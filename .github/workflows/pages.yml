@@ -62,7 +62,7 @@ jobs:
           print(f"{len(lib['clauses'])} clauses, {len(lib['spec_sections'])} sections exported")
           PY
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs
