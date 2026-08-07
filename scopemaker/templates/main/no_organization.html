@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}No organization &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card__body empty">
+    <h3>You are not a member of any organization</h3>
+    <p class="muted">
+      Scopes, projects and clause libraries all belong to an organization. Ask
+      an administrator to invite you, or have one created for you.
+    </p>
+    <p class="muted small">Signed in as {{ current_user.email }}.</p>
+  </div>
+</div>
+{% endblock %}

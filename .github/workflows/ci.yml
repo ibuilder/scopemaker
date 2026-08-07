@@ -1,0 +1,165 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint and type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install ".[dev]"
+      - name: ruff
+        run: ruff check --output-format=github .
+      - name: mypy
+        run: mypy scopemaker
+        continue-on-error: true
+
+  test:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install WeasyPrint native libraries
+        # These are what make PDF export work. Installing them here means the
+        # tests marked `pdf` run for real in CI rather than being skipped, so a
+        # regression in the PDF pipeline fails the build.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b \
+            libcairo2 libgdk-pixbuf-2.0-0 libffi-dev shared-mime-info \
+            fonts-dejavu-core
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - run: pip install ".[dev]"
+
+      - name: Confirm the PDF renderer is usable
+        # Fail loudly here rather than silently skipping the PDF tests below.
+        run: |
+          python - <<'PY'
+          import sys
+          from scopemaker.services.renderers import PDF_AVAILABLE, pdf_unavailable_reason
+          if not PDF_AVAILABLE:
+              print(pdf_unavailable_reason())
+              sys.exit(1)
+          print("WeasyPrint loaded; PDF tests will run.")
+          PY
+
+      - name: Run tests
+        run: pytest -q --cov=scopemaker --cov-report=xml --cov-report=term-missing
+
+      - name: Assert the PDF tests actually ran
+        run: pytest -q -m pdf --no-header | tee /dev/stderr | grep -qv "no tests ran"
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.python-version == '3.12'
+        with:
+          name: coverage
+          path: coverage.xml
+          if-no-files-found: warn
+
+  migrations:
+    name: Migrations against PostgreSQL
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: scopemaker
+          POSTGRES_PASSWORD: scopemaker
+          POSTGRES_DB: scopemaker
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install ".[dev,postgres]"
+
+      - name: Upgrade, seed, then downgrade
+        env:
+          FLASK_APP: wsgi:app
+          FLASK_ENV: development
+          DATABASE_URL: postgresql+psycopg://scopemaker:scopemaker@localhost:5432/scopemaker
+          SECRET_KEY: ci-only-secret-key-not-used-in-production
+          ENCRYPTION_KEY: PHMYRQ3sBQGmWfQFOWfLWCkV1s0MnBGKcpS4iFctuNM=
+        run: |
+          flask db upgrade
+          flask seed-library
+          # Re-seeding must be idempotent.
+          flask seed-library
+          flask db downgrade base
+
+      - name: Fail if models have drifted from the migrations
+        env:
+          FLASK_APP: wsgi:app
+          FLASK_ENV: development
+          DATABASE_URL: postgresql+psycopg://scopemaker:scopemaker@localhost:5432/scopemaker
+          SECRET_KEY: ci-only-secret-key-not-used-in-production
+          ENCRYPTION_KEY: PHMYRQ3sBQGmWfQFOWfLWCkV1s0MnBGKcpS4iFctuNM=
+        run: |
+          flask db upgrade
+          flask db migrate -m "drift check" --rev-id drift_check
+          if grep -qE "op\.(create|drop|alter|add)_" migrations/versions/drift_check_*.py; then
+            echo "::error::Models and migrations are out of sync. Run 'flask db migrate' and commit the result."
+            cat migrations/versions/drift_check_*.py
+            exit 1
+          fi
+          rm -f migrations/versions/drift_check_*.py
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: scopemaker:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: PDF rendering works inside the image
+        run: |
+          docker run --rm \
+            -e FLASK_ENV=development \
+            -e SECRET_KEY=ci-only \
+            -e ENCRYPTION_KEY=PHMYRQ3sBQGmWfQFOWfLWCkV1s0MnBGKcpS4iFctuNM= \
+            --entrypoint flask scopemaker:ci check-pdf

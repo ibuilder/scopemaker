@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import status_chip, empty_state %}
+{% block title %}Dashboard &middot; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <div>
+    <h1>{{ organization.name }}</h1>
+    <p class="pagehead__sub">{{ scope_total }} scope{{ '' if scope_total == 1 else 's' }},
+      {{ project_count }} active project{{ '' if project_count == 1 else 's' }}</p>
+  </div>
+  {% if current_user.has_role('editor') %}
+  <div class="btnrow">
+    <a class="btn btn--secondary" href="{{ url_for('projects.create') }}">New project</a>
+    <a class="btn btn--primary" href="{{ url_for('scopes.new') }}">New scope</a>
+  </div>
+  {% endif %}
+</div>
+
+{% if not pdf_available %}
+<div class="callout">
+  <strong>PDF export is unavailable on this server.</strong>
+  WeasyPrint's native libraries are not installed, so PDF downloads will fail.
+  Word, HTML, Markdown and JSON exports all work. Run
+  <code>flask check-pdf</code> for installation instructions.
+</div>
+{% endif %}
+
+<div class="grid grid--4" style="margin-bottom:1.5rem">
+  <div class="stat">
+    <div class="stat__value">{{ status_counts.get('draft', 0) }}</div>
+    <div class="stat__label">Draft</div>
+  </div>
+  <div class="stat">
+    <div class="stat__value">{{ status_counts.get('in_review', 0) }}</div>
+    <div class="stat__label">In review</div>
+  </div>
+  <div class="stat">
+    <div class="stat__value">{{ status_counts.get('issued', 0) }}</div>
+    <div class="stat__label">Issued</div>
+  </div>
+  <div class="stat">
+    <div class="stat__value">{{ library.clauses_total }}</div>
+    <div class="stat__label">Clauses available</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__header">
+    <h2 class="card__title">Recent scopes</h2>
+    <a class="btn btn--sm btn--secondary" href="{{ url_for('scopes.index') }}">View all</a>
+  </div>
+  {% if recent_scopes %}
+  <div class="table__wrap" style="border:0;border-radius:0">
+    <table class="table">
+      <thead>
+        <tr><th>Document</th><th>Division</th><th>Status</th><th>Items</th><th>Updated</th></tr>
+      </thead>
+      <tbody>
+        {% for scope in recent_scopes %}
+        <tr>
+          <td>
+            <a href="{{ url_for('scopes.edit', scope_id=scope.id) }}"><strong>{{ scope.document_title }}</strong></a>
+            {% if scope.trade_name %}<br><span class="muted small">{{ scope.trade_name }}</span>{% endif %}
+          </td>
+          <td>{% if scope.division_code %}<span class="chip chip--division">{{ scope.division_code }}</span>{% else %}<span class="muted">&mdash;</span>{% endif %}</td>
+          <td>{{ status_chip(scope.status, scope.status_label) }}{% if scope.version > 1 %} <span class="muted small">v{{ scope.version }}</span>{% endif %}</td>
+          <td class="numeric">{{ scope.item_count }}</td>
+          <td class="muted small">{{ scope.updated_at.strftime('%d %b %Y') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  {{ empty_state(
+      'No scopes yet',
+      'Generate your first exhibit — pick a division and the library does the rest.',
+      url_for('scopes.new') if current_user.has_role('editor') else none,
+      'Create a scope') }}
+  {% endif %}
+</div>
+
+<div class="grid grid--2">
+  <div class="card">
+    <div class="card__header"><h2 class="card__title">Your library</h2>
+      <a class="btn btn--sm btn--secondary" href="{{ url_for('library.index') }}">Manage</a></div>
+    <div class="card__body">
+      <table class="table">
+        <tbody>
+          <tr><td>Clauses available</td><td class="numeric">{{ library.clauses_total }}</td></tr>
+          <tr><td>Written by your organization</td><td class="numeric">{{ library.clauses_custom }}</td></tr>
+          <tr><td>Hidden from the shipped set</td><td class="numeric">{{ library.clauses_suppressed }}</td></tr>
+          <tr><td>Specification sections</td><td class="numeric">{{ library.spec_sections_total }}</td></tr>
+          <tr><td>Divisions covered</td><td class="numeric">{{ library.divisions_covered }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__header"><h2 class="card__title">Getting started</h2></div>
+    <div class="card__body small">
+      <ol style="padding-left:1.2rem;margin:0">
+        <li>Add a <a href="{{ url_for('projects.index') }}">project</a> and its bid packages.</li>
+        <li>Generate a scope &mdash; the library pre-selects the standard clauses for the division.</li>
+        <li>Edit, reorder and add your own language in the editor.</li>
+        <li>Export to PDF or Word, or issue the scope to lock the version.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+{% endblock %}

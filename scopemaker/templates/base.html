@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <meta name="description" content="{{ app_tagline }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="brand" href="{{ url_for('main.index') }}">
+      <span class="brand__mark" aria-hidden="true">SM</span>
+      <span class="brand__name">{{ app_name }}</span>
+    </a>
+
+    {% if current_user.is_authenticated %}
+    <nav class="mainnav" aria-label="Main">
+      <a href="{{ url_for('main.dashboard') }}" class="{{ 'is-active' if request.blueprint == 'main' }}">Dashboard</a>
+      <a href="{{ url_for('scopes.index') }}" class="{{ 'is-active' if request.blueprint == 'scopes' }}">Scopes</a>
+      <a href="{{ url_for('projects.index') }}" class="{{ 'is-active' if request.blueprint == 'projects' }}">Projects</a>
+      <a href="{{ url_for('library.index') }}" class="{{ 'is-active' if request.blueprint == 'library' }}">Library</a>
+      {% if procore_enabled %}
+      <a href="{{ url_for('procore.index') }}" class="{{ 'is-active' if request.blueprint == 'procore' }}">Procore</a>
+      {% endif %}
+      {% if current_user.has_role('admin') %}
+      <a href="{{ url_for('admin.index') }}" class="{{ 'is-active' if request.blueprint == 'admin' }}">Admin</a>
+      {% endif %}
+    </nav>
+
+    <div class="usermenu">
+      {% if current_user.organizations|length > 1 %}
+      <form method="post" action="{{ url_for('auth.switch_organization', organization_id='PLACEHOLDER') }}"
+            class="orgswitch" id="orgswitch-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="visually-hidden" for="orgswitch">Organization</label>
+        <select id="orgswitch" name="organization_id" data-orgswitch>
+          {% for org in current_user.organizations %}
+          <option value="{{ org.id }}" {{ 'selected' if org.id == current_user.active_organization_id }}>{{ org.name }}</option>
+          {% endfor %}
+        </select>
+      </form>
+      {% elif current_user.active_organization %}
+      <span class="usermenu__org">{{ current_user.active_organization.name }}</span>
+      {% endif %}
+
+      <a class="usermenu__name" href="{{ url_for('auth.profile') }}">
+        {{ current_user.full_name or current_user.email }}
+        {% if current_user.role %}<span class="chip chip--role">{{ current_user.role }}</span>{% endif %}
+      </a>
+      <form method="post" action="{{ url_for('auth.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn--ghost btn--sm">Sign out</button>
+      </form>
+    </div>
+    {% else %}
+    <div class="usermenu">
+      <a class="btn btn--ghost btn--sm" href="{{ url_for('auth.login') }}">Sign in</a>
+    </div>
+    {% endif %}
+  </div>
+</header>
+
+<main id="main" class="{% block main_class %}shell{% endblock %}">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flashes" role="status" aria-live="polite">
+      {% for category, message in messages %}
+      <div class="flash flash--{{ category }}">
+        <span>{{ message }}</span>
+        <button type="button" class="flash__close" data-dismiss aria-label="Dismiss">&times;</button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="sitefooter">
+  <div class="sitefooter__inner">
+    <span>{{ app_name }} v{{ app_version }}</span>
+    <nav aria-label="Footer">
+      <a href="{{ docs_url }}">Documentation</a>
+      <a href="{{ source_url }}">Source</a>
+      <a href="{{ url_for('api.root') }}">API</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

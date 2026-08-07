@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import empty_state %}
+{% block title %}Revisions: {{ scope.document_title }} &middot; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('scopes.index') }}">Scopes</a> /
+  <a href="{{ url_for('scopes.edit', scope_id=scope.id) }}">{{ scope.document_title }}</a> / Revisions
+</div>
+<div class="pagehead">
+  <div>
+    <h1>Revision history</h1>
+    <p class="pagehead__sub">Currently on version {{ scope.version }}</p>
+  </div>
+  <a class="btn btn--secondary" href="{{ url_for('scopes.edit', scope_id=scope.id) }}">Back to editor</a>
+</div>
+
+{% if scope.revisions %}
+<div class="table__wrap">
+  <table class="table">
+    <thead><tr><th>Version</th><th>Note</th><th>Sections</th><th>Recorded</th></tr></thead>
+    <tbody>
+      {% for revision in scope.revisions %}
+      <tr>
+        <td><strong>v{{ revision.version }}</strong></td>
+        <td>{{ revision.note or '—' }}</td>
+        <td class="numeric">{{ revision.snapshot.get('sections', [])|length }}</td>
+        <td class="muted small">{{ revision.created_at.strftime('%d %b %Y at %H:%M') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<p class="muted small" style="margin-top:.8rem">
+  Each row holds a verbatim snapshot of the document at the moment it was
+  frozen, including every clause and its number.
+</p>
+{% else %}
+<div class="card"><div class="card__body">
+{{ empty_state('No revisions yet',
+   'A revision is recorded when a scope is issued or superseded.') }}
+</div></div>
+{% endif %}
+{% endblock %}

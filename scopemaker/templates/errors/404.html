@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Not found &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card__body empty">
+    <h1>404</h1>
+    <h3>Not found</h3>
+    <p class="muted">
+      That page does not exist, or it belongs to an organization you are not a
+      member of.
+    </p>
+    <a class="btn btn--secondary" href="{{ url_for('main.index') }}">Back to safety</a>
+  </div>
+</div>
+{% endblock %}

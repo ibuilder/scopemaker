@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}{{ app_name }} &middot; {{ app_tagline }}{% endblock %}
+{% block content %}
+<section style="text-align:center;padding:2.5rem 0 3rem">
+  <h1 style="font-size:2.4rem;letter-spacing:-.02em;max-width:22ch;margin:0 auto .6rem">
+    Scope of work exhibits, generated properly.
+  </h1>
+  <p class="muted" style="font-size:1.08rem;max-width:60ch;margin:0 auto 1.6rem">
+    Pick a CSI division, choose from a curated clause library, edit anything you
+    need to, and export a paginated PDF, an editable Word file, or JSON &mdash;
+    all with identical clause numbering.
+  </p>
+  <div class="btnrow" style="justify-content:center">
+    <a class="btn btn--primary" href="{{ url_for('auth.register') }}">Get started</a>
+    <a class="btn btn--secondary" href="{{ docs_url }}">Read the docs</a>
+  </div>
+</section>
+
+<div class="grid grid--3">
+  <div class="card"><div class="card__body">
+    <h3>A real clause library</h3>
+    <p class="muted small">
+      Universal obligations plus trade-specific inclusions and exclusions across
+      the CSI divisions that actually get bid &mdash; concrete, steel, envelope,
+      fire protection, plumbing, HVAC, electrical, sitework and more.
+    </p>
+  </div></div>
+
+  <div class="card"><div class="card__body">
+    <h3>Cross-division spec sections</h3>
+    <p class="muted small">
+      A fire protection package automatically gets offered the Division 07
+      firestopping and Division 08 access doors it is contractually responsible
+      for. That is where scope gaps come from.
+    </p>
+  </div></div>
+
+  <div class="card"><div class="card__body">
+    <h3>Documents that survive review</h3>
+    <p class="muted small">
+      Real paged PDFs with running headers and page numbers, selectable text,
+      and an outline where 3.2.4 points at exactly one sentence in every format
+      you export.
+    </p>
+  </div></div>
+
+  <div class="card"><div class="card__body">
+    <h3>Versioned and auditable</h3>
+    <p class="muted small">
+      Issuing a scope freezes an immutable revision. Later edits create a new
+      version, so what went out with the subcontract is preserved verbatim.
+    </p>
+  </div></div>
+
+  <div class="card"><div class="card__body">
+    <h3>Procore, server-side</h3>
+    <p class="muted small">
+      Optional. Import projects and bid packages, and push finished exhibits
+      back onto commitments. Credentials stay on the server, encrypted at rest.
+    </p>
+  </div></div>
+
+  <div class="card"><div class="card__body">
+    <h3>API and self-hosting</h3>
+    <p class="muted small">
+      A token-authenticated JSON API, a Docker image, PostgreSQL, and no
+      third-party CDN calls &mdash; so it runs on a locked-down network.
+    </p>
+  </div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import empty_state %}
+{% block title %}Scope templates &middot; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <div>
+    <h1>Scope templates</h1>
+    <p class="pagehead__sub">Reusable exhibit structures and language</p>
+  </div>
+  <a class="btn btn--secondary" href="{{ url_for('library.index') }}">Clause library</a>
+</div>
+
+<div class="callout callout--info">
+  Save any scope as a template from its editor. New scopes started from a
+  template inherit its sections, boilerplate and saved items.
+</div>
+
+{% if templates %}
+<div class="table__wrap">
+  <table class="table">
+    <thead><tr><th>Name</th><th>Division</th><th>Sections</th><th>Flags</th><th></th></tr></thead>
+    <tbody>
+      {% for template in templates %}
+      <tr {% if not template.is_active %}style="opacity:.55"{% endif %}>
+        <td>
+          <strong>{{ template.name }}</strong>
+          {% if template.description %}<br><span class="muted small">{{ template.description }}</span>{% endif %}
+        </td>
+        <td>
+          {% if template.division_code %}<span class="chip chip--division">{{ template.division_code }}</span>
+          {% else %}<span class="chip">Any</span>{% endif %}
+        </td>
+        <td class="numeric">{{ template.payload.get('sections', [])|length }}</td>
+        <td>
+          {% if template.is_system %}<span class="chip chip--system">Shipped</span>
+          {% else %}<span class="chip chip--custom">Yours</span>{% endif %}
+          {% if template.is_default %}<span class="chip">Default</span>{% endif %}
+        </td>
+        <td>
+          {% if current_user.has_role('editor') and not template.is_system %}
+          <div class="btnrow">
+            <a class="btn btn--sm btn--secondary" href="{{ url_for('library.edit_template', template_id=template.id) }}">Edit</a>
+            <form method="post" action="{{ url_for('library.delete_template', template_id=template.id) }}"
+                  data-confirm="Delete this template?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn--sm btn--danger">Delete</button>
+            </form>
+          </div>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card"><div class="card__body">
+{{ empty_state('No templates yet',
+   'Build a scope the way your company likes it, then use "Save as template" from the editor.') }}
+</div></div>
+{% endif %}
+{% endblock %}

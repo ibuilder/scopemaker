@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Procore &middot; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <div>
+    <h1>Procore integration</h1>
+    <p class="pagehead__sub">Import projects and bid packages, and push finished exhibits back.</p>
+  </div>
+</div>
+
+{% if connection and connection.is_connected %}
+<div class="card">
+  <div class="card__header">
+    <h2 class="card__title">Connected</h2>
+    <span class="chip chip--issued">Active</span>
+  </div>
+  <div class="card__body">
+    <table class="table">
+      <tbody>
+        <tr><th>Grant type</th><td>{{ connection.grant_type.replace('_', ' ') }}</td></tr>
+        <tr><th>Procore user</th>
+            <td>{{ connection.procore_user_name or '—' }}
+              {% if connection.procore_user_email %}<span class="muted small">({{ connection.procore_user_email }})</span>{% endif %}</td></tr>
+        <tr><th>Company</th><td>{{ connection.company_name or connection.company_id or '—' }}</td></tr>
+        <tr><th>Token expires</th>
+            <td>{{ connection.token_expires_at.strftime('%d %b %Y at %H:%M') if connection.token_expires_at else '—' }}</td></tr>
+        <tr><th>Last sync</th>
+            <td>{{ connection.last_sync_at.strftime('%d %b %Y at %H:%M') if connection.last_sync_at else 'Never' }}</td></tr>
+        {% if connection.last_error %}
+        <tr><th>Last error</th><td class="small" style="color:var(--red-700)">{{ connection.last_error }}</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card__footer btnrow">
+    <form method="post" action="{{ url_for('procore.sync_projects') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn--primary">Sync projects</button>
+    </form>
+    {% if current_user.has_role('admin') %}
+    <form method="post" action="{{ url_for('procore.disconnect') }}"
+          data-confirm="Disconnect from Procore? Imported projects are kept.">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn--danger">Disconnect</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+{% if companies and current_user.has_role('admin') %}
+<div class="card">
+  <div class="card__header"><h2 class="card__title">Active company</h2></div>
+  <div class="card__body">
+    <form method="post" action="{{ url_for('procore.set_company') }}" style="display:flex;gap:.6rem;align-items:flex-end;flex-wrap:wrap">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field" style="margin:0;flex:1 1 260px">
+        <label for="company_id">Company</label>
+        <select id="company_id" name="company_id">
+          {% for company in companies %}
+          <option value="{{ company.id }}" {{ 'selected' if connection.company_id == company.id|string }}>{{ company.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn--secondary">Set company</button>
+    </form>
+    <p class="field__hint" style="margin-top:.6rem">
+      Project sync pulls from the selected company only.
+    </p>
+  </div>
+</div>
+{% endif %}
+
+{% else %}
+
+<div class="callout callout--info">
+  Credentials stay on the server and tokens are encrypted at rest with the
+  application's <code>ENCRYPTION_KEY</code>. Nothing sensitive reaches the browser.
+</div>
+
+<div class="grid grid--2" style="align-items:start">
+  <div class="card">
+    <div class="card__header"><h2 class="card__title">Connect your account</h2></div>
+    <div class="card__body">
+      <p class="muted small">
+        Authorize with your own Procore login. ScopeMaker will see the projects
+        you have access to.
+      </p>
+      <p class="small">
+        Register <span class="mono">{{ redirect_uri }}</span> as a redirect URI
+        in the Procore Developer Portal first.
+      </p>
+      {% if current_user.has_role('admin') %}
+      <form method="post" action="{{ url_for('procore.connect') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn--primary">Connect to Procore</button>
+      </form>
+      {% else %}
+      <p class="muted small">An administrator must set up this connection.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__header"><h2 class="card__title">Service account</h2></div>
+    <div class="card__body">
+      <p class="muted small">
+        For unattended sync, use a Developer Managed Service Account. Procore
+        retired traditional service accounts in March 2025, so DMSA with the
+        client-credentials grant is the supported path.
+      </p>
+      {% if current_user.has_role('admin') %}
+      <form method="post" action="{{ url_for('procore.connect_service_account') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field">
+          <label for="dmsa-company">Procore company id</label>
+          <input type="text" id="dmsa-company" name="company_id" placeholder="123456">
+        </div>
+        <button type="submit" class="btn btn--secondary">Connect service account</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

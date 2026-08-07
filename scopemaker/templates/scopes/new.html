@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field, division_select %}
+{% block title %}New scope &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('scopes.index') }}">Scopes</a> / New</div>
+<div class="pagehead">
+  <div>
+    <h1>New scope</h1>
+    <p class="pagehead__sub">Step 1 of 2 &mdash; what is this exhibit for?</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div class="formgrid">
+        <div style="grid-column:1/-1">
+          {{ field(form.project_id, **{'data-project-select': ''}) }}
+        </div>
+        <div style="grid-column:1/-1">
+          <div class="field">
+            {{ form.bid_package_id.label }}
+            {{ form.bid_package_id(**{
+                'data-package-select': '',
+                'data-packages-url': url_for('scopes.bid_packages_for_project')}) }}
+            <p class="field__hint">Choosing a package fills in its division and trade.</p>
+          </div>
+        </div>
+      </div>
+
+      {{ division_select(form.division_code, form.division_groups) }}
+      {{ field(form.trade_name, placeholder='e.g. Fire Protection') }}
+
+      <div class="formgrid">
+        {{ field(form.exhibit_label) }}
+        {{ field(form.title) }}
+      </div>
+
+      <details class="details">
+        <summary>Presentation and templates</summary>
+        <div class="details__body">
+          {{ field(form.numbering_scheme) }}
+          {{ field(form.template_id) }}
+        </div>
+      </details>
+
+      <div class="btnrow" style="margin-top:1rem">
+        {{ form.submit(class='btn btn--primary') }}
+        <a class="btn btn--secondary" href="{{ url_for('scopes.index') }}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

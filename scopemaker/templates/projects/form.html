@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}{{ 'Edit' if project else 'New' }} project &middot; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('projects.index') }}">Projects</a> /
+  {{ project.name if project else 'New' }}
+</div>
+<div class="pagehead"><div><h1>{{ 'Edit project' if project else 'New project' }}</h1></div></div>
+
+<form method="post" novalidate>
+  {{ form.hidden_tag() }}
+
+  <div class="card">
+    <div class="card__header"><h2 class="card__title">Identity</h2></div>
+    <div class="card__body">
+      <div class="formgrid">
+        {{ field(form.name) }}
+        {{ field(form.number) }}
+      </div>
+      {{ field(form.description) }}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__header"><h2 class="card__title">Location</h2></div>
+    <div class="card__body">
+      <div class="formgrid">
+        {{ field(form.address) }}
+        {{ field(form.city) }}
+        {{ field(form.state) }}
+        {{ field(form.postal_code) }}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__header">
+      <h2 class="card__title">Project parties</h2>
+      <span class="muted small">Merged into exhibit boilerplate</span>
+    </div>
+    <div class="card__body">
+      <div class="formgrid">
+        {{ field(form.owner_name) }}
+        {{ field(form.architect_name) }}
+        {{ field(form.engineer_name) }}
+        {{ field(form.contractor_name) }}
+        {{ field(form.delivery_method) }}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__header"><h2 class="card__title">Schedule</h2></div>
+    <div class="card__body">
+      <div class="formgrid">
+        {{ field(form.start_date) }}
+        {{ field(form.completion_date) }}
+      </div>
+    </div>
+  </div>
+
+  <div class="btnrow">
+    {{ form.submit(class='btn btn--primary') }}
+    <a class="btn btn--secondary"
+       href="{{ url_for('projects.detail', project_id=project.id) if project else url_for('projects.index') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

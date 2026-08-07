@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}API tokens &middot; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('admin.index') }}">Administration</a> / API tokens</div>
+<div class="pagehead">
+  <div><h1>API tokens</h1><p class="pagehead__sub">For the JSON API at <span class="mono">/api/v1</span></p></div>
+</div>
+
+{% if issued_token %}
+<div class="callout">
+  <p><strong>Copy this token now.</strong> Only a hash is stored, so it cannot be shown again.</p>
+  <div class="tokenbox" id="new-token">{{ issued_token }}</div>
+  <button type="button" class="btn btn--sm btn--secondary" data-copy="#new-token" style="margin-top:.6rem">Copy</button>
+</div>
+{% endif %}
+
+<div class="grid grid--2" style="align-items:start">
+  <div class="card">
+    <div class="card__header"><h2 class="card__title">Create a token</h2></div>
+    <div class="card__body">
+      <form method="post" novalidate>
+        {{ form.hidden_tag() }}
+        {{ field(form.name, placeholder='Estimating integration') }}
+        {{ field(form.scopes) }}
+        {{ field(form.expires_days) }}
+        {{ form.submit(class='btn btn--primary') }}
+      </form>
+    </div>
+    <div class="card__footer small muted">
+      Use it as <span class="mono">Authorization: Bearer smk_...</span>.
+      Tokens act within this organization only.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__header"><h2 class="card__title">Active tokens</h2></div>
+    {% if tokens %}
+    <div class="table__wrap" style="border:0;border-radius:0">
+      <table class="table">
+        <thead><tr><th>Label</th><th>Prefix</th><th>Access</th><th>Last used</th><th></th></tr></thead>
+        <tbody>
+          {% for token in tokens %}
+          <tr>
+            <td>{{ token.name }}</td>
+            <td class="mono small">{{ token.token_prefix }}…</td>
+            <td><span class="chip">{{ token.scopes }}</span></td>
+            <td class="muted small">
+              {{ token.last_used_at.strftime('%d %b %Y') if token.last_used_at else 'Never' }}
+            </td>
+            <td>
+              <form method="post" action="{{ url_for('admin.revoke_token', token_id=token.id) }}"
+                    data-confirm="Revoke this token? Anything using it will stop working immediately.">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn--sm btn--danger">Revoke</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="card__body"><p class="muted">No active tokens.</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

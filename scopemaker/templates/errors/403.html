@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Not permitted &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card__body empty">
+    <h1>403</h1>
+    <h3>You do not have access to that</h3>
+    <p class="muted">
+      Your role in this organization does not allow this action. An
+      administrator can change your role.
+    </p>
+    <a class="btn btn--secondary" href="{{ url_for('main.dashboard') }}">Back to dashboard</a>
+  </div>
+</div>
+{% endblock %}

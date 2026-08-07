@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field, checkbox %}
+{% block title %}{{ 'Edit' if section else 'New' }} specification section &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('library.spec_sections') }}">Specification sections</a> /
+  {{ section.code if section else 'New' }}
+</div>
+<div class="pagehead"><div><h1>{{ 'Edit section' if section else 'New specification section' }}</h1></div></div>
+
+<div class="card">
+  <div class="card__body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="formgrid">
+        {{ field(form.code, placeholder='078413') }}
+        {{ field(form.division_code) }}
+      </div>
+      {{ field(form.title, placeholder='Penetration Firestopping') }}
+      {{ field(form.related_divisions, placeholder='21, 22, 23, 26') }}
+      {{ checkbox(form.is_universal) }}
+      {{ checkbox(form.is_default) }}
+      {{ checkbox(form.is_active) }}
+      {{ field(form.position) }}
+      <div class="btnrow">
+        {{ form.submit(class='btn btn--primary') }}
+        <a class="btn btn--secondary" href="{{ url_for('library.spec_sections') }}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

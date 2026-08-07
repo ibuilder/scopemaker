@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Send to Procore &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('scopes.edit', scope_id=scope.id) }}">{{ scope.document_title }}</a> / Send to Procore
+</div>
+<div class="pagehead"><div><h1>Attach to a commitment</h1></div></div>
+
+<div class="card">
+  <div class="card__body">
+    {% if commitments %}
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="commitment_id">Commitment</label>
+        <select id="commitment_id" name="commitment_id" required>
+          <option value="">-- Choose a commitment --</option>
+          {% for commitment in commitments %}
+          <option value="{{ commitment.id }}">
+            {{ commitment.number or commitment.id }} &mdash;
+            {{ commitment.title or commitment.vendor.name if commitment.vendor else '' }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="format">Format</label>
+        <select id="format" name="format">
+          <option value="pdf">PDF</option>
+          <option value="docx">Word (DOCX)</option>
+        </select>
+      </div>
+      <div class="btnrow">
+        <button type="submit" class="btn btn--primary">Attach exhibit</button>
+        <a class="btn btn--secondary" href="{{ url_for('scopes.edit', scope_id=scope.id) }}">Cancel</a>
+      </div>
+    </form>
+    {% else %}
+    <div class="empty">
+      <h3>No commitments found</h3>
+      <p class="muted">
+        This Procore project has no commitments the connected account can see,
+        or the connected app lacks permission to read them.
+      </p>
+      <a class="btn btn--secondary" href="{{ url_for('scopes.edit', scope_id=scope.id) }}">Back to editor</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

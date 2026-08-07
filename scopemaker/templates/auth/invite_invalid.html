@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Invitation not valid &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card__body empty">
+    <h3>This invitation is no longer valid</h3>
+    <p class="muted">It has expired or has already been used. Ask an administrator to send a new one.</p>
+    <a class="btn btn--secondary" href="{{ url_for('auth.login') }}">Go to sign in</a>
+  </div>
+</div>
+{% endblock %}

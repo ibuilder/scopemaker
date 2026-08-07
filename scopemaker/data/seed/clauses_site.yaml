@@ -1,0 +1,285 @@
+# Trade clauses for the Site and Infrastructure subgroup (Divisions 31-35).
+version: 1
+
+clauses:
+
+# ===========================================================================
+# Division 31 - Earthwork
+# ===========================================================================
+- key: d31.incl.mass_excavation
+  division: "31"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Clearing, grubbing, stripping, mass excavation, structural excavation,
+    backfill, compaction and fine grading to the lines, grades and tolerances
+    shown, including all cut-fill balancing on site.
+
+- key: d31.incl.erosion_control
+  division: "31"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    Installation and maintenance of all erosion and sedimentation control
+    measures for the duration of the Work, including silt fence, inlet
+    protection, construction entrances, weekly and post-rainfall inspections,
+    SWPPP recordkeeping, and removal at stabilization.
+
+- key: d31.incl.subgrade_prep
+  division: "31"
+  category: inclusion
+  default: true
+  position: 30
+  text: >-
+    Proof-rolling and preparation of subgrade beneath slabs, pavements and
+    footings, and furnishing, placing and compacting granular base to the
+    thickness and density specified.
+
+- key: d31.incl.shoring
+  division: "31"
+  category: inclusion
+  default: true
+  position: 40
+  text: >-
+    Excavation support, sloping, benching, trench boxes and engineered shoring
+    as required by OSHA and site conditions, designed by a licensed
+    professional engineer where required.
+
+- key: d31.incl.dewatering_incidental
+  division: "31"
+  category: inclusion
+  default: true
+  position: 50
+  text: >-
+    Surface water management and pumping of accumulated water from excavations,
+    including sumps, discharge piping and required filtration prior to
+    discharge.
+
+- key: d31.incl.backfill_structures
+  division: "31"
+  category: inclusion
+  default: true
+  position: 60
+  text: >-
+    Backfill and compaction around foundations, walls, utility trenches and
+    structures in controlled lifts, with density testing coordination and
+    correction of any lift failing to meet the specified compaction.
+
+- key: d31.incl.deep_foundations
+  division: "31"
+  category: inclusion
+  default: false
+  position: 70
+  text: >-
+    Deep foundation elements including drilled piers, augercast piles or driven
+    piles, complete with installation records, pile driving logs and any
+    required load testing.
+
+- key: d31.incl.import_export
+  division: "31"
+  category: inclusion
+  default: false
+  position: 80
+  text: >-
+    Import of suitable structural fill and export and legal disposal of surplus
+    material, including all haul, tipping fees and permits.
+
+- key: d31.excl.unsuitable_soils
+  division: "31"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Undercut and replacement of unsuitable or unstable soils below the design
+    subgrade elevation, which will be compensated at the unit prices stated in
+    this Exhibit based on surveyed quantities.
+
+- key: d31.excl.rock
+  division: "31"
+  category: exclusion
+  default: true
+  position: 210
+  text: >-
+    Rock excavation, blasting and removal of boulders exceeding one cubic yard,
+    which will be compensated at the unit prices stated in this Exhibit.
+
+- key: d31.excl.geotech_testing
+  division: "31"
+  category: exclusion
+  default: true
+  position: 220
+  text: >-
+    Owner's geotechnical testing agency for compaction and materials testing.
+    Providing access and standing by during testing is included.
+
+- key: d31.excl.contaminated_soil
+  division: "31"
+  category: exclusion
+  default: true
+  position: 230
+  text: >-
+    Handling, transportation and disposal of contaminated soil or groundwater
+    encountered on site.
+
+- key: d31.excl.permanent_dewatering
+  division: "31"
+  category: exclusion
+  default: false
+  position: 240
+  text: >-
+    Engineered dewatering systems, well points and deep wells required to lower
+    the groundwater table.
+
+# ===========================================================================
+# Division 32 - Exterior Improvements
+# ===========================================================================
+- key: d32.incl.paving
+  division: "32"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Complete asphalt and concrete paving including aggregate base, binder and
+    surface courses, curbs, gutters, sidewalks, ramps and pavement markings.
+
+- key: d32.incl.ada
+  division: "32"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    Construction of all accessible routes, curb ramps, detectable warning
+    surfaces and accessible parking to the running slope and cross slope
+    tolerances required by the ADA, verified by survey prior to acceptance, and
+    replacement of any non-compliant work at no additional cost.
+
+- key: d32.incl.landscaping
+  division: "32"
+  category: inclusion
+  default: false
+  position: 30
+  text: >-
+    Landscaping including topsoil, soil amendments, planting, sod, seeding,
+    mulch, tree staking, and a full establishment and maintenance period through
+    the end of the warranty term.
+
+- key: d32.incl.irrigation
+  division: "32"
+  category: inclusion
+  default: false
+  position: 40
+  text: >-
+    Complete irrigation system including mainline, laterals, heads, valves,
+    controller, rain sensor, backflow prevention, winterization and coverage
+    testing.
+
+- key: d32.incl.fencing
+  division: "32"
+  category: inclusion
+  default: false
+  position: 50
+  text: >-
+    Site fencing, gates, operators, bollards and site furnishings, complete with
+    footings and final adjustment.
+
+- key: d32.excl.subgrade_by_others
+  division: "32"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Preparation and certification of subgrade to within plus or minus one tenth
+    of a foot, which is by the Earthwork Subcontractor.
+
+- key: d32.excl.striping_maintenance
+  division: "32"
+  category: exclusion
+  default: false
+  position: 210
+  text: >-
+    Re-striping and seal coating after Substantial Completion, and repair of
+    pavement damaged by other trades after acceptance.
+
+# ===========================================================================
+# Division 33 - Utilities
+# ===========================================================================
+- key: d33.incl.site_utilities
+  division: "33"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Complete site utilities including sanitary sewer, storm drainage, domestic
+    and fire water mains, structures, manholes, inlets, cleanouts, fittings,
+    valves, thrust restraint, bedding and backfill, from the point of connection
+    to five feet outside the building line.
+
+- key: d33.incl.testing_utilities
+  division: "33"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    All required testing including pressure and leakage testing, disinfection
+    and bacteriological sampling of water mains, mandrel and vacuum testing of
+    sewers, and video inspection of gravity lines with recordings submitted.
+
+- key: d33.incl.tie_ins
+  division: "33"
+  category: inclusion
+  default: true
+  position: 30
+  text: >-
+    Connections and tie-ins to existing utilities, including coordination with
+    the utility owner, required shutdowns, temporary bypass pumping, night and
+    weekend work necessary to obtain a shutdown window, and restoration of
+    disturbed areas.
+
+- key: d33.incl.record_survey
+  division: "33"
+  category: inclusion
+  default: true
+  position: 40
+  text: >-
+    Record survey of all installed utilities by a licensed surveyor, showing
+    horizontal location, invert elevations and material, in the format required
+    by the authority having jurisdiction.
+
+- key: d33.incl.stormwater
+  division: "33"
+  category: inclusion
+  default: false
+  position: 50
+  text: >-
+    Stormwater detention and retention structures, underground storage systems,
+    outlet control structures, water quality units and their required
+    maintenance access.
+
+- key: d33.excl.utility_fees_33
+  division: "33"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Tap fees, impact fees, meter fees and utility company charges, which are
+    paid directly by the Owner.
+
+- key: d33.excl.building_side
+  division: "33"
+  category: exclusion
+  default: true
+  position: 210
+  text: >-
+    Utilities inside the building line, which are by the Plumbing and Electrical
+    Subcontractors.
+
+- key: d33.excl.offsite
+  division: "33"
+  category: exclusion
+  default: false
+  position: 220
+  text: >-
+    Offsite utility improvements, roadway restoration beyond the limits of
+    disturbance, and municipal permit fees for work in the public right of way.

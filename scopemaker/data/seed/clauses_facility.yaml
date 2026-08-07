@@ -1,0 +1,831 @@
+# Trade clauses for the Facility Construction subgroup (Divisions 02-14).
+version: 1
+
+clauses:
+
+# ===========================================================================
+# Division 02 - Existing Conditions
+# ===========================================================================
+- key: d02.incl.selective_demo
+  division: "02"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Complete selective demolition of the structures, finishes, systems and
+    site elements indicated for removal, including all shoring, bracing and
+    temporary support required to maintain the stability of remaining
+    construction.
+
+- key: d02.incl.salvage
+  division: "02"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    Careful removal, protection, tagging and turnover to the Owner of all items
+    identified for salvage, and disposal of all other demolished material at a
+    properly licensed facility.
+
+- key: d02.incl.dust_control
+  division: "02"
+  category: inclusion
+  default: true
+  position: 30
+  text: >-
+    Temporary dust partitions, negative air machines, HEPA filtration, floor
+    protection and noise mitigation as required to permit adjacent areas to
+    remain occupied and operational during demolition.
+
+- key: d02.incl.utility_disconnect
+  division: "02"
+  category: inclusion
+  default: true
+  position: 40
+  text: >-
+    Locating, safing-off, capping and documenting all utilities serving the
+    areas to be demolished, coordinated with the utility owner and the
+    Contractor prior to any removal.
+
+- key: d02.incl.survey
+  division: "02"
+  category: inclusion
+  default: true
+  position: 50
+  text: >-
+    Pre-demolition condition survey with photographic and video documentation of
+    adjacent structures, finishes and public ways, issued to the Contractor
+    before mobilization.
+
+- key: d02.incl.recycling
+  division: "02"
+  category: inclusion
+  default: false
+  position: 60
+  text: >-
+    Source separation and recycling of demolition debris to meet the Project
+    diversion rate, with weight tickets and diversion reports submitted monthly.
+
+- key: d02.excl.abatement
+  division: "02"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Abatement of asbestos-containing material, lead-based paint and other
+    regulated hazardous materials, which is performed under a separate
+    abatement contract.
+
+- key: d02.excl.structural_design
+  division: "02"
+  category: exclusion
+  default: false
+  position: 210
+  text: >-
+    Engineering design of permanent structural modifications. Design of
+    temporary shoring required for the Subcontractor's means and methods is
+    included.
+
+# ===========================================================================
+# Division 03 - Concrete
+# ===========================================================================
+- key: d03.incl.cip_complete
+  division: "03"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Complete cast-in-place concrete Work, including formwork, shoring,
+    reshoring, reinforcing steel furnishing and placement, embeds, concrete
+    placement, consolidation, finishing, curing and protection.
+
+- key: d03.incl.rebar
+  division: "03"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    Furnishing, detailing, fabricating, delivering and installing all
+    reinforcing steel, welded wire reinforcement, dowels, couplers, chairs,
+    bolsters and accessories, including placing drawings and bar lists.
+
+- key: d03.incl.mix_designs
+  division: "03"
+  category: inclusion
+  default: true
+  position: 30
+  text: >-
+    Submission of concrete mix designs for each class of concrete, supported by
+    trial batch data or historical strength records, for review prior to the
+    first placement.
+
+- key: d03.incl.slab_flatness
+  division: "03"
+  category: inclusion
+  default: true
+  position: 40
+  text: >-
+    Achievement of the specified floor flatness and levelness tolerances, and
+    grinding, topping or replacement of any slab area failing to meet the
+    specified F-numbers at no additional cost.
+
+- key: d03.incl.embeds_coordination
+  division: "03"
+  category: inclusion
+  default: true
+  position: 50
+  text: >-
+    Installation of all embeds, anchor bolts, sleeves, blockouts and inserts
+    furnished by other trades, based on templates and layout information
+    supplied by those trades in advance of placement.
+
+- key: d03.incl.joints
+  division: "03"
+  category: inclusion
+  default: true
+  position: 60
+  text: >-
+    Construction, control and expansion joints located per approved joint
+    layout drawings, including sawcutting within the required time window, joint
+    filler and sealant.
+
+- key: d03.incl.curing_protection
+  division: "03"
+  category: inclusion
+  default: true
+  position: 70
+  text: >-
+    Curing, cold-weather and hot-weather protection measures, including
+    blankets, enclosures, heaters, evaporation retarders and admixtures
+    necessary to place concrete in the actual conditions encountered.
+
+- key: d03.incl.surface_prep
+  division: "03"
+  category: inclusion
+  default: false
+  position: 80
+  text: >-
+    Surface preparation of slabs to the profile and moisture condition required
+    by the flooring manufacturer, including shot blasting or grinding and
+    remediation of laitance and curing compound residue.
+
+- key: d03.incl.moisture_testing
+  division: "03"
+  category: inclusion
+  default: false
+  position: 90
+  text: >-
+    Relative humidity and moisture vapor emission testing of slabs prior to
+    flooring installation, with results reported to the Contractor.
+
+- key: d03.excl.testing_agency
+  division: "03"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Owner's independent testing laboratory for cylinder breaks, slump and air
+    content testing. Providing safe access and assistance to the testing agency
+    is included.
+
+- key: d03.excl.subgrade
+  division: "03"
+  category: exclusion
+  default: true
+  position: 210
+  text: >-
+    Preparation, proof-rolling and compaction of subgrade, and furnishing of
+    granular base beneath slabs on grade, which is by the Earthwork
+    Subcontractor.
+
+- key: d03.excl.vapor_barrier
+  division: "03"
+  category: exclusion
+  default: false
+  position: 220
+  text: >-
+    Under-slab vapor retarder and its taping and sealing at penetrations, unless
+    expressly included in this Exhibit.
+
+- key: d03.excl.structural_steel
+  division: "03"
+  category: exclusion
+  default: false
+  position: 230
+  text: >-
+    Furnishing of structural steel embeds, bearing plates and anchor rod
+    assemblies, which are furnished by the Structural Steel Subcontractor for
+    installation under this Subcontract.
+
+# ===========================================================================
+# Division 04 - Masonry
+# ===========================================================================
+- key: d04.incl.unit_masonry
+  division: "04"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Complete unit masonry Work including concrete masonry units, face brick,
+    mortar, grout, reinforcing, ties, anchors, lintels installation, flashing
+    installation and accessories.
+
+- key: d04.incl.scaffolding
+  division: "04"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    All scaffolding, mast climbers, hoists and material handling required for
+    the masonry Work, including engineering, erection, inspection, maintenance
+    and removal.
+
+- key: d04.incl.cleaning
+  division: "04"
+  category: inclusion
+  default: true
+  position: 30
+  text: >-
+    Final cleaning of all exposed masonry surfaces using methods approved by the
+    masonry manufacturer, including removal of mortar smears and efflorescence.
+
+- key: d04.incl.cold_weather
+  division: "04"
+  category: inclusion
+  default: true
+  position: 40
+  text: >-
+    Cold-weather and hot-weather masonry construction procedures per the
+    governing masonry code, including enclosures, heated enclosures, admixtures
+    and protection of newly laid masonry.
+
+- key: d04.incl.mockup
+  division: "04"
+  category: inclusion
+  default: true
+  position: 50
+  text: >-
+    Construction and maintenance of the sample masonry panel for each exposed
+    masonry type, including rework until accepted, and retention on site as the
+    quality standard for the Work.
+
+- key: d04.incl.flashing_install
+  division: "04"
+  category: inclusion
+  default: false
+  position: 60
+  text: >-
+    Installation of through-wall flashing, end dams, weeps and drainage mat
+    within the masonry cavity, coordinated with the roofing and waterproofing
+    trades.
+
+- key: d04.excl.lintels_furnish
+  division: "04"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Furnishing of loose steel lintels, shelf angles and relieving angles, which
+    are furnished by the Metals Subcontractor for installation under this
+    Subcontract.
+
+- key: d04.excl.air_barrier
+  division: "04"
+  category: exclusion
+  default: false
+  position: 210
+  text: >-
+    Air barrier and fluid-applied waterproofing on the backup wall, which is by
+    the Division 07 Subcontractor.
+
+# ===========================================================================
+# Division 05 - Metals
+# ===========================================================================
+- key: d05.incl.structural_steel
+  division: "05"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Complete structural steel package including detailing, fabrication, shop
+    priming, delivery, field erection, bolting, welding and final connections
+    of all structural steel, joists, joist girders and metal deck.
+
+- key: d05.incl.connection_design
+  division: "05"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    Delegated design of all steel connections by a professional engineer
+    licensed in the Project jurisdiction, with sealed calculations and
+    connection details submitted for review.
+
+- key: d05.incl.erection_engineering
+  division: "05"
+  category: inclusion
+  default: true
+  position: 30
+  text: >-
+    Erection engineering, temporary bracing, guying and stability of the
+    structure until all permanent connections, decking and diaphragms are
+    complete, designed by a licensed professional engineer.
+
+- key: d05.incl.misc_metals
+  division: "05"
+  category: inclusion
+  default: true
+  position: 40
+  text: >-
+    Miscellaneous and ornamental metals including stairs, landings, handrails,
+    guardrails, ladders, bollards, lintels, shelf angles, embeds, bumper posts
+    and support framing not furnished under another Section.
+
+- key: d05.incl.welding_qc
+  division: "05"
+  category: inclusion
+  default: true
+  position: 50
+  text: >-
+    Certified welding procedures, welder qualification records, and the
+    Subcontractor's own quality control inspection of shop and field welds.
+
+- key: d05.incl.touch_up
+  division: "05"
+  category: inclusion
+  default: true
+  position: 60
+  text: >-
+    Field touch-up of shop primer at all connections, abrasions, burn marks and
+    areas damaged during shipping and erection.
+
+- key: d05.incl.deck_closure
+  division: "05"
+  category: inclusion
+  default: false
+  position: 70
+  text: >-
+    Metal deck closure pieces, pour stops, edge angles, sump pans and deck
+    reinforcement at openings up to the size indicated on the structural
+    drawings.
+
+- key: d05.excl.special_inspection
+  division: "05"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Owner's special inspection of high-strength bolting and field welding.
+    Correction of deficiencies identified by the special inspector and the cost
+    of re-inspection are included.
+
+- key: d05.excl.fireproofing
+  division: "05"
+  category: exclusion
+  default: true
+  position: 210
+  text: >-
+    Spray-applied fireproofing and intumescent coatings, which are by the
+    Division 07 Subcontractor.
+
+- key: d05.excl.anchor_bolt_install
+  division: "05"
+  category: exclusion
+  default: false
+  position: 220
+  text: >-
+    Setting of anchor rods and leveling plates into concrete, which is performed
+    by the Concrete Subcontractor from templates furnished under this
+    Subcontract.
+
+# ===========================================================================
+# Division 06 - Wood, Plastics, and Composites
+# ===========================================================================
+- key: d06.incl.rough_carpentry
+  division: "06"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    All rough carpentry including wood blocking, nailers, furring, curbs,
+    sleepers, plates and backing required for the attachment of work by all
+    trades, whether or not specifically indicated on the drawings.
+
+- key: d06.incl.millwork
+  division: "06"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    Shop drawings, fabrication, finishing, delivery and installation of all
+    architectural millwork and casework to the grade specified, including
+    hardware, filler panels, scribes and closure pieces.
+
+- key: d06.incl.field_measure
+  division: "06"
+  category: inclusion
+  default: true
+  position: 30
+  text: >-
+    Field verification of all dimensions prior to fabrication. The Subcontractor
+    accepts responsibility for fit and shall bear the cost of rework arising
+    from failure to field measure.
+
+- key: d06.incl.fire_treated
+  division: "06"
+  category: inclusion
+  default: true
+  position: 40
+  text: >-
+    Fire-retardant-treated and preservative-treated lumber where required by
+    code or the Contract Documents, with treatment certifications submitted.
+
+- key: d06.incl.acclimation
+  division: "06"
+  category: inclusion
+  default: false
+  position: 50
+  text: >-
+    Delivery of millwork only after the building is enclosed and permanent HVAC
+    is operating, with acclimation of materials for the period required by the
+    manufacturer.
+
+- key: d06.excl.countertops
+  division: "06"
+  category: exclusion
+  default: false
+  position: 200
+  text: >-
+    Solid surface, quartz and stone countertops, unless expressly listed as
+    included in this Exhibit.
+
+- key: d06.excl.appliances
+  division: "06"
+  category: exclusion
+  default: false
+  position: 210
+  text: >-
+    Furnishing of appliances and equipment set into casework. Cutouts and
+    coordination for their installation are included.
+
+# ===========================================================================
+# Division 07 - Thermal and Moisture Protection
+# ===========================================================================
+- key: d07.incl.roofing_system
+  division: "07"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Complete roofing system including vapor retarder, insulation, tapered
+    insulation to achieve positive drainage, cover board, membrane, flashings,
+    edge metal, walkway pads and all accessories required for a warrantable
+    installation.
+
+- key: d07.incl.warranty_ndl
+  division: "07"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    Manufacturer's no-dollar-limit total system warranty for the specified term,
+    with the Subcontractor's own two-year labor and workmanship warranty, and
+    all manufacturer field inspections required to secure it.
+
+- key: d07.incl.temporary_roof
+  division: "07"
+  category: inclusion
+  default: true
+  position: 30
+  text: >-
+    Temporary roofing, night seals and water cut-offs at the end of each work
+    day sufficient to keep the building watertight, and removal of the same as
+    permanent work proceeds.
+
+- key: d07.incl.waterproofing
+  division: "07"
+  category: inclusion
+  default: true
+  position: 40
+  text: >-
+    Below-grade and horizontal waterproofing, air and vapor barriers, dampproofing,
+    protection board, drainage composite and all transitions and terminations
+    to adjacent assemblies.
+
+- key: d07.incl.firestopping_system
+  division: "07"
+  category: inclusion
+  default: true
+  position: 50
+  text: >-
+    Through-penetration and joint firestopping for all rated assemblies,
+    including tested UL system selection, submittal of a firestop schedule,
+    installation and identification labeling at each location.
+
+- key: d07.incl.sealants
+  division: "07"
+  category: inclusion
+  default: true
+  position: 60
+  text: >-
+    Exterior joint sealants at all building envelope joints, including backer
+    rod, primer, adhesion testing and a sealant warranty for the specified term.
+
+- key: d07.incl.fireproofing
+  division: "07"
+  category: inclusion
+  default: false
+  position: 70
+  text: >-
+    Spray-applied fire-resistive material and intumescent coatings to the
+    thicknesses required by the approved UL designs, including patching after
+    other trades and thickness/density testing.
+
+- key: d07.incl.leak_testing
+  division: "07"
+  category: inclusion
+  default: false
+  position: 80
+  text: >-
+    Flood testing of horizontal waterproofing and water testing of envelope
+    mock-ups per the Contract Documents, including repair and retesting until
+    passing.
+
+- key: d07.excl.roof_structure
+  division: "07"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Roof deck, structural framing, and wood blocking and nailers, which are by
+    others. Coordination of blocking locations is included.
+
+- key: d07.excl.roof_penetrations
+  division: "07"
+  category: exclusion
+  default: false
+  position: 210
+  text: >-
+    Furnishing of mechanical curbs, equipment supports and pipe penetration
+    sleeves, which are furnished by the respective trades. Flashing them into
+    the roof system is included.
+
+# ===========================================================================
+# Division 08 - Openings
+# ===========================================================================
+- key: d08.incl.doors_frames_hardware
+  division: "08"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Furnishing and installing all hollow metal frames, doors, wood doors and
+    finish hardware, complete with a hardware schedule prepared and signed by a
+    certified Architectural Hardware Consultant.
+
+- key: d08.incl.glazing
+  division: "08"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    Complete aluminum entrance, storefront and curtain wall systems, including
+    glass, glazing, gaskets, perimeter sealants, anchors, flashing, sill pans
+    and all associated trim.
+
+- key: d08.incl.delegated_design
+  division: "08"
+  category: inclusion
+  default: true
+  position: 30
+  text: >-
+    Delegated design of curtain wall and storefront systems for the specified
+    wind, seismic, thermal movement and deflection criteria, sealed by a
+    professional engineer licensed in the Project jurisdiction.
+
+- key: d08.incl.hardware_coordination
+  division: "08"
+  category: inclusion
+  default: true
+  position: 40
+  text: >-
+    Coordination of all electrified hardware, including furnishing point-to-point
+    wiring diagrams, power and low-voltage requirements, and attendance at
+    door hardware coordination meetings with the electrical and security trades.
+
+- key: d08.incl.keying
+  division: "08"
+  category: inclusion
+  default: true
+  position: 50
+  text: >-
+    Keying conference with the Owner, preparation of the keying schedule,
+    furnishing of permanent cylinders and keys, and a construction keying
+    system removed at turnover.
+
+- key: d08.incl.overhead_doors
+  division: "08"
+  category: inclusion
+  default: false
+  position: 60
+  text: >-
+    Overhead coiling doors, sectional doors, grilles and operators, including
+    motor operators, safety devices and final adjustment.
+
+- key: d08.excl.electrified_power
+  division: "08"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Line-voltage power to door hardware, access control head-end equipment and
+    low-voltage cabling, which are by the Electrical and Security
+    Subcontractors.
+
+- key: d08.excl.blocking
+  division: "08"
+  category: exclusion
+  default: false
+  position: 210
+  text: >-
+    Wall blocking, backing and rough openings, which are furnished and installed
+    by others in accordance with dimensions provided under this Subcontract.
+
+# ===========================================================================
+# Division 09 - Finishes
+# ===========================================================================
+- key: d09.incl.framing_drywall
+  division: "09"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Complete non-structural metal framing and gypsum board assemblies, including
+    deflection track, bracing, backing, insulation within partitions, corner
+    bead, trim, joint treatment to the specified level of finish, and rated
+    assembly construction per the approved UL designs.
+
+- key: d09.incl.acoustical
+  division: "09"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    Acoustical ceiling systems including suspension grid, hanger wire, seismic
+    bracing and restraint per the governing code, tile, perimeter trim and
+    coordination of all ceiling-mounted devices.
+
+- key: d09.incl.flooring
+  division: "09"
+  category: inclusion
+  default: true
+  position: 30
+  text: >-
+    All flooring Work including substrate preparation, self-leveling underlayment,
+    moisture mitigation where required by test results, adhesives, base,
+    transitions and protection until turnover.
+
+- key: d09.incl.painting
+  division: "09"
+  category: inclusion
+  default: true
+  position: 40
+  text: >-
+    All painting and coating including surface preparation, priming, the
+    specified number of finish coats, painting of exposed conduit, piping,
+    ductwork and equipment where scheduled, and touch-up at punch list.
+
+- key: d09.incl.tile
+  division: "09"
+  category: inclusion
+  default: false
+  position: 50
+  text: >-
+    Ceramic and porcelain tile including setting materials, waterproof membrane,
+    crack isolation membrane, movement joints, grout, sealing and transition
+    profiles.
+
+- key: d09.incl.rated_assemblies
+  division: "09"
+  category: inclusion
+  default: true
+  position: 60
+  text: >-
+    Construction of fire-rated and smoke-rated partitions in strict accordance
+    with the approved UL designs, including head-of-wall joint systems,
+    correct fastener patterns and rated assembly identification stenciling above
+    ceilings.
+
+- key: d09.incl.attic_stock_finishes
+  division: "09"
+  category: inclusion
+  default: false
+  position: 70
+  text: >-
+    Attic stock of each flooring, tile, ceiling tile and paint color in the
+    quantities specified, delivered and turned over to the Owner.
+
+- key: d09.excl.substrate_defects
+  division: "09"
+  category: exclusion
+  default: false
+  position: 200
+  text: >-
+    Correction of substrate defects exceeding the tolerances of the applicable
+    industry standard, including grinding or filling of slabs outside the
+    specified F-number tolerances.
+
+- key: d09.excl.moisture_mitigation
+  division: "09"
+  category: exclusion
+  default: false
+  position: 210
+  text: >-
+    Moisture vapor mitigation systems where slab moisture exceeds the flooring
+    manufacturer's limits, which will be added by Change Order based on
+    documented test results.
+
+# ===========================================================================
+# Division 10 / 11 / 12 / 14 - selected trades
+# ===========================================================================
+- key: d10.incl.specialties
+  division: "10"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Furnishing and installing all specialty items scheduled, including toilet
+    partitions, toilet and bath accessories, corner guards, lockers, fire
+    extinguishers and cabinets, signage and visual display units, complete with
+    all anchors and mounting hardware.
+
+- key: d10.incl.signage_permits
+  division: "10"
+  category: inclusion
+  default: false
+  position: 20
+  text: >-
+    Code-required signage including room identification, egress, and ADA-compliant
+    tactile and Braille signage, with a submitted sign message schedule for
+    Owner approval.
+
+- key: d10.excl.blocking_specialties
+  division: "10"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    In-wall blocking and backing, which is installed by others in accordance
+    with mounting height and location information furnished under this
+    Subcontract.
+
+- key: d11.incl.equipment
+  division: "11"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Furnishing, delivery, setting, anchoring and final connection of all
+    specified equipment, including manufacturer start-up, testing and Owner
+    training.
+
+- key: d11.excl.rough_ins
+  division: "11"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Mechanical, plumbing and electrical rough-in to within five feet of the
+    equipment, which is by the respective trades from rough-in drawings
+    furnished under this Subcontract.
+
+- key: d14.incl.elevators
+  division: "14"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Complete elevator systems including machines, controllers, rails, cabs,
+    doors, fixtures, wiring within the hoistway and machine room, testing,
+    inspection by the authority having jurisdiction, and all permits and
+    licenses for the elevator installation.
+
+- key: d14.incl.temp_use
+  division: "14"
+  category: inclusion
+  default: false
+  position: 20
+  text: >-
+    Temporary use of one elevator for construction purposes, including protective
+    padding, operator where required, and refurbishment to new condition prior
+    to turnover.
+
+- key: d14.excl.hoistway_work
+  division: "14"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Hoistway construction, pit waterproofing, sump, machine room HVAC, standby
+    power, shunt trip, fire alarm interface and hoistway lighting, which are by
+    others.

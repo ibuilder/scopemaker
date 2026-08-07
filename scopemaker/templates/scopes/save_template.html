@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}Save as template &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('scopes.edit', scope_id=scope.id) }}">{{ scope.document_title }}</a> / Save as template
+</div>
+<div class="pagehead"><div><h1>Save as template</h1></div></div>
+
+<div class="callout callout--info">
+  Captures this scope's structure and language &mdash; which sections are on,
+  their introductory text, and every item &mdash; so the same exhibit can be
+  produced again for another package.
+</div>
+
+<div class="card">
+  <div class="card__body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.name) }}
+      {{ field(form.description) }}
+      <div class="btnrow">
+        {{ form.submit(class='btn btn--primary') }}
+        <a class="btn btn--secondary" href="{{ url_for('scopes.edit', scope_id=scope.id) }}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

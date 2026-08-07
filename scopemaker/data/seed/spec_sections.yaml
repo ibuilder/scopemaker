@@ -1,0 +1,238 @@
+# Specification sections offered as cross-references when building a scope.
+#
+# `division` is where the section actually lives. `related` lists the *other*
+# divisions whose scopes should also be offered it -- this is the mechanism
+# that catches the classic scope gap where a fire protection package silently
+# omits the Division 07 firestopping it is contractually responsible for.
+#
+# `universal: true` marks Division 01 procedural sections that belong on every
+# trade's exhibit.
+#
+# Section numbers reproduced here are limited to those in common public use as
+# cross-references in bid documents. The complete MasterFormat section list is
+# published and copyrighted by CSI; organizations should load their own project
+# specification index for authoritative numbering.
+version: 1
+
+spec_sections:
+
+# ---------------------------------------------------------------------------
+# Division 01 - carried by every trade
+# ---------------------------------------------------------------------------
+- {key: spec.011000, division: "01", code: "011000", title: "Summary", universal: true, default: false, position: 10}
+- {key: spec.012300, division: "01", code: "012300", title: "Alternates", universal: true, default: false, position: 20}
+- {key: spec.012600, division: "01", code: "012600", title: "Contract Modification Procedures", universal: true, default: false, position: 30}
+- {key: spec.012900, division: "01", code: "012900", title: "Payment Procedures", universal: true, default: false, position: 40}
+- {key: spec.013100, division: "01", code: "013100", title: "Project Management and Coordination", universal: true, default: true, position: 50}
+- {key: spec.013200, division: "01", code: "013200", title: "Construction Progress Documentation", universal: true, default: false, position: 60}
+- {key: spec.013300, division: "01", code: "013300", title: "Submittal Procedures", universal: true, default: true, position: 70}
+- {key: spec.014000, division: "01", code: "014000", title: "Quality Requirements", universal: true, default: true, position: 80}
+- {key: spec.014200, division: "01", code: "014200", title: "References", universal: true, default: false, position: 90}
+- {key: spec.015000, division: "01", code: "015000", title: "Temporary Facilities and Controls", universal: true, default: true, position: 100}
+- {key: spec.016000, division: "01", code: "016000", title: "Product Requirements", universal: true, default: false, position: 110}
+- {key: spec.017300, division: "01", code: "017300", title: "Execution", universal: true, default: false, position: 120}
+- {key: spec.017329, division: "01", code: "017329", title: "Cutting and Patching", universal: true, default: true, position: 130}
+- {key: spec.017419, division: "01", code: "017419", title: "Construction Waste Management and Disposal", universal: true, default: true, position: 140}
+- {key: spec.017700, division: "01", code: "017700", title: "Closeout Procedures", universal: true, default: true, position: 150}
+- {key: spec.017823, division: "01", code: "017823", title: "Operation and Maintenance Data", universal: true, default: true, position: 160}
+- {key: spec.017839, division: "01", code: "017839", title: "Project Record Documents", universal: true, default: true, position: 170}
+- {key: spec.017900, division: "01", code: "017900", title: "Demonstration and Training", universal: true, default: false, position: 180}
+- {key: spec.019113, division: "01", code: "019113", title: "General Commissioning Requirements", universal: true, default: true, position: 190}
+
+# ---------------------------------------------------------------------------
+# Division 02 - Existing Conditions
+# ---------------------------------------------------------------------------
+- {key: spec.024119, division: "02", code: "024119", title: "Selective Demolition", default: true, position: 10}
+- {key: spec.028213, division: "02", code: "028213", title: "Asbestos Abatement", default: false, position: 20}
+- {key: spec.028313, division: "02", code: "028313", title: "Lead Remediation", default: false, position: 30}
+
+# ---------------------------------------------------------------------------
+# Division 03 - Concrete
+# ---------------------------------------------------------------------------
+- {key: spec.033000, division: "03", code: "033000", title: "Cast-in-Place Concrete", default: true, position: 10}
+- {key: spec.032000, division: "03", code: "032000", title: "Concrete Reinforcing", default: true, position: 20}
+- {key: spec.031000, division: "03", code: "031000", title: "Concrete Forming and Accessories", default: true, position: 30}
+- {key: spec.033543, division: "03", code: "033543", title: "Polished Concrete Finishing", default: false, position: 40}
+- {key: spec.034100, division: "03", code: "034100", title: "Precast Structural Concrete", default: false, position: 50}
+
+# ---------------------------------------------------------------------------
+# Division 04 - Masonry
+# ---------------------------------------------------------------------------
+- {key: spec.042000, division: "04", code: "042000", title: "Unit Masonry", default: true, position: 10}
+- {key: spec.040511, division: "04", code: "040511", title: "Masonry Mortaring and Grouting", default: true, position: 20}
+- {key: spec.047200, division: "04", code: "047200", title: "Cast Stone Masonry", default: false, position: 30}
+
+# ---------------------------------------------------------------------------
+# Division 05 - Metals
+# ---------------------------------------------------------------------------
+- {key: spec.051200, division: "05", code: "051200", title: "Structural Steel Framing", default: true, position: 10}
+- {key: spec.052100, division: "05", code: "052100", title: "Steel Joist Framing", default: true, position: 20}
+- {key: spec.053100, division: "05", code: "053100", title: "Steel Decking", default: true, position: 30}
+- {key: spec.055000, division: "05", code: "055000", title: "Metal Fabrications", default: true, position: 40}
+- {key: spec.055100, division: "05", code: "055100", title: "Metal Stairs", default: false, position: 50}
+- {key: spec.055213, division: "05", code: "055213", title: "Pipe and Tube Railings", default: false, position: 60}
+
+# ---------------------------------------------------------------------------
+# Division 06 - Wood, Plastics, and Composites
+# ---------------------------------------------------------------------------
+- {key: spec.061000, division: "06", code: "061000", title: "Rough Carpentry", default: true, position: 10, related: ["09", "10"]}
+- {key: spec.062023, division: "06", code: "062023", title: "Interior Finish Carpentry", default: false, position: 20}
+- {key: spec.064116, division: "06", code: "064116", title: "Plastic-Laminate-Clad Architectural Cabinets", default: false, position: 30}
+
+# ---------------------------------------------------------------------------
+# Division 07 - Thermal and Moisture Protection
+# The firestopping and sealant sections are the ones every services trade
+# carries and every services trade forgets.
+# ---------------------------------------------------------------------------
+- {key: spec.078413, division: "07", code: "078413", title: "Penetration Firestopping", default: true, position: 10, related: ["21", "22", "23", "25", "26", "27", "28", "09"]}
+- {key: spec.078443, division: "07", code: "078443", title: "Joint Firestopping", default: true, position: 20, related: ["21", "22", "23", "26", "27", "28", "09"]}
+- {key: spec.079200, division: "07", code: "079200", title: "Joint Sealants", default: true, position: 30, related: ["04", "08", "09", "32"]}
+- {key: spec.079219, division: "07", code: "079219", title: "Acoustical Joint Sealants", default: false, position: 40, related: ["09", "21", "22", "23", "26"]}
+- {key: spec.075400, division: "07", code: "075400", title: "Thermoplastic Membrane Roofing", default: true, position: 50}
+- {key: spec.072100, division: "07", code: "072100", title: "Thermal Insulation", default: true, position: 60}
+- {key: spec.072500, division: "07", code: "072500", title: "Weather Barriers", default: true, position: 70, related: ["04", "08"]}
+- {key: spec.071300, division: "07", code: "071300", title: "Sheet Waterproofing", default: false, position: 80}
+- {key: spec.078100, division: "07", code: "078100", title: "Applied Fireproofing", default: false, position: 90, related: ["05"]}
+- {key: spec.076200, division: "07", code: "076200", title: "Sheet Metal Flashing and Trim", default: false, position: 100, related: ["04"]}
+
+# ---------------------------------------------------------------------------
+# Division 08 - Openings
+# ---------------------------------------------------------------------------
+- {key: spec.081113, division: "08", code: "081113", title: "Hollow Metal Doors and Frames", default: true, position: 10}
+- {key: spec.081416, division: "08", code: "081416", title: "Flush Wood Doors", default: true, position: 20}
+- {key: spec.087100, division: "08", code: "087100", title: "Door Hardware", default: true, position: 30, related: ["28"]}
+- {key: spec.084113, division: "08", code: "084113", title: "Aluminum-Framed Entrances and Storefronts", default: true, position: 40}
+- {key: spec.088000, division: "08", code: "088000", title: "Glazing", default: true, position: 50}
+- {key: spec.083113, division: "08", code: "083113", title: "Access Doors and Frames", default: true, position: 60, related: ["09", "21", "22", "23", "26"]}
+- {key: spec.083323, division: "08", code: "083323", title: "Overhead Coiling Doors", default: false, position: 70}
+
+# ---------------------------------------------------------------------------
+# Division 09 - Finishes
+# ---------------------------------------------------------------------------
+- {key: spec.092216, division: "09", code: "092216", title: "Non-Structural Metal Framing", default: true, position: 10}
+- {key: spec.092900, division: "09", code: "092900", title: "Gypsum Board", default: true, position: 20}
+- {key: spec.095113, division: "09", code: "095113", title: "Acoustical Panel Ceilings", default: true, position: 30}
+- {key: spec.096513, division: "09", code: "096513", title: "Resilient Base and Accessories", default: true, position: 40}
+- {key: spec.099123, division: "09", code: "099123", title: "Interior Painting", default: true, position: 50, related: ["21", "22", "23", "26"]}
+- {key: spec.099113, division: "09", code: "099113", title: "Exterior Painting", default: false, position: 60, related: ["05"]}
+- {key: spec.093013, division: "09", code: "093013", title: "Ceramic Tiling", default: false, position: 70}
+- {key: spec.096816, division: "09", code: "096816", title: "Sheet Carpeting", default: false, position: 80}
+
+# ---------------------------------------------------------------------------
+# Division 10 / 11 / 14
+# ---------------------------------------------------------------------------
+- {key: spec.102113, division: "10", code: "102113", title: "Toilet Compartments", default: true, position: 10}
+- {key: spec.102800, division: "10", code: "102800", title: "Toilet, Bath, and Laundry Accessories", default: true, position: 20}
+- {key: spec.104416, division: "10", code: "104416", title: "Fire Extinguishers", default: true, position: 30, related: ["21"]}
+- {key: spec.101400, division: "10", code: "101400", title: "Signage", default: false, position: 40}
+- {key: spec.142100, division: "14", code: "142100", title: "Electric Traction Elevators", default: true, position: 10}
+- {key: spec.142400, division: "14", code: "142400", title: "Hydraulic Elevators", default: false, position: 20}
+
+# ---------------------------------------------------------------------------
+# Division 21 - Fire Suppression
+# ---------------------------------------------------------------------------
+- {key: spec.210500, division: "21", code: "210500", title: "Common Work Results for Fire Suppression", default: true, position: 10}
+- {key: spec.210517, division: "21", code: "210517", title: "Sleeves and Sleeve Seals for Fire-Suppression Piping", default: true, position: 20}
+- {key: spec.211200, division: "21", code: "211200", title: "Fire-Suppression Standpipes", default: true, position: 30}
+- {key: spec.211313, division: "21", code: "211313", title: "Wet-Pipe Sprinkler Systems", default: true, position: 40}
+- {key: spec.211316, division: "21", code: "211316", title: "Dry-Pipe Sprinkler Systems", default: true, position: 50}
+- {key: spec.213113, division: "21", code: "213113", title: "Electric-Drive Centrifugal Fire Pumps", default: false, position: 60}
+- {key: spec.212200, division: "21", code: "212200", title: "Clean-Agent Fire-Extinguishing Systems", default: false, position: 70}
+
+# ---------------------------------------------------------------------------
+# Division 22 - Plumbing
+# ---------------------------------------------------------------------------
+- {key: spec.220500, division: "22", code: "220500", title: "Common Work Results for Plumbing", default: true, position: 10}
+- {key: spec.220519, division: "22", code: "220519", title: "Meters and Gages for Plumbing Piping", default: false, position: 20}
+- {key: spec.220529, division: "22", code: "220529", title: "Hangers and Supports for Plumbing Piping and Equipment", default: true, position: 30}
+- {key: spec.220553, division: "22", code: "220553", title: "Identification for Plumbing Piping and Equipment", default: true, position: 40}
+- {key: spec.220700, division: "22", code: "220700", title: "Plumbing Insulation", default: true, position: 50}
+- {key: spec.221116, division: "22", code: "221116", title: "Domestic Water Piping", default: true, position: 60}
+- {key: spec.221316, division: "22", code: "221316", title: "Sanitary Waste and Vent Piping", default: true, position: 70}
+- {key: spec.221413, division: "22", code: "221413", title: "Facility Storm Drainage Piping", default: true, position: 80}
+- {key: spec.224000, division: "22", code: "224000", title: "Plumbing Fixtures", default: true, position: 90}
+- {key: spec.226000, division: "22", code: "226000", title: "Gas and Vacuum Systems for Laboratory and Healthcare Facilities", default: false, position: 100}
+
+# ---------------------------------------------------------------------------
+# Division 23 - HVAC
+# ---------------------------------------------------------------------------
+- {key: spec.230500, division: "23", code: "230500", title: "Common Work Results for HVAC", default: true, position: 10}
+- {key: spec.230529, division: "23", code: "230529", title: "Hangers and Supports for HVAC Piping and Equipment", default: true, position: 20}
+- {key: spec.230548, division: "23", code: "230548", title: "Vibration and Seismic Controls for HVAC", default: true, position: 30}
+- {key: spec.230593, division: "23", code: "230593", title: "Testing, Adjusting, and Balancing for HVAC", default: true, position: 40}
+- {key: spec.230700, division: "23", code: "230700", title: "HVAC Insulation", default: true, position: 50}
+- {key: spec.230900, division: "23", code: "230900", title: "Instrumentation and Control for HVAC", default: true, position: 60, related: ["25"]}
+- {key: spec.233113, division: "23", code: "233113", title: "Metal Ducts", default: true, position: 70}
+- {key: spec.233300, division: "23", code: "233300", title: "Air Duct Accessories", default: true, position: 80}
+- {key: spec.233723, division: "23", code: "233723", title: "HVAC Gravity Ventilators", default: false, position: 90}
+- {key: spec.237413, division: "23", code: "237413", title: "Packaged Outdoor Central-Station Air-Handling Units", default: false, position: 100}
+
+# ---------------------------------------------------------------------------
+# Division 25 - Integrated Automation
+# ---------------------------------------------------------------------------
+- {key: spec.250500, division: "25", code: "250500", title: "Common Work Results for Integrated Automation", default: true, position: 10}
+- {key: spec.255000, division: "25", code: "255000", title: "Integrated Automation Facility Controls", default: true, position: 20}
+
+# ---------------------------------------------------------------------------
+# Division 26 - Electrical
+# ---------------------------------------------------------------------------
+- {key: spec.260500, division: "26", code: "260500", title: "Common Work Results for Electrical", default: true, position: 10}
+- {key: spec.260519, division: "26", code: "260519", title: "Low-Voltage Electrical Power Conductors and Cables", default: true, position: 20}
+- {key: spec.260526, division: "26", code: "260526", title: "Grounding and Bonding for Electrical Systems", default: true, position: 30}
+- {key: spec.260529, division: "26", code: "260529", title: "Hangers and Supports for Electrical Systems", default: true, position: 40}
+- {key: spec.260533, division: "26", code: "260533", title: "Raceways and Boxes for Electrical Systems", default: true, position: 50, related: ["27", "28"]}
+- {key: spec.260553, division: "26", code: "260553", title: "Identification for Electrical Systems", default: true, position: 60}
+- {key: spec.260923, division: "26", code: "260923", title: "Lighting Control Devices", default: true, position: 70}
+- {key: spec.262416, division: "26", code: "262416", title: "Panelboards", default: true, position: 80}
+- {key: spec.262726, division: "26", code: "262726", title: "Wiring Devices", default: true, position: 90}
+- {key: spec.262813, division: "26", code: "262813", title: "Fuses", default: false, position: 100}
+- {key: spec.263213, division: "26", code: "263213", title: "Engine Generators", default: false, position: 110}
+- {key: spec.263600, division: "26", code: "263600", title: "Transfer Switches", default: false, position: 120}
+- {key: spec.265100, division: "26", code: "265100", title: "Interior Lighting", default: true, position: 130}
+- {key: spec.265600, division: "26", code: "265600", title: "Exterior Lighting", default: false, position: 140, related: ["32"]}
+
+# ---------------------------------------------------------------------------
+# Division 27 - Communications
+# ---------------------------------------------------------------------------
+- {key: spec.270500, division: "27", code: "270500", title: "Common Work Results for Communications", default: true, position: 10}
+- {key: spec.270526, division: "27", code: "270526", title: "Grounding and Bonding for Communications Systems", default: true, position: 20}
+- {key: spec.270528, division: "27", code: "270528", title: "Pathways for Communications Systems", default: true, position: 30, related: ["26"]}
+- {key: spec.271500, division: "27", code: "271500", title: "Communications Horizontal Cabling", default: true, position: 40}
+- {key: spec.271300, division: "27", code: "271300", title: "Communications Backbone Cabling", default: true, position: 50}
+- {key: spec.274116, division: "27", code: "274116", title: "Integrated Audio-Video Systems and Equipment", default: false, position: 60}
+
+# ---------------------------------------------------------------------------
+# Division 28 - Electronic Safety and Security
+# ---------------------------------------------------------------------------
+- {key: spec.280500, division: "28", code: "280500", title: "Common Work Results for Electronic Safety and Security", default: true, position: 10}
+- {key: spec.281300, division: "28", code: "281300", title: "Access Control", default: false, position: 20, related: ["08"]}
+- {key: spec.282300, division: "28", code: "282300", title: "Video Surveillance", default: false, position: 30}
+- {key: spec.283111, division: "28", code: "283111", title: "Digital, Addressable Fire-Alarm System", default: true, position: 40, related: ["21", "14"]}
+
+# ---------------------------------------------------------------------------
+# Division 31 - Earthwork
+# ---------------------------------------------------------------------------
+- {key: spec.311000, division: "31", code: "311000", title: "Site Clearing", default: true, position: 10}
+- {key: spec.312000, division: "31", code: "312000", title: "Earth Moving", default: true, position: 20}
+- {key: spec.312500, division: "31", code: "312500", title: "Erosion and Sedimentation Controls", default: true, position: 30, related: ["32", "33"]}
+- {key: spec.315000, division: "31", code: "315000", title: "Excavation Support and Protection", default: false, position: 40}
+- {key: spec.316329, division: "31", code: "316329", title: "Drilled Concrete Piers and Shafts", default: false, position: 50}
+
+# ---------------------------------------------------------------------------
+# Division 32 - Exterior Improvements
+# ---------------------------------------------------------------------------
+- {key: spec.321216, division: "32", code: "321216", title: "Asphalt Paving", default: true, position: 10}
+- {key: spec.321313, division: "32", code: "321313", title: "Concrete Paving", default: true, position: 20}
+- {key: spec.321723, division: "32", code: "321723", title: "Pavement Markings", default: true, position: 30}
+- {key: spec.323113, division: "32", code: "323113", title: "Chain Link Fences and Gates", default: false, position: 40}
+- {key: spec.328400, division: "32", code: "328400", title: "Planting Irrigation", default: false, position: 50}
+- {key: spec.329300, division: "32", code: "329300", title: "Plants", default: false, position: 60}
+
+# ---------------------------------------------------------------------------
+# Division 33 - Utilities
+# ---------------------------------------------------------------------------
+- {key: spec.331100, division: "33", code: "331100", title: "Water Utility Distribution Piping", default: true, position: 10, related: ["21", "22"]}
+- {key: spec.333100, division: "33", code: "333100", title: "Sanitary Utility Sewerage Piping", default: true, position: 20, related: ["22"]}
+- {key: spec.334100, division: "33", code: "334100", title: "Storm Utility Drainage Piping", default: true, position: 30}
+- {key: spec.334600, division: "33", code: "334600", title: "Subdrainage", default: false, position: 40}
+- {key: spec.337119, division: "33", code: "337119", title: "Electrical Underground Ducts and Manholes", default: false, position: 50, related: ["26"]}

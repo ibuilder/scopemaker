@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import empty_state %}
+{% block title %}Projects &middot; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <div><h1>Projects</h1><p class="pagehead__sub">{{ projects|length }} shown</p></div>
+  <div class="btnrow">
+    {% if procore_enabled %}
+    <form method="post" action="{{ url_for('procore.sync_projects') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn--secondary">Sync from Procore</button>
+    </form>
+    {% endif %}
+    {% if current_user.has_role('editor') %}
+    <a class="btn btn--primary" href="{{ url_for('projects.create') }}">New project</a>
+    {% endif %}
+  </div>
+</div>
+
+<form class="toolbar" method="get">
+  <div class="field">
+    <label for="q">Search</label>
+    <input type="search" id="q" name="q" value="{{ query }}" placeholder="Name or number">
+  </div>
+  <label class="checkbox" style="margin-bottom:.35rem">
+    <input type="checkbox" name="archived" value="1" {{ 'checked' if show_archived }}>
+    <span>Include archived</span>
+  </label>
+  <button type="submit" class="btn btn--secondary">Filter</button>
+</form>
+
+{% if projects %}
+<div class="table__wrap">
+  <table class="table">
+    <thead>
+      <tr><th>Project</th><th>Location</th><th>Owner</th>
+          <th class="numeric">Packages</th><th class="numeric">Scopes</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for project in projects %}
+      <tr>
+        <td>
+          <a href="{{ url_for('projects.detail', project_id=project.id) }}"><strong>{{ project.name }}</strong></a>
+          {% if project.number %}<br><span class="muted small">{{ project.number }}</span>{% endif %}
+          {% if project.is_archived %} <span class="chip chip--archived">Archived</span>{% endif %}
+          {% if project.procore_project_id %} <span class="chip chip--system">Procore</span>{% endif %}
+        </td>
+        <td class="small muted">{{ project.location or '—' }}</td>
+        <td class="small">{{ project.owner_name or '—' }}</td>
+        <td class="numeric">{{ project.bid_packages|length }}</td>
+        <td class="numeric">{{ project.scopes|length }}</td>
+        <td><a class="btn btn--sm btn--secondary" href="{{ url_for('projects.detail', project_id=project.id) }}">Open</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card"><div class="card__body">
+{{ empty_state('No projects yet',
+   'A project holds the facts that get merged into every exhibit: name, number, owner, architect and its bid packages.',
+   url_for('projects.create') if current_user.has_role('editor') else none,
+   'Create a project') }}
+</div></div>
+{% endif %}
+{% endblock %}
