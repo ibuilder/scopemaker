@@ -17,6 +17,7 @@ from ...extensions import db, limiter
 from ...models import BidPackage, Project, Scope
 from ...models.library import CLAUSE_CATEGORIES
 from ...models.scope import DEFAULT_SECTIONS, SCOPE_STATUSES
+from ...services import coverage as coverage_service
 from ...services import library as library_service
 from ...services import scope_builder
 from ...services.renderers import (
@@ -116,6 +117,7 @@ def root():
                 "spec_sections": url_for("api.list_spec_sections"),
                 "scopes": url_for("api.list_scopes"),
                 "projects": url_for("api.list_projects"),
+                "coverage": "/api/v1/projects/{project_id}/coverage",
             },
         }
     )
@@ -435,6 +437,20 @@ def create_bid_package(project_id: str):
     return jsonify(
         {"bid_package": {"id": package.id, "number": package.number, "name": package.name}}
     ), 201
+
+
+@bp.route("/projects/<project_id>/coverage")
+@api_auth()
+def project_coverage(project_id: str):
+    """Specification sections claimed by nobody, or by more than one trade."""
+    project = db.session.get(Project, project_id)
+    if project is None or project.organization_id != api_org_id():
+        raise NotFoundError("No project with that id.")
+
+    report = coverage_service.analyse_project(
+        project, include_archived=request.args.get("archived") == "1"
+    )
+    return jsonify(report.to_dict())
 
 
 @bp.route("/projects/<project_id>/bid-packages")

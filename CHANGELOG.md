@@ -3,6 +3,61 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] — 2026-08-07
+
+### Added
+
+**Project scope coverage analysis.** A scope gap is work that appears in the drawings
+but ends up in nobody's contract — classically at the seam between two trades, where
+each assumed the other had it. Because ScopeMaker holds every exhibit as structured
+rows rather than a PDF, answering "what has nobody's name against it?" is a query.
+
+The new page at `/projects/{id}/coverage` lines up the specification sections claimed
+across every scope on a project and reports four things:
+
+- **Gaps** — a section that applies to a division on the project but is claimed by no
+  scope.
+- **Overlaps** — a trade-specific section claimed by two or more trades, which usually
+  means the same work is being bought twice.
+- **Shared seams** — sections the library cross-references to several divisions, and
+  which several trades correctly carry. Every trade firestops its own penetrations, so
+  four claims on `078413` is right, not a double-buy. Reported separately because the
+  seam still needs a decision: who paints the exposed sprinkler pipe, and who furnishes
+  the access door for whose valve.
+- **Unassigned hand-offs** — an exclusion that pushes work onto another division
+  ("…which is by the Division 28 Subcontractor") when no scope for that division exists
+  on the project. Fire protection excluding the fire alarm is only safe if Division 28
+  is actually coming.
+
+Also lists bid packages with no scope written yet.
+
+Available as a CSV download for buyout meetings, and at
+`GET /api/v1/projects/{id}/coverage`.
+
+A section claimed by a hand-edited line still counts: the analysis prefers the
+structured id recorded at generation and falls back to a six-digit number in the text,
+so rewording a spec line cannot manufacture a phantom gap.
+
+### Fixed
+
+- **`.env` was never actually being read.** Config classes read `os.environ` at
+  class-definition time — that is, at import — so `load_dotenv()` in the application
+  factory ran far too late to have any effect. The `flask` CLI happens to load dotenv
+  itself, which masked the problem; gunicorn, a cron job or any maintenance script
+  silently fell back to the default SQLite path and presented as a mysteriously empty
+  database. Loading now happens at the top of `scopemaker/config.py`, from an explicit
+  project-root path, before the classes are defined.
+- **The licence file did not match the declared licence.** `LICENSE` was GPL-3.0 while
+  the README, `pyproject.toml` and release notes all said MIT. The file is now the MIT
+  text.
+
+### Added (tooling)
+
+- `scripts/build_samples.py` and a manually dispatched **Build sample exhibits**
+  workflow that renders a full set of exhibits as PDF, DOCX, Markdown and JSON and
+  uploads them as an artifact — a way to review real output without installing the
+  WeasyPrint native stack locally.
+
 ## [1.0.0] — 2026-08-06
 
 Complete rewrite. The repository was previously a browser-only prototype: five static

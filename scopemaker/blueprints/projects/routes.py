@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from flask import flash, redirect, render_template, request, url_for
+from flask import Response, flash, redirect, render_template, request, url_for
 from flask_login import login_required
+from slugify import slugify
 from sqlalchemy import or_, select
 
 from ...data.masterformat import normalize_code
 from ...extensions import db
 from ...models import BidPackage, Project, Scope
 from ...security import editor_required
+from ...services import coverage as coverage_service
 from ..helpers import current_org_id, get_bid_package_or_404, get_project_or_404
 from . import bp
 from .forms import BidPackageForm, ProjectForm
@@ -63,6 +65,35 @@ def detail(project_id: str):
         )
     )
     return render_template("projects/detail.html", project=project, scopes=scopes)
+
+
+@bp.route("/<project_id>/coverage")
+@login_required
+def coverage(project_id: str):
+    """Which specification sections nobody has, and which two trades both have."""
+    project = get_project_or_404(project_id)
+    report = coverage_service.analyse_project(
+        project, include_archived=request.args.get("archived") == "1"
+    )
+    return render_template(
+        "projects/coverage.html",
+        project=project,
+        report=report,
+        status_filter=request.args.get("status", "findings"),
+    )
+
+
+@bp.route("/<project_id>/coverage.csv")
+@login_required
+def coverage_csv(project_id: str):
+    project = get_project_or_404(project_id)
+    report = coverage_service.analyse_project(project)
+    filename = f"{slugify(project.display_title)}-coverage.csv"
+    return Response(
+        coverage_service.to_csv(report),
+        mimetype="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @bp.route("/<project_id>/edit", methods=["GET", "POST"])

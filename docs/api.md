@@ -113,6 +113,42 @@ style-independent `path`, plus the recap rows.
 |---|---|
 | `GET` `POST` | `/api/v1/projects` |
 | `GET` `POST` | `/api/v1/projects/{id}/bid-packages` |
+| `GET` | `/api/v1/projects/{id}/coverage` |
+
+### `GET /api/v1/projects/{id}/coverage`
+
+Which specification sections every scope on a project claims, and what that leaves.
+
+```json
+{
+  "summary": {"scopes": 5, "gaps": 1, "overlaps": 0, "shared": 4, "redirects": 2},
+  "divisions_present": ["09", "21", "23", "26", "31"],
+  "sections": [
+    {"code": "211316", "title": "Dry-Pipe Sprinkler Systems",
+     "division_code": "21", "status": "gap", "claimed_by": []},
+    {"code": "078413", "title": "Penetration Firestopping",
+     "division_code": "07", "status": "shared",
+     "claimed_by": [{"scope_id": "…", "division_code": "21", "trade_name": "Fire Protection"}]}
+  ],
+  "redirects": [
+    {"scope_division": "21", "referenced_division": "28",
+     "referenced_title": "Electronic Safety and Security",
+     "text": "Fire alarm system … which are by the Division 28 Subcontractor."}
+  ]
+}
+```
+
+Section `status` is one of:
+
+| Status | Meaning |
+|---|---|
+| `gap` | Applies to a division on this project, claimed by nobody |
+| `overlap` | A trade-specific section claimed by two or more trades — probably bought twice |
+| `shared` | Cross-referenced by design and carried by several trades — correct, but the split needs deciding |
+| `covered` | Exactly one trade, or a Division 00/01 procedural section |
+
+`?archived=1` includes archived scopes. The same report is available as CSV from the
+web UI at `/projects/{id}/coverage.csv`.
 
 ## Worked example
 

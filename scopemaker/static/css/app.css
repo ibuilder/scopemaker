@@ -230,6 +230,14 @@ textarea { min-height: 90px; resize: vertical; line-height: 1.5; }
 .chip--system { background: var(--blue-100); color: var(--blue-700); }
 .chip--custom { background: var(--amber-100); color: var(--amber-600); }
 
+/* Coverage findings */
+.chip--gap { background: var(--red-100); color: var(--red-700); }
+.chip--overlap { background: var(--amber-100); color: var(--amber-600); }
+.chip--covered { background: var(--green-100); color: var(--green-700); }
+.chip--shared { background: var(--blue-100); color: var(--blue-700); }
+a.chip { text-decoration: none; }
+a.chip:hover { filter: brightness(1.15); }
+
 .muted { color: var(--slate-500); }
 .small { font-size: .85rem; }
 .mono { font-family: var(--mono); font-size: .85rem; }

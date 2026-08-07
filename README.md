@@ -154,6 +154,15 @@ demote or delete before export.
 
 ## Features
 
+**Coverage analysis** *(new in 1.1)*
+- Project-level matrix showing which specification sections are claimed by **nobody**
+  (a gap), by **two trades** (bought twice), and which are **shared by design** —
+  every trade firestops its own penetrations, but somebody still has to decide who
+  paints the exposed sprinkler pipe
+- Flags exclusions that hand work to a division with no scope on the project: fire
+  protection excluding the fire alarm is only safe if Division 28 is actually coming
+- CSV export for buyout meetings, plus `GET /api/v1/projects/{id}/coverage`
+
 **Scope generation**
 - Full CSI MasterFormat 2020 division list — all 50 numbers, with 15–20, 24, 29, 30,
   36–39, 47 and 49 correctly marked reserved and never offered for selection

@@ -14,6 +14,7 @@
     </p>
   </div>
   <div class="btnrow">
+    <a class="btn btn--primary" href="{{ url_for('projects.coverage', project_id=project.id) }}">Coverage</a>
     {% if current_user.has_role('editor') %}
     <a class="btn btn--secondary" href="{{ url_for('projects.edit', project_id=project.id) }}">Edit</a>
     <a class="btn btn--secondary" href="{{ url_for('projects.create_package', project_id=project.id) }}">Add bid package</a>

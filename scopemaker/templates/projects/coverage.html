@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import empty_state %}
+{% block title %}Coverage: {{ project.display_title }} &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--wide{% endblock %}
+
+{% macro claim_list(section) %}
+  {% if section.claimed_by %}
+    {% for claim in section.claimed_by %}
+    <a class="chip chip--division" href="{{ url_for('scopes.edit', scope_id=claim.id) }}"
+       title="{{ claim.label }}">{{ claim.short }}</a>
+    {% endfor %}
+  {% else %}
+    <span class="chip chip--gap">Nobody</span>
+  {% endif %}
+{% endmacro %}
+
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('projects.index') }}">Projects</a> /
+  <a href="{{ url_for('projects.detail', project_id=project.id) }}">{{ project.name }}</a> /
+  Coverage
+</div>
+
+<div class="pagehead">
+  <div>
+    <h1>Scope coverage</h1>
+    <p class="pagehead__sub">
+      {{ report.scopes|length }} scope{{ '' if report.scopes|length == 1 else 's' }} across
+      {{ report.divisions_present|length }} division{{ '' if report.divisions_present|length == 1 else 's' }},
+      {{ report.sections|length }} specification section{{ '' if report.sections|length == 1 else 's' }} analysed
+    </p>
+  </div>
+  <div class="btnrow">
+    <a class="btn btn--secondary" href="{{ url_for('projects.coverage_csv', project_id=project.id) }}">Download CSV</a>
+    <a class="btn btn--secondary" href="{{ url_for('projects.detail', project_id=project.id) }}">Back to project</a>
+  </div>
+</div>
+
+{% if not report.scopes %}
+<div class="card"><div class="card__body">
+{{ empty_state('Nothing to analyse yet',
+   'Coverage compares the specification sections claimed across every scope on a project. Generate a scope or two first.',
+   url_for('scopes.new') if current_user.has_role('editor') else none,
+   'New scope') }}
+</div></div>
+{% else %}
+
+<div class="grid grid--4" style="margin-bottom:1.5rem">
+  <div class="stat">
+    <div class="stat__value" style="color:{{ 'var(--red-700)' if report.gaps else 'var(--green-700)' }}">{{ report.gaps|length }}</div>
+    <div class="stat__label">Gaps</div>
+  </div>
+  <div class="stat">
+    <div class="stat__value" style="color:{{ 'var(--amber-600)' if report.overlaps else 'var(--slate-500)' }}">{{ report.overlaps|length }}</div>
+    <div class="stat__label">Overlaps</div>
+  </div>
+  <div class="stat">
+    <div class="stat__value" style="color:{{ 'var(--amber-600)' if report.redirects else 'var(--slate-500)' }}">{{ report.redirects|length }}</div>
+    <div class="stat__label">Unassigned hand-offs</div>
+  </div>
+  <div class="stat">
+    <div class="stat__value">{{ report.shared|length }}</div>
+    <div class="stat__label">Shared seams</div>
+  </div>
+</div>
+
+{% if report.is_clean %}
+<div class="callout" style="background:var(--green-100);border-left-color:var(--green-700)">
+  <strong>No coverage findings.</strong> Every specification section expected for the
+  divisions on this project is claimed by exactly one scope, and no exclusion hands
+  work to a division that has no scope.
+</div>
+{% else %}
+<div class="callout">
+  <strong>This is advisory.</strong> It reports what the exhibits say, not what the
+  drawings require. A gap here is a question to ask at buyout, not proof of an
+  omission. Shared seams are listed separately below because they are correct by
+  design &mdash; they just still need someone to decide the split.
+</div>
+{% endif %}
+
+{# ---------------------------------------------------------------- gaps #}
+{% if report.gaps %}
+<div class="card">
+  <div class="card__header">
+    <h2 class="card__title">Gaps &mdash; claimed by nobody</h2>
+    <span class="chip chip--gap">{{ report.gaps|length }}</span>
+  </div>
+  <div class="table__wrap" style="border:0;border-radius:0">
+    <table class="table">
+      <thead><tr><th>Section</th><th>Title</th><th>Lives in</th><th>Who should carry it?</th></tr></thead>
+      <tbody>
+        {% for section in report.gaps %}
+        <tr>
+          <td class="mono">{{ section.code }}</td>
+          <td>{{ section.title }}</td>
+          <td><span class="chip chip--division">{{ section.division_code }}</span></td>
+          <td><span class="muted small">Not referenced by any scope on this project</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{# ------------------------------------------------------------ overlaps #}
+{% if report.overlaps %}
+<div class="card">
+  <div class="card__header">
+    <h2 class="card__title">Overlaps &mdash; claimed by more than one trade</h2>
+    <span class="chip chip--overlap">{{ report.overlaps|length }}</span>
+  </div>
+  <div class="table__wrap" style="border:0;border-radius:0">
+    <table class="table">
+      <thead><tr><th>Section</th><th>Title</th><th>Lives in</th><th>Claimed by</th></tr></thead>
+      <tbody>
+        {% for section in report.overlaps %}
+        <tr>
+          <td class="mono">{{ section.code }}</td>
+          <td>{{ section.title }}</td>
+          <td><span class="chip chip--division">{{ section.division_code }}</span></td>
+          <td>{{ claim_list(section) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card__footer small muted">
+    Two trades on the same trade-specific section usually means the work is being
+    bought twice. Decide who owns it and exclude it from the other.
+  </div>
+</div>
+{% endif %}
+
+{# ------------------------------------------------------ shared seams #}
+{% if report.shared %}
+<div class="card">
+  <div class="card__header">
+    <h2 class="card__title">Shared seams &mdash; several trades, by design</h2>
+    <span class="chip chip--shared">{{ report.shared|length }}</span>
+  </div>
+  <div class="table__wrap" style="border:0;border-radius:0">
+    <table class="table">
+      <thead><tr><th>Section</th><th>Title</th><th>Lives in</th><th>Carried by</th></tr></thead>
+      <tbody>
+        {% for section in report.shared %}
+        <tr>
+          <td class="mono">{{ section.code }}</td>
+          <td>{{ section.title }}</td>
+          <td><span class="chip chip--division">{{ section.division_code }}</span></td>
+          <td>{{ claim_list(section) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card__footer small muted">
+    These are correct &mdash; every trade firestops its own penetrations. They are
+    listed because the seam still needs a decision: who paints the exposed sprinkler
+    pipe, and who furnishes the access door for whose valve, is exactly what turns
+    into a change order later.
+  </div>
+</div>
+{% endif %}
+
+{# ----------------------------------------------------------- redirects #}
+{% if report.redirects %}
+<div class="card">
+  <div class="card__header">
+    <h2 class="card__title">Exclusions handed to a division with no scope</h2>
+    <span class="chip chip--overlap">{{ report.redirects|length }}</span>
+  </div>
+  <div class="table__wrap" style="border:0;border-radius:0">
+    <table class="table">
+      <thead><tr><th>Scope</th><th>Hands work to</th><th>Exclusion</th></tr></thead>
+      <tbody>
+        {% for redirect in report.redirects %}
+        <tr>
+          <td>
+            <a href="{{ url_for('scopes.edit', scope_id=redirect.scope.id) }}">{{ redirect.scope.short }}</a>
+          </td>
+          <td>
+            <span class="chip chip--division">{{ redirect.referenced_division }}</span><br>
+            <span class="muted small">{{ redirect.referenced_title }}</span>
+          </td>
+          <td class="small">{{ redirect.text }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card__footer small muted">
+    Each of these says another trade has the work, but no scope exists for that
+    division yet. If that package is not coming, the work is nobody's.
+  </div>
+</div>
+{% endif %}
+
+{# --------------------------------------------------- packages unscoped #}
+{% if report.packages_without_scope %}
+<div class="card">
+  <div class="card__header"><h2 class="card__title">Bid packages with no scope written</h2></div>
+  <div class="card__body">
+    <div class="btnrow">
+      {% for number, name in report.packages_without_scope %}
+      <span class="chip">{{ number }} &middot; {{ name }}</span>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{# ------------------------------------------------------- full matrix #}
+<details class="details">
+  <summary>Full matrix &mdash; all {{ report.sections|length }} sections</summary>
+  <div class="details__body" style="padding:0">
+    <div class="table__wrap" style="border:0">
+      <table class="table">
+        <thead><tr><th>Section</th><th>Title</th><th>Division</th><th>Status</th><th>Claimed by</th></tr></thead>
+        <tbody>
+          {% for section in report.sections %}
+          <tr>
+            <td class="mono">{{ section.code }}</td>
+            <td>{{ section.title }}</td>
+            <td><span class="chip chip--division">{{ section.division_code }}</span></td>
+            <td><span class="chip chip--{{ section.status }}">{{ section.status }}</span></td>
+            <td>{{ claim_list(section) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</details>
+{% endif %}
+{% endblock %}
