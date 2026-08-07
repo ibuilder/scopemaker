@@ -1,0 +1,283 @@
+/*
+ * Document styles.
+ *
+ * This one stylesheet is used by three consumers: the live preview in the
+ * editor, the browser print view, and WeasyPrint when it generates the PDF.
+ * Keeping them on the same rules is what makes "what you see is what you
+ * export" true rather than aspirational -- so avoid adding anything here that
+ * only one of the three understands.
+ */
+
+/* ---------------------------------------------------------------------------
+ * Paged media. WeasyPrint reads @page; browsers honour it when printing.
+ * ------------------------------------------------------------------------ */
+@page {
+  size: Letter portrait;
+  margin: 25mm 20mm 22mm 20mm;
+
+  @top-center {
+    content: string(doc-running-header);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 8.5pt;
+    color: #555;
+    padding-bottom: 4mm;
+  }
+
+  @bottom-center {
+    content: string(doc-running-footer) "    Page " counter(page) " of " counter(pages);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 8.5pt;
+    color: #555;
+    padding-top: 4mm;
+  }
+}
+
+@page :first {
+  @top-center { content: ""; }
+}
+
+.doc {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 11pt;
+  line-height: 1.42;
+  color: #111;
+  background: #fff;
+  counter-reset: none;
+}
+
+/* The running header/footer strings are lifted out of these elements and are
+ * never displayed inline. */
+.doc__running-header {
+  string-set: doc-running-header content();
+  position: absolute;
+  left: -9999px;
+  height: 0;
+  overflow: hidden;
+}
+
+.doc__running-footer {
+  string-set: doc-running-footer content();
+  position: absolute;
+  left: -9999px;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------------------
+ * Title block
+ * ------------------------------------------------------------------------ */
+.doc__title {
+  text-align: center;
+  font-size: 13pt;
+  font-weight: bold;
+  text-decoration: underline;
+  text-transform: uppercase;
+  margin: 0 0 4pt;
+  letter-spacing: 0.02em;
+}
+
+.doc__subtitle {
+  text-align: center;
+  font-size: 11pt;
+  font-weight: bold;
+  margin: 0 0 14pt;
+}
+
+.doc__facts {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 16pt;
+  font-size: 10pt;
+}
+
+.doc__facts th {
+  text-align: left;
+  font-weight: bold;
+  width: 26%;
+  padding: 2pt 8pt 2pt 0;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.doc__facts td {
+  padding: 2pt 0;
+  vertical-align: top;
+}
+
+/* ---------------------------------------------------------------------------
+ * Sections
+ * ------------------------------------------------------------------------ */
+.doc__section {
+  margin: 0 0 12pt;
+  /* Never leave a heading stranded at the foot of a page. */
+  break-inside: auto;
+}
+
+.doc__heading {
+  font-size: 11pt;
+  font-weight: bold;
+  text-decoration: underline;
+  text-transform: uppercase;
+  margin: 14pt 0 6pt;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+.doc__heading-number {
+  margin-right: 0.4em;
+}
+
+.doc__body {
+  margin: 0 0 8pt;
+  text-align: justify;
+}
+
+.doc__body p {
+  margin: 0 0 6pt;
+}
+
+.doc__body p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Numbered outline.
+ *
+ * Labels are computed server-side and written as literal text, not generated
+ * by CSS counters: the PDF, the DOCX and the JSON export must all agree on
+ * what "3.2.4" refers to, and CSS counters cannot be shared with those.
+ * ------------------------------------------------------------------------ */
+.doc__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.doc__item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  margin: 0 0 4pt;
+  /* Keep a clause and its number on the same page. */
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.doc__item-label {
+  flex: 0 0 auto;
+  min-width: 2.4em;
+  font-variant-numeric: tabular-nums;
+}
+
+.doc__item-text {
+  flex: 1 1 auto;
+  text-align: justify;
+}
+
+/* Each nested level steps in by one label width. */
+.doc__list .doc__list {
+  margin-left: 1.9em;
+  margin-top: 4pt;
+}
+
+.doc__item--depth-1 > .doc__item-label { min-width: 2.9em; }
+.doc__item--depth-2 > .doc__item-label { min-width: 3.4em; }
+.doc__item--depth-3 > .doc__item-label { min-width: 3.9em; }
+
+/* ---------------------------------------------------------------------------
+ * Contract recap
+ * ------------------------------------------------------------------------ */
+.doc__recap {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8pt 0 0;
+  break-inside: avoid;
+}
+
+.doc__recap td {
+  padding: 3pt 0;
+  vertical-align: bottom;
+}
+
+.doc__recap td:last-child {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  min-width: 28mm;
+  border-bottom: 0.5pt solid #999;
+}
+
+.doc__recap tr:last-child td {
+  font-weight: bold;
+  border-top: 1pt solid #111;
+  border-bottom: 2.5pt double #111;
+  padding-top: 5pt;
+}
+
+/* ---------------------------------------------------------------------------
+ * Signature block
+ * ------------------------------------------------------------------------ */
+.doc__signatures {
+  margin-top: 26pt;
+  break-inside: avoid;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 12pt 0;
+}
+
+.doc__signatures td {
+  width: 50%;
+  vertical-align: top;
+  padding-top: 22pt;
+  border-top: 0.75pt solid #111;
+  font-size: 9.5pt;
+}
+
+/* ---------------------------------------------------------------------------
+ * Status watermark for anything not yet issued
+ * ------------------------------------------------------------------------ */
+.doc--draft .doc__title::after {
+  content: " (DRAFT)";
+  color: #b00;
+  text-decoration: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * Screen-only framing. WeasyPrint ignores the screen media query, so these
+ * rules shape the preview without leaking into the PDF.
+ * ------------------------------------------------------------------------ */
+@media screen {
+  .doc {
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 0.9in 0.85in;
+    box-shadow: 0 2px 18px rgba(15, 23, 42, 0.14);
+    border-radius: 2px;
+  }
+
+  .doc__running-header,
+  .doc__running-footer {
+    position: static;
+    left: auto;
+    height: auto;
+    overflow: visible;
+    display: block;
+    text-align: center;
+    font-size: 9px;
+    color: #6b7280;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .doc__running-header {
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 6px;
+    margin-bottom: 18px;
+  }
+
+  .doc__running-footer {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 6px;
+    margin-top: 24px;
+  }
+}

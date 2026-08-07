@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}Your profile &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Your profile</h1><p class="pagehead__sub">{{ current_user.email }}</p></div></div>
+
+<div class="card">
+  <div class="card__header"><h2 class="card__title">Details</h2></div>
+  <div class="card__body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.full_name) }}
+      {{ form.submit(class='btn btn--primary') }}
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__header"><h2 class="card__title">Password</h2></div>
+  <div class="card__body">
+    {% if current_user.is_sso_only %}
+    <p class="muted">
+      This account signs in through {{ oidc_display_name }}. Change your
+      password with your identity provider.
+    </p>
+    {% else %}
+    <form method="post" novalidate>
+      {{ password_form.hidden_tag() }}
+      {{ field(password_form.current_password, autocomplete='current-password') }}
+      {{ field(password_form.password, autocomplete='new-password') }}
+      {{ field(password_form.confirm, autocomplete='new-password') }}
+      {{ password_form.submit(class='btn btn--secondary') }}
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__header"><h2 class="card__title">Organizations</h2></div>
+  <div class="card__body">
+    <table class="table">
+      <thead><tr><th>Organization</th><th>Your role</th></tr></thead>
+      <tbody>
+        {% for membership in current_user.memberships %}
+        <tr>
+          <td>{{ membership.organization.name }}</td>
+          <td><span class="chip">{{ membership.role }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

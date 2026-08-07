@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import status_chip %}
+{% block title %}{{ scope.document_title }} &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--wide{% endblock %}
+
+{% macro render_items(nodes, section, depth=0) %}
+  {% for node in nodes %}
+  <li class="item {{ 'item--child' if depth > 0 }}"
+      draggable="true"
+      data-item-id="{{ node.item.id }}"
+      data-parent-id="{{ node.item.parent_id or '' }}">
+    <span class="item__handle" aria-hidden="true" title="Drag to reorder">⠿</span>
+    <span class="item__label">{{ node.label }}</span>
+    <span class="item__text">{{ node.item.text_html|safe }}</span>
+
+    <div class="item__edit">
+      <form method="post" action="{{ url_for('scopes.update_item', scope_id=scope.id, item_id=node.item.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <textarea name="text_html" rows="3">{{ node.item.text_html }}</textarea>
+        <div class="btnrow" style="margin-top:.4rem">
+          <button type="submit" name="submit" value="Save" class="btn btn--sm btn--primary">Save</button>
+          <button type="button" class="btn btn--sm btn--secondary" data-cancel-edit>Cancel</button>
+        </div>
+      </form>
+    </div>
+
+    {% if not scope.is_locked and current_user.has_role('editor') %}
+    <div class="item__actions">
+      <button type="button" class="btn btn--sm btn--secondary" data-edit-item>Edit</button>
+      <form method="post"
+            action="{{ url_for('scopes.delete_item', scope_id=scope.id, item_id=node.item.id) }}"
+            data-confirm="Delete this item?">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn--sm btn--danger">Delete</button>
+      </form>
+    </div>
+    {% endif %}
+  </li>
+  {% if node.children %}
+    {{ render_items(node.children, section, depth + 1) }}
+  {% endif %}
+  {% endfor %}
+{% endmacro %}
+
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('scopes.index') }}">Scopes</a> / {{ scope.document_title }}</div>
+
+<div class="pagehead">
+  <div>
+    <h1>{{ scope.document_title }}</h1>
+    <p class="pagehead__sub">
+      {{ status_chip(scope.status, scope.status_label) }}
+      {% if scope.version > 1 %}<span class="chip">Version {{ scope.version }}</span>{% endif %}
+      {% if scope.division_code %}<span class="chip chip--division">Div {{ scope.division_code }}</span>{% endif %}
+      {% if scope.trade_name %}{{ scope.trade_name }}{% endif %}
+      {% if scope.project %} &middot; {{ scope.project.display_title }}{% endif %}
+    </p>
+  </div>
+  <div class="btnrow">
+    <a class="btn btn--secondary" href="{{ url_for('scopes.preview', scope_id=scope.id) }}">Preview</a>
+    {% if pdf_available %}
+    <a class="btn btn--primary" href="{{ url_for('exports.download', scope_id=scope.id, format_key='pdf') }}">PDF</a>
+    {% else %}
+    <a class="btn btn--primary" href="{{ url_for('exports.print_view', scope_id=scope.id) }}" target="_blank" rel="noopener">Print</a>
+    {% endif %}
+    <a class="btn btn--secondary" href="{{ url_for('exports.download', scope_id=scope.id, format_key='docx') }}">Word</a>
+    {% if current_user.has_role('editor') %}
+    <a class="btn btn--secondary" href="{{ url_for('scopes.settings', scope_id=scope.id) }}">Settings</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if scope.is_locked %}
+<div class="callout">
+  <strong>This scope is {{ scope.status_label|lower }} and locked.</strong>
+  Version {{ scope.version }} has been frozen as a revision. To make changes,
+  create a new revision &mdash; the issued version stays preserved exactly as it went out.
+  {% if current_user.has_role('editor') %}
+  <form method="post" action="{{ url_for('scopes.revise', scope_id=scope.id) }}" style="margin-top:.6rem">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn--sm btn--primary">Create revision {{ scope.version + 1 }}</button>
+  </form>
+  {% endif %}
+</div>
+{% endif %}
+
+<p id="reorder-status" class="muted small" role="status" aria-live="polite"></p>
+
+<div class="editor">
+  <div class="editor__sections">
+    {% for section in scope.sections %}
+    <section class="section-editor {{ 'section-editor--off' if not section.is_enabled }}"
+             id="section-{{ section.key }}">
+      <div class="section-editor__head">
+        <h2 class="section-editor__title">{{ section.heading }}</h2>
+        {% if not section.is_enabled %}<span class="chip">Hidden</span>{% endif %}
+        {% if current_user.has_role('editor') and not scope.is_locked %}
+        <form method="post" action="{{ url_for('scopes.toggle_section', scope_id=scope.id, section_key=section.key) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn--sm btn--secondary">
+            {{ 'Include' if not section.is_enabled else 'Hide' }}
+          </button>
+        </form>
+        {% endif %}
+      </div>
+
+      <div class="section-editor__body">
+        {% if section.kind == 'recap' %}
+          <p class="muted small">
+            The contract recap is built from the amounts on the
+            <a href="{{ url_for('scopes.settings', scope_id=scope.id) }}">settings page</a>.
+          </p>
+          <table class="table">
+            <tbody>
+              <tr><td>Base bid</td><td class="numeric">{{ '${:,.2f}'.format(scope.base_bid_amount) if scope.base_bid_amount is not none else 'TBD' }}</td></tr>
+              <tr><td>Accepted alternates</td><td class="numeric">{{ '${:,.2f}'.format(scope.alternates_amount) if scope.alternates_amount is not none else 'TBD' }}</td></tr>
+              <tr><td>Other additions / deletions</td><td class="numeric">{{ '${:,.2f}'.format(scope.adjustments_amount) if scope.adjustments_amount is not none else 'TBD' }}</td></tr>
+              <tr><td><strong>Total</strong></td><td class="numeric"><strong>{{ '${:,.2f}'.format(scope.total_amount) if scope.total_amount is not none else 'TBD' }}</strong></td></tr>
+            </tbody>
+          </table>
+        {% else %}
+
+          {% if section.body_html or section.kind == 'prose' %}
+          <details class="details">
+            <summary>Introductory text</summary>
+            <div class="details__body">
+              <form method="post" action="{{ url_for('scopes.update_section', scope_id=scope.id, section_key=section.key) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="field">
+                  <label for="heading-{{ section.key }}">Heading</label>
+                  <input type="text" id="heading-{{ section.key }}" name="heading" value="{{ section.heading }}">
+                </div>
+                <div class="field">
+                  <label for="body-{{ section.key }}">Text</label>
+                  <textarea id="body-{{ section.key }}" name="body_html" rows="6">{{ section.body_html or '' }}</textarea>
+                  <p class="field__hint">Basic HTML is allowed: paragraphs, bold, italic, underline and lists.</p>
+                </div>
+                <label class="checkbox">
+                  <input type="checkbox" name="is_enabled" {{ 'checked' if section.is_enabled }}>
+                  <span>Include in document</span>
+                </label>
+                <div class="btnrow" style="margin-top:.6rem">
+                  <button type="submit" name="submit" value="Save section" class="btn btn--sm btn--primary"
+                          {{ 'disabled' if scope.is_locked or not current_user.has_role('editor') }}>Save</button>
+                </div>
+              </form>
+            </div>
+          </details>
+          {% endif %}
+
+          {% set nodes = outlines.get(section.key, []) %}
+          {% if nodes %}
+          <ul class="itemlist"
+              data-reorder
+              data-section-key="{{ section.key }}"
+              data-reorder-url="{{ url_for('scopes.reorder_items', scope_id=scope.id) }}">
+            {{ render_items(nodes, section) }}
+          </ul>
+          {% elif section.kind == 'items' %}
+          <p class="muted small">No items in this section yet.</p>
+          {% endif %}
+
+          {% if current_user.has_role('editor') and not scope.is_locked and section.kind == 'items' %}
+          <details class="details" style="margin-top:.8rem">
+            <summary>Add to this section</summary>
+            <div class="details__body">
+              <form method="post" action="{{ url_for('scopes.add_item', scope_id=scope.id, section_key=section.key) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="field">
+                  <label for="new-{{ section.key }}">New item</label>
+                  <textarea id="new-{{ section.key }}" name="text_html" rows="3"
+                            placeholder="Write the clause as it should read in the exhibit."></textarea>
+                </div>
+                <button type="submit" name="submit" value="Save" class="btn btn--sm btn--primary">Add item</button>
+              </form>
+
+              {% set category_clauses = grouped_clauses.get({
+                    'inclusions': 'inclusion',
+                    'exclusions': 'exclusion',
+                    'clarifications': 'clarification',
+                    'allowances': 'allowance',
+                    'alternates': 'alternate',
+                    'unit_prices': 'unit_price',
+                    'safety': 'safety',
+                    'closeout': 'closeout',
+                    'schedule': 'schedule',
+                    'summary': 'general_requirement'}.get(section.key, ''), []) %}
+              {% if category_clauses %}
+              <hr style="margin:1rem 0;border:0;border-top:1px solid var(--slate-200)">
+              <form method="post" action="{{ url_for('scopes.add_clauses', scope_id=scope.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="section_key" value="{{ section.key }}">
+                <div class="picker__group">
+                  <div class="picker__head">
+                    <div class="picker__title">From the library</div>
+                    <div class="btnrow">
+                      <button type="button" class="btn btn--sm btn--secondary" data-select-none>Clear</button>
+                    </div>
+                  </div>
+                  <div class="picker__list" style="max-height:260px">
+                    {% for clause in category_clauses %}
+                    <label class="picker__item">
+                      <input type="checkbox" name="clause_ids" value="{{ clause.id }}">
+                      <span class="picker__text">{{ clause.text }}</span>
+                    </label>
+                    {% endfor %}
+                  </div>
+                </div>
+                <button type="submit" name="submit" value="Add selected clauses"
+                        class="btn btn--sm btn--secondary" style="margin-top:.6rem">Add selected</button>
+              </form>
+              {% endif %}
+            </div>
+          </details>
+          {% endif %}
+        {% endif %}
+      </div>
+    </section>
+    {% endfor %}
+
+    {% if current_user.has_role('editor') %}
+    <div class="card">
+      <div class="card__header"><h2 class="card__title">Document actions</h2></div>
+      <div class="card__body btnrow">
+        {% if not scope.is_locked %}
+        <a class="btn btn--primary" href="{{ url_for('scopes.issue', scope_id=scope.id) }}">Issue scope</a>
+        {% endif %}
+        <a class="btn btn--secondary" href="{{ url_for('scopes.save_template', scope_id=scope.id) }}">Save as template</a>
+        <form method="post" action="{{ url_for('scopes.duplicate', scope_id=scope.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn--secondary">Duplicate</button>
+        </form>
+        <a class="btn btn--secondary" href="{{ url_for('scopes.revisions', scope_id=scope.id) }}">
+          Revisions ({{ scope.revisions|length }})
+        </a>
+        {% if procore_enabled and scope.project and scope.project.procore_project_id %}
+        <a class="btn btn--secondary" href="{{ url_for('procore.push_scope', scope_id=scope.id) }}">Send to Procore</a>
+        {% endif %}
+        <form method="post" action="{{ url_for('scopes.archive', scope_id=scope.id) }}"
+              data-confirm="Archive this scope?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn--danger">Archive</button>
+        </form>
+      </div>
+      <div class="card__footer small muted">
+        Also available:
+        <a href="{{ url_for('exports.download', scope_id=scope.id, format_key='md') }}">Markdown</a>,
+        <a href="{{ url_for('exports.download', scope_id=scope.id, format_key='json') }}">JSON</a>,
+        <a href="{{ url_for('exports.download', scope_id=scope.id, format_key='html') }}">HTML</a>,
+        <a href="{{ url_for('exports.print_view', scope_id=scope.id) }}" target="_blank" rel="noopener">print view</a>.
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="editor__preview">
+    <div class="card" style="margin-bottom:.6rem">
+      <div class="card__header">
+        <h2 class="card__title">Live preview</h2>
+        <span class="muted small">Exactly what exports</span>
+      </div>
+    </div>
+    <div class="editor__preview-inner">
+      {{ preview_html|safe }}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/document.css') }}">
+{% endblock %}

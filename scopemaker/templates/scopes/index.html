@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import status_chip, empty_state %}
+{% block title %}Scopes &middot; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <div><h1>Scopes</h1><p class="pagehead__sub">{{ scopes|length }} shown</p></div>
+  {% if current_user.has_role('editor') %}
+  <a class="btn btn--primary" href="{{ url_for('scopes.new') }}">New scope</a>
+  {% endif %}
+</div>
+
+<form class="toolbar" method="get">
+  <div class="field">
+    <label for="q">Search</label>
+    <input type="search" id="q" name="q" value="{{ query }}" placeholder="Title or trade">
+  </div>
+  <div class="field">
+    <label for="status">Status</label>
+    <select id="status" name="status">
+      <option value="">All statuses</option>
+      {% for value, label in statuses %}
+      <option value="{{ value }}" {{ 'selected' if value == status }}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="division">Division</label>
+    <select id="division" name="division">
+      <option value="">All divisions</option>
+      {% for d in divisions %}
+      <option value="{{ d.code }}" {{ 'selected' if d.code == division }}>{{ d.code }} &mdash; {{ d.title }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="btn btn--secondary">Filter</button>
+  {% if query or status or division %}
+  <a class="btn btn--ghost" style="color:var(--slate-600)" href="{{ url_for('scopes.index') }}">Clear</a>
+  {% endif %}
+</form>
+
+{% if scopes %}
+<div class="table__wrap">
+  <table class="table">
+    <thead>
+      <tr><th>Document</th><th>Project</th><th>Division</th><th>Status</th>
+          <th class="numeric">Items</th><th>Updated</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for scope in scopes %}
+      <tr>
+        <td>
+          <a href="{{ url_for('scopes.edit', scope_id=scope.id) }}"><strong>{{ scope.document_title }}</strong></a>
+          {% if scope.trade_name %}<br><span class="muted small">{{ scope.trade_name }}</span>{% endif %}
+        </td>
+        <td class="small">
+          {% if scope.project %}
+            <a href="{{ url_for('projects.detail', project_id=scope.project.id) }}">{{ scope.project.display_title }}</a>
+            {% if scope.bid_package %}<br><span class="muted">{{ scope.bid_package.number }}</span>{% endif %}
+          {% else %}<span class="muted">&mdash;</span>{% endif %}
+        </td>
+        <td>{% if scope.division_code %}<span class="chip chip--division">{{ scope.division_code }}</span>{% else %}<span class="muted">&mdash;</span>{% endif %}</td>
+        <td>{{ status_chip(scope.status, scope.status_label) }}{% if scope.version > 1 %} <span class="muted small">v{{ scope.version }}</span>{% endif %}</td>
+        <td class="numeric">{{ scope.item_count }}</td>
+        <td class="muted small">{{ scope.updated_at.strftime('%d %b %Y') }}</td>
+        <td>
+          <div class="btnrow">
+            <a class="btn btn--sm btn--secondary" href="{{ url_for('scopes.preview', scope_id=scope.id) }}">Preview</a>
+            <a class="btn btn--sm btn--secondary" href="{{ url_for('exports.download', scope_id=scope.id, format_key='pdf') }}">PDF</a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card"><div class="card__body">
+{{ empty_state(
+    'No scopes match',
+    'Adjust the filters, or generate a new scope from the clause library.',
+    url_for('scopes.new') if current_user.has_role('editor') else none,
+    'Create a scope') }}
+</div></div>
+{% endif %}
+{% endblock %}

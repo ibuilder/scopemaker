@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}Join {{ invitation.organization.name }} &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card__header"><h1 class="card__title">Join {{ invitation.organization.name }}</h1></div>
+  <div class="card__body">
+    <p class="muted">
+      Setting up an account for <strong>{{ invitation.email }}</strong>
+      with the {{ invitation.role }} role.
+    </p>
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.full_name, autocomplete='name', autofocus=true) }}
+      {{ field(form.password, autocomplete='new-password') }}
+      {{ field(form.confirm, autocomplete='new-password') }}
+      <div style="margin-top:1rem">{{ form.submit(class='btn btn--primary btn--block') }}</div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field, checkbox %}
+{% block title %}{{ 'Edit' if clause else 'New' }} clause &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('library.index') }}">Library</a> / {{ 'Edit clause' if clause else 'New clause' }}</div>
+<div class="pagehead"><div>
+  <h1>{% if copying_from %}Copy clause{% elif clause %}Edit clause{% else %}New clause{% endif %}</h1>
+</div></div>
+
+{% if copying_from %}
+<div class="callout callout--info">
+  Saving creates a copy in your organization's library and hides the shipped
+  version, so the picker will not show near-identical twins.
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card__body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="formgrid">
+        {{ field(form.category) }}
+        {{ field(form.division_code) }}
+      </div>
+      {{ field(form.text, rows=6) }}
+      {{ checkbox(form.is_default) }}
+      {{ checkbox(form.is_active) }}
+      {{ field(form.position) }}
+      {{ field(form.notes, rows=3) }}
+      <div class="btnrow">
+        {{ form.submit(class='btn btn--primary') }}
+        <a class="btn btn--secondary" href="{{ url_for('library.index') }}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,645 @@
+# Universal clauses -- offered on every scope regardless of division.
+# `division: null` marks a clause as universal.
+# `default: true` means it is pre-selected when a scope is generated.
+version: 1
+
+clauses:
+
+# ---------------------------------------------------------------------------
+# General requirements (fold into the Scope of Work Summary)
+# ---------------------------------------------------------------------------
+- key: univ.gen.division01
+  division: null
+  category: general_requirement
+  default: true
+  position: 10
+  text: >-
+    Subcontractor shall comply with all Division 01 General Requirements,
+    the Project Manual, the General Conditions and Supplementary Conditions,
+    and all Project-specific procedures issued by the Contractor.
+
+- key: univ.gen.site_logistics
+  division: null
+  category: general_requirement
+  default: true
+  position: 20
+  text: >-
+    Subcontractor shall comply with the Project site logistics plan, including
+    designated laydown and staging areas, delivery windows, crane and hoist
+    scheduling, parking restrictions, badging and site access procedures.
+
+- key: univ.gen.meetings
+  division: null
+  category: general_requirement
+  default: true
+  position: 30
+  text: >-
+    Subcontractor shall attend and actively participate in pre-construction,
+    weekly coordination, safety, quality, look-ahead scheduling and progress
+    meetings, and shall send a representative empowered to make binding
+    commitments on behalf of the Subcontractor.
+
+- key: univ.gen.supervision
+  division: null
+  category: general_requirement
+  default: true
+  position: 40
+  text: >-
+    Subcontractor shall provide a competent, full-time, on-site supervisor
+    who is fluent in English, is authorized to act on the Subcontractor's
+    behalf, and remains assigned to the Project for its duration absent the
+    Contractor's written consent to a replacement.
+
+# ---------------------------------------------------------------------------
+# Inclusions
+# ---------------------------------------------------------------------------
+- key: univ.incl.complete_installation
+  division: null
+  category: inclusion
+  default: true
+  position: 100
+  text: >-
+    All labor, material, equipment, tools, consumables, supervision,
+    transportation, hoisting, rigging, scaffolding, lifts, fuel, licenses,
+    permits specific to this trade, burden, taxes and insurance required for a
+    complete, operational and code-compliant installation.
+
+- key: univ.incl.submittals
+  division: null
+  category: inclusion
+  default: true
+  position: 110
+  text: >-
+    Preparation and timely submission of all shop drawings, product data,
+    samples, mock-ups, certifications and calculations required by the Contract
+    Documents, including resubmittals required to obtain approval. Subcontractor
+    shall bear the cost of the Architect's or Engineer's review of any
+    submittal beyond the second submission of the same item.
+
+- key: univ.incl.coordination_drawings
+  division: null
+  category: inclusion
+  default: true
+  position: 120
+  text: >-
+    Participation in the Project coordination and BIM process, including
+    furnishing trade models in the required format, attending coordination
+    sessions, resolving clashes affecting this trade, and signing off on the
+    coordinated composite model prior to fabrication.
+
+- key: univ.incl.layout
+  division: null
+  category: inclusion
+  default: true
+  position: 130
+  text: >-
+    Field layout of the Subcontractor's own Work from the primary control lines
+    and benchmarks established and maintained by the Contractor.
+
+- key: univ.incl.embeds_sleeves
+  division: null
+  category: inclusion
+  default: true
+  position: 140
+  text: >-
+    Furnishing, laying out and setting all sleeves, inserts, anchors, embeds,
+    blockouts, hangers and supports required for this trade's Work, coordinated
+    with and installed in time to meet the Project schedule.
+
+- key: univ.incl.cutting_patching
+  division: null
+  category: inclusion
+  default: true
+  position: 150
+  text: >-
+    All cutting, coring, drilling and patching required for this trade's Work,
+    including repair of any adjacent finished work damaged by the
+    Subcontractor's operations, restored to match existing adjacent surfaces.
+
+- key: univ.incl.firestopping_own
+  division: null
+  category: inclusion
+  default: true
+  position: 160
+  text: >-
+    Firestopping and smoke sealing of all penetrations created by this trade
+    through rated assemblies, using tested and listed UL systems appropriate to
+    the assembly and penetrant.
+
+- key: univ.incl.protection
+  division: null
+  category: inclusion
+  default: true
+  position: 170
+  text: >-
+    Protection of the Subcontractor's own Work and of adjacent existing and
+    in-place Work from damage, weather, theft and the operations of other
+    trades, until Substantial Completion.
+
+- key: univ.incl.cleanup
+  division: null
+  category: inclusion
+  default: true
+  position: 180
+  text: >-
+    Daily cleanup and removal of debris generated by this trade to the
+    Contractor-designated containers, including broom-clean condition of work
+    areas at the end of each shift. Composite cleanup crews will be back-charged
+    proportionally where a trade fails to maintain its areas.
+
+- key: univ.incl.waste_management
+  division: null
+  category: inclusion
+  default: true
+  position: 190
+  text: >-
+    Compliance with the Project Construction Waste Management Plan, including
+    source separation, use of designated recycling containers, and submission of
+    weight tickets and diversion documentation.
+
+- key: univ.incl.safety_program
+  division: null
+  category: inclusion
+  default: true
+  position: 200
+  text: >-
+    A written site-specific safety program, job hazard analyses for each
+    activity, designated competent persons, 100% fall protection above six feet,
+    daily pre-task planning, and full compliance with OSHA, the authority having
+    jurisdiction and the Contractor's safety program, whichever is most
+    stringent.
+
+- key: univ.incl.testing_inspections
+  division: null
+  category: inclusion
+  default: true
+  position: 210
+  text: >-
+    All testing, start-up and inspections required of this trade by the Contract
+    Documents or the authority having jurisdiction, including the cost of
+    retesting and re-inspection resulting from the Subcontractor's failed or
+    incomplete work.
+
+- key: univ.incl.schedule_compliance
+  division: null
+  category: inclusion
+  default: true
+  position: 220
+  text: >-
+    Performance of the Work in accordance with the Project schedule, including
+    furnishing manpower loading projections, participating in pull planning, and
+    providing a written recovery plan and the additional manpower or shifts
+    necessary to recover any delay attributable to the Subcontractor, at no
+    additional cost.
+
+- key: univ.incl.asbuilts
+  division: null
+  category: inclusion
+  default: true
+  position: 230
+  text: >-
+    Maintenance of a clean, current set of as-built record documents on site,
+    updated weekly, and delivery of final record documents in the format
+    required by the Contract Documents as a condition of final payment.
+
+- key: univ.incl.om_warranties
+  division: null
+  category: inclusion
+  default: true
+  position: 240
+  text: >-
+    Operation and maintenance manuals, warranty documentation, spare parts and
+    attic stock, and Owner training sessions as required by the Contract
+    Documents.
+
+- key: univ.incl.commissioning
+  division: null
+  category: inclusion
+  default: true
+  position: 250
+  text: >-
+    Participation in the Project commissioning process, including completion of
+    pre-functional checklists, support of functional performance testing,
+    correction of deficiencies identified by the Commissioning Authority, and
+    attendance at commissioning meetings.
+
+- key: univ.incl.warranty
+  division: null
+  category: inclusion
+  default: true
+  position: 260
+  text: >-
+    A full parts-and-labor warranty against defects in materials and workmanship
+    for a period of one (1) year from the date of Substantial Completion, or for
+    the longer period specified in the Contract Documents, including any
+    extended manufacturer warranties.
+
+- key: univ.incl.punchlist
+  division: null
+  category: inclusion
+  default: true
+  position: 270
+  text: >-
+    Completion of all punch list items within fourteen (14) calendar days of
+    receipt of the list, and return to the site as required to complete
+    seasonal, deferred or corrective work.
+
+- key: univ.incl.temp_protection
+  division: null
+  category: inclusion
+  default: false
+  position: 280
+  text: >-
+    Temporary weather protection, enclosures and temporary heat required to
+    protect this trade's Work and to maintain manufacturer-required installation
+    conditions.
+
+- key: univ.incl.hoisting_own
+  division: null
+  category: inclusion
+  default: false
+  position: 290
+  text: >-
+    All hoisting, rigging, cranes, forklifts and material handling required for
+    this trade's materials beyond the shared tower crane time allocated by the
+    Contractor.
+
+- key: univ.incl.sds
+  division: null
+  category: inclusion
+  default: false
+  position: 300
+  text: >-
+    Safety Data Sheets for every product brought on site, submitted before
+    delivery, and compliance with the Project hazard communication program.
+
+- key: univ.incl.leed
+  division: null
+  category: inclusion
+  default: false
+  position: 310
+  text: >-
+    All sustainability and green building documentation required for the
+    Project's certification, including product data for recycled content,
+    regional materials, VOC content and environmental product declarations.
+
+- key: univ.incl.prevailing_wage
+  division: null
+  category: inclusion
+  default: false
+  position: 320
+  text: >-
+    Payment of prevailing wages and submission of certified payroll reports in
+    the form and frequency required by the funding source and the authority
+    having jurisdiction.
+
+- key: univ.incl.mock_up
+  division: null
+  category: inclusion
+  default: false
+  position: 330
+  text: >-
+    Construction of full-scale mock-ups as required by the Contract Documents,
+    including rework until accepted by the Architect, and removal of the mock-up
+    when directed.
+
+# ---------------------------------------------------------------------------
+# Exclusions
+# ---------------------------------------------------------------------------
+- key: univ.excl.bonds
+  division: null
+  category: exclusion
+  default: true
+  position: 400
+  text: >-
+    Payment and Performance Bond. If a bond is required, it will be added by
+    Change Order at the documented bond rate, subject to the Subcontractor's
+    enrollment in the Contractor's Subcontractor Default Insurance program where
+    approved.
+
+- key: univ.excl.builders_risk
+  division: null
+  category: exclusion
+  default: true
+  position: 410
+  text: >-
+    Builder's Risk insurance and any deductible thereunder, which is carried by
+    the Owner or Contractor.
+
+- key: univ.excl.building_permit
+  division: null
+  category: exclusion
+  default: true
+  position: 420
+  text: >-
+    The general building permit and Owner-paid impact, tap, connection and
+    utility company fees. Trade-specific permits and licenses remain the
+    Subcontractor's responsibility.
+
+- key: univ.excl.hazmat
+  division: null
+  category: exclusion
+  default: true
+  position: 430
+  text: >-
+    Identification, testing, handling, abatement or disposal of asbestos, lead,
+    PCBs, contaminated soil, mold or any other pre-existing hazardous material
+    not introduced by the Subcontractor.
+
+- key: univ.excl.temp_utilities
+  division: null
+  category: exclusion
+  default: true
+  position: 440
+  text: >-
+    Temporary power distribution, temporary lighting, temporary water and
+    temporary toilets, which are furnished by the Contractor. Consumption
+    of temporary utilities by the Subcontractor's own tools is included.
+
+- key: univ.excl.overtime
+  division: null
+  category: exclusion
+  default: true
+  position: 450
+  text: >-
+    Overtime, shift work and premium time, except where required to recover a
+    delay caused by the Subcontractor. Contractor-directed acceleration will be
+    compensated by Change Order.
+
+- key: univ.excl.owner_testing
+  division: null
+  category: exclusion
+  default: true
+  position: 460
+  text: >-
+    Independent third-party special inspections and quality-assurance testing
+    engaged by the Owner. Costs of re-inspection caused by the Subcontractor's
+    failed work are not excluded.
+
+- key: univ.excl.final_cleaning
+  division: null
+  category: exclusion
+  default: true
+  position: 470
+  text: >-
+    Final cleaning of the building prior to Owner occupancy, which is performed
+    by the Contractor. Daily cleanup and cleaning of this trade's own
+    installed work remain included.
+
+- key: univ.excl.unknown_conditions
+  division: null
+  category: exclusion
+  default: true
+  position: 480
+  text: >-
+    Removal, relocation or protection of undocumented existing utilities,
+    structures or obstructions not shown on the Contract Documents and not
+    reasonably discoverable by a pre-bid site visit.
+
+- key: univ.excl.design
+  division: null
+  category: exclusion
+  default: false
+  position: 490
+  text: >-
+    Architectural and engineering design services, except for the delegated
+    design expressly assigned to this trade by the Contract Documents.
+
+- key: univ.excl.escalation
+  division: null
+  category: exclusion
+  default: false
+  position: 500
+  text: >-
+    Material escalation beyond the bid validity period stated in this Exhibit,
+    and any tariff, duty or surcharge imposed after the bid date.
+
+- key: univ.excl.winter_conditions
+  division: null
+  category: exclusion
+  default: false
+  position: 510
+  text: >-
+    Winter conditions, snow and ice removal, ground thawing and temporary heat
+    for the building as a whole.
+
+- key: univ.excl.dewatering
+  division: null
+  category: exclusion
+  default: false
+  position: 520
+  text: >-
+    Site dewatering, well points and management of groundwater beyond pumping
+    incidental to this trade's own excavations.
+
+- key: univ.excl.traffic_control
+  division: null
+  category: exclusion
+  default: false
+  position: 530
+  text: >-
+    Traffic control plans, flagging, police details and street closure permits,
+    except as expressly required for this trade's own deliveries.
+
+- key: univ.excl.security
+  division: null
+  category: exclusion
+  default: false
+  position: 540
+  text: >-
+    Off-hours site security, fencing and surveillance of the Project as a whole.
+
+- key: univ.excl.sales_tax
+  division: null
+  category: exclusion
+  default: false
+  position: 550
+  text: >-
+    Sales and use tax, where the Owner furnishes a valid tax exemption
+    certificate for the Project.
+
+- key: univ.excl.owner_furnished
+  division: null
+  category: exclusion
+  default: false
+  position: 560
+  text: >-
+    Receiving, storage, handling and installation of Owner-furnished equipment,
+    except where expressly listed as included in this Exhibit.
+
+- key: univ.excl.impact_costs
+  division: null
+  category: exclusion
+  default: false
+  position: 570
+  text: >-
+    Costs arising from impact, acceleration, out-of-sequence work or inefficiency
+    caused by others, which will be addressed under the Contract's change
+    provisions.
+
+# ---------------------------------------------------------------------------
+# Clarifications and assumptions
+# ---------------------------------------------------------------------------
+- key: univ.clar.documents_basis
+  division: null
+  category: clarification
+  default: true
+  position: 600
+  text: >-
+    This Scope of Work is based on the Drawings and Specifications identified in
+    the Contract Documents, including all addenda issued through the bid date.
+    Subsequent revisions will be handled as changes to the Work.
+
+- key: univ.clar.precedence
+  division: null
+  category: clarification
+  default: true
+  position: 610
+  text: >-
+    In the event of a conflict between this Exhibit and the Contract Documents,
+    the Contract Documents govern and the more stringent requirement applies.
+    Nothing listed as an exclusion overrides work expressly required of this
+    trade by the Contract Documents.
+
+- key: univ.clar.normal_hours
+  division: null
+  category: clarification
+  default: true
+  position: 620
+  text: >-
+    Pricing assumes performance of the Work during normal working hours, Monday
+    through Friday, in a continuous and uninterrupted sequence, with reasonable
+    and unobstructed access to the work areas.
+
+- key: univ.clar.bid_validity
+  division: null
+  category: clarification
+  default: false
+  position: 630
+  text: >-
+    This proposal is valid for thirty (30) days from the date of submission
+    unless extended in writing.
+
+- key: univ.clar.single_mobilization
+  division: null
+  category: clarification
+  default: false
+  position: 640
+  text: >-
+    Pricing assumes a single mobilization and demobilization per work area.
+    Additional mobilizations requested by the Contractor will be compensated at
+    the unit prices stated in this Exhibit.
+
+- key: univ.clar.staging
+  division: null
+  category: clarification
+  default: false
+  position: 650
+  text: >-
+    Pricing assumes the Contractor provides on-site laydown and staging area
+    within reasonable proximity to the work face, and reasonable access for
+    delivery vehicles.
+
+- key: univ.clar.substitutions
+  division: null
+  category: clarification
+  default: false
+  position: 660
+  text: >-
+    No substitutions or value engineering options are included unless expressly
+    listed in this Exhibit and accepted in writing by the Owner and Architect.
+
+# ---------------------------------------------------------------------------
+# Closeout
+# ---------------------------------------------------------------------------
+- key: univ.close.record_docs
+  division: null
+  category: closeout
+  default: true
+  position: 700
+  text: >-
+    Final as-built record drawings and specifications, in both marked-up print
+    and electronic form, delivered prior to the final application for payment.
+
+- key: univ.close.om_training
+  division: null
+  category: closeout
+  default: true
+  position: 710
+  text: >-
+    Operation and maintenance manuals, equipment warranties, and documented
+    Owner training sessions, recorded where required by the Contract Documents.
+
+- key: univ.close.lien_waivers
+  division: null
+  category: closeout
+  default: true
+  position: 720
+  text: >-
+    Final unconditional lien waivers from the Subcontractor and from every
+    lower-tier subcontractor and material supplier, along with a consent of
+    surety where a bond is in place.
+
+- key: univ.close.attic_stock
+  division: null
+  category: closeout
+  default: false
+  position: 730
+  text: >-
+    Delivery of all specified spare parts, attic stock and extra materials to
+    the Owner, with a signed transmittal.
+
+# ---------------------------------------------------------------------------
+# Schedule
+# ---------------------------------------------------------------------------
+- key: univ.sched.milestones
+  division: null
+  category: schedule
+  default: false
+  position: 800
+  text: >-
+    Subcontractor shall meet the milestone dates set out in the Project schedule
+    and shall notify the Contractor in writing within forty-eight (48) hours of
+    becoming aware of any condition that may affect a milestone.
+
+- key: univ.sched.submittal_lead
+  division: null
+  category: schedule
+  default: false
+  position: 810
+  text: >-
+    Initial submittals shall be delivered within twenty-one (21) calendar days of
+    the notice to proceed, and long-lead material shall be released for
+    fabrication immediately upon submittal approval.
+
+# ---------------------------------------------------------------------------
+# Safety
+# ---------------------------------------------------------------------------
+- key: univ.safety.competent_person
+  division: null
+  category: safety
+  default: false
+  position: 900
+  text: >-
+    A designated competent person shall be on site whenever this trade is
+    working, for each activity requiring one under OSHA, including excavation,
+    scaffolding, fall protection, rigging and confined space entry.
+
+- key: univ.safety.hot_work
+  division: null
+  category: safety
+  default: false
+  position: 910
+  text: >-
+    All hot work requires a permit issued by the Contractor, a dedicated fire
+    watch during the work and for thirty (30) minutes afterward, and appropriate
+    fire extinguishing equipment at the work location.
+
+- key: univ.safety.loto
+  division: null
+  category: safety
+  default: false
+  position: 920
+  text: >-
+    Compliance with the Project lockout/tagout and energized work programs,
+    including written energized work permits where de-energizing is not feasible.

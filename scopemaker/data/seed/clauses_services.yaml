@@ -1,0 +1,665 @@
+# Trade clauses for the Facility Services subgroup (Divisions 21-28).
+version: 1
+
+clauses:
+
+# ===========================================================================
+# Division 21 - Fire Suppression
+# ===========================================================================
+- key: d21.incl.design
+  division: "21"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Complete hydraulically calculated design of the wet and dry sprinkler
+    systems by a NICET Level III or higher designer or a licensed fire
+    protection engineer, including full submittal to the Architect, Engineer,
+    the authority having jurisdiction and the Owner's insurance carrier for
+    approval, and revision until approved.
+
+- key: d21.incl.systems
+  division: "21"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    Furnishing and installing complete wet, dry, pre-action and standpipe
+    systems, including piping, hangers, seismic bracing, sprinkler heads,
+    escutcheons, valves, tamper and flow switches, inspector test connections,
+    drains and auxiliary drains.
+
+- key: d21.incl.fdc
+  division: "21"
+  category: inclusion
+  default: true
+  position: 30
+  text: >-
+    All fire department connections, drain lines and inspector test line
+    locations, coordinated with the Owner, Architect, the authority having
+    jurisdiction and the Owner's insurance carrier, and terminated to approved
+    points of discharge.
+
+- key: d21.incl.fire_pump
+  division: "21"
+  category: inclusion
+  default: true
+  position: 40
+  text: >-
+    Fire pump, jockey pump, fire pump controller, suction and discharge piping,
+    test header, flow meter, and all pump accessories, including factory
+    certified acceptance testing.
+
+- key: d21.incl.heat_trace
+  division: "21"
+  category: inclusion
+  default: false
+  position: 50
+  text: >-
+    Insulation and heat tracing of wet system piping routed through unheated
+    space, including parking decks, attics and loading docks, complete with
+    thermostats and end-seal kits.
+
+- key: d21.incl.temp_standpipes
+  division: "21"
+  category: inclusion
+  default: true
+  position: 60
+  text: >-
+    Temporary standpipes maintained in service throughout construction in
+    accordance with NFPA 241, OSHA and the requirements of the authority having
+    jurisdiction, including relocation as the structure rises and removal at
+    completion.
+
+- key: d21.incl.seismic_bracing
+  division: "21"
+  category: inclusion
+  default: true
+  position: 70
+  text: >-
+    Seismic bracing, restraints and flexible couplings for all fire suppression
+    piping per NFPA 13 and the governing building code, with sealed calculations
+    where required.
+
+- key: d21.incl.testing_acceptance
+  division: "21"
+  category: inclusion
+  default: true
+  position: 80
+  text: >-
+    Hydrostatic testing, flushing, main drain tests, and the complete NFPA
+    contractor's material and test certificates for above-ground and underground
+    piping, witnessed by the authority having jurisdiction.
+
+- key: d21.incl.coordination_ceiling
+  division: "21"
+  category: inclusion
+  default: true
+  position: 90
+  text: >-
+    Coordination of sprinkler head locations with the reflected ceiling plans,
+    light fixtures, diffusers, structure and other trades, with center-of-tile
+    placement in lay-in ceilings unless directed otherwise.
+
+- key: d21.incl.special_hazard
+  division: "21"
+  category: inclusion
+  default: false
+  position: 100
+  text: >-
+    Clean agent, water mist and specialty suppression systems for protected
+    rooms, including detection, releasing panel, cylinders, nozzles, room
+    integrity testing and discharge testing.
+
+- key: d21.incl.underground
+  division: "21"
+  category: inclusion
+  default: false
+  position: 110
+  text: >-
+    Underground fire service main from five feet outside the building to the
+    riser, including thrust blocks, restraints, post indicator valve, backflow
+    preventer and flushing.
+
+- key: d21.excl.fire_alarm
+  division: "21"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Fire alarm system, alarm panel, initiating and notification devices, and all
+    wiring and monitoring of tamper and flow switches, which are by the Division
+    28 Subcontractor. Furnishing the switches for their connection is included.
+
+- key: d21.excl.power_wiring
+  division: "21"
+  category: exclusion
+  default: true
+  position: 210
+  text: >-
+    Line-voltage power wiring and disconnects to the fire pump and controller,
+    which are by the Electrical Subcontractor.
+
+- key: d21.excl.rated_penetrations_others
+  division: "21"
+  category: exclusion
+  default: false
+  position: 220
+  text: >-
+    Firestopping of penetrations created by other trades. Firestopping of this
+    trade's own penetrations is included.
+
+- key: d21.excl.painting_exposed
+  division: "21"
+  category: exclusion
+  default: false
+  position: 230
+  text: >-
+    Field painting of exposed sprinkler piping, which is by the Painting
+    Subcontractor. Factory finish on specified heads and escutcheons is included.
+
+# ===========================================================================
+# Division 22 - Plumbing
+# ===========================================================================
+- key: d22.incl.complete_systems
+  division: "22"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Complete plumbing systems including domestic hot and cold water, sanitary
+    waste and vent, storm drainage, natural gas, and all fixtures, trim,
+    carriers, valves, insulation, hangers and seismic restraints.
+
+- key: d22.incl.underslab
+  division: "22"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    All under-slab and below-grade plumbing rough-in including excavation,
+    bedding, backfill and compaction within the building footprint, and
+    inspection prior to cover.
+
+- key: d22.incl.fixtures
+  division: "22"
+  category: inclusion
+  default: true
+  position: 30
+  text: >-
+    Furnishing and setting all plumbing fixtures, faucets, flush valves,
+    carriers, stops, traps, escutcheons and accessories, complete and operating,
+    including final connection of Owner-furnished fixtures.
+
+- key: d22.incl.testing_disinfection
+  division: "22"
+  category: inclusion
+  default: true
+  position: 40
+  text: >-
+    Pressure testing, disinfection and bacteriological testing of the domestic
+    water system, with passing laboratory results submitted prior to occupancy.
+
+- key: d22.incl.water_heaters
+  division: "22"
+  category: inclusion
+  default: true
+  position: 50
+  text: >-
+    Water heaters, recirculation pumps, mixing valves, expansion tanks, backflow
+    preventers and associated piping specialties, complete with start-up and
+    certification of backflow devices by a licensed tester.
+
+- key: d22.incl.medical_gas
+  division: "22"
+  category: inclusion
+  default: false
+  position: 60
+  text: >-
+    Medical gas systems installed by ASSE 6010 certified installers, with
+    brazing under nitrogen purge, and third-party verification by an ASSE 6030
+    verifier.
+
+- key: d22.incl.grease
+  division: "22"
+  category: inclusion
+  default: false
+  position: 70
+  text: >-
+    Grease interceptors, sand and oil separators, trench drains and associated
+    venting, including coordination with the authority having jurisdiction.
+
+- key: d22.excl.site_utilities
+  division: "22"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Site utilities beyond five feet outside the building line, which are by the
+    Site Utilities Subcontractor, including tap fees and utility company
+    charges.
+
+- key: d22.excl.electrical_connections
+  division: "22"
+  category: exclusion
+  default: true
+  position: 210
+  text: >-
+    Line-voltage power, disconnects and starters for plumbing equipment, which
+    are by the Electrical Subcontractor. Control wiring integral to the plumbing
+    equipment is included.
+
+- key: d22.excl.kitchen_equipment
+  division: "22"
+  category: exclusion
+  default: false
+  position: 220
+  text: >-
+    Furnishing of food service equipment. Rough-in and final connection of that
+    equipment per the approved kitchen equipment drawings is included.
+
+# ===========================================================================
+# Division 23 - HVAC
+# ===========================================================================
+- key: d23.incl.complete_hvac
+  division: "23"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Complete HVAC systems including air handling units, rooftop units, chillers,
+    boilers, pumps, terminal units, ductwork, piping, insulation, grilles,
+    registers, diffusers, dampers, hangers and seismic restraints.
+
+- key: d23.incl.ductwork
+  division: "23"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    Fabrication and installation of all ductwork to the SMACNA pressure class
+    specified, including duct sealing, leakage testing, access doors, fire and
+    smoke dampers, and turning vanes.
+
+- key: d23.incl.curbs_supports
+  division: "23"
+  category: inclusion
+  default: true
+  position: 30
+  text: >-
+    Furnishing of all roof curbs, equipment rails, vibration isolation, housekeeping
+    pad dimensions and structural support requirements, delivered in time for
+    installation by the responsible trades.
+
+- key: d23.incl.tab
+  division: "23"
+  category: inclusion
+  default: true
+  position: 40
+  text: >-
+    Testing, adjusting and balancing by an independent AABC or NEBB certified
+    agency, including a full report, and return visits to rebalance following
+    any post-report adjustments.
+
+- key: d23.incl.controls
+  division: "23"
+  category: inclusion
+  default: true
+  position: 50
+  text: >-
+    Complete direct digital control system including controllers, sensors,
+    actuators, valves, control wiring, graphics, point-to-point checkout,
+    sequences of operation, programming and integration with the building
+    automation system.
+
+- key: d23.incl.startup
+  division: "23"
+  category: inclusion
+  default: true
+  position: 60
+  text: >-
+    Manufacturer start-up of all major equipment, submission of start-up
+    reports, and correction of deficiencies identified during start-up and
+    commissioning.
+
+- key: d23.incl.temp_hvac
+  division: "23"
+  category: inclusion
+  default: false
+  position: 70
+  text: >-
+    Temporary conditioning of the building using permanent equipment where
+    directed, including temporary filtration, extra filter changes, and
+    refurbishment of equipment to as-new condition prior to turnover.
+
+- key: d23.incl.duct_cleaning
+  division: "23"
+  category: inclusion
+  default: false
+  position: 80
+  text: >-
+    Cleaning of all ductwork prior to turnover where the system was operated
+    during construction, and replacement of all filters at Substantial
+    Completion.
+
+- key: d23.excl.electrical_power
+  division: "23"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Line-voltage power wiring, disconnects, starters and variable frequency
+    drives, which are by the Electrical Subcontractor unless factory mounted on
+    the equipment.
+
+- key: d23.excl.structural_support
+  division: "23"
+  category: exclusion
+  default: true
+  position: 210
+  text: >-
+    Structural steel dunnage and reinforcement of the building structure to
+    support HVAC equipment, which is by the Metals Subcontractor from loading
+    information furnished under this Subcontract.
+
+- key: d23.excl.gas_service
+  division: "23"
+  category: exclusion
+  default: false
+  position: 220
+  text: >-
+    Natural gas service, meter and piping to the building, which is by the
+    utility company and the Site Utilities Subcontractor.
+
+# ===========================================================================
+# Division 25 - Integrated Automation
+# ===========================================================================
+- key: d25.incl.integration
+  division: "25"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Integration of mechanical, electrical, lighting, metering and life safety
+    systems into a single supervisory platform, including all gateways,
+    protocol translation, network configuration, graphics and trend logging.
+
+- key: d25.incl.commissioning_support
+  division: "25"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    Support of the Commissioning Authority including point-to-point verification,
+    trend data extraction, and demonstration of every sequence of operation.
+
+- key: d25.excl.field_devices
+  division: "25"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Field devices, sensors and control valves furnished under the mechanical
+    and electrical Divisions. Their integration and configuration is included.
+
+# ===========================================================================
+# Division 26 - Electrical
+# ===========================================================================
+- key: d26.incl.complete_electrical
+  division: "26"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Complete electrical systems including service entrance, switchgear,
+    panelboards, transformers, feeders, branch circuits, wiring devices,
+    lighting fixtures, lighting controls, grounding and bonding.
+
+- key: d26.incl.utility_coordination
+  division: "26"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    Coordination with the serving electric utility, including submission of
+    applications, provision of the utility-required conduit, ductbank,
+    transformer pad, metering provisions and secondary connections.
+
+- key: d26.incl.lighting_controls
+  division: "26"
+  category: inclusion
+  default: true
+  position: 30
+  text: >-
+    Complete lighting control system including occupancy sensors, daylight
+    sensors, dimming controls, relay panels, programming, and the functional
+    testing and documentation required by the energy code.
+
+- key: d26.incl.generator
+  division: "26"
+  category: inclusion
+  default: false
+  position: 40
+  text: >-
+    Emergency and standby power systems including generator, automatic transfer
+    switches, fuel system, exhaust, load bank testing and code-required
+    acceptance testing.
+
+- key: d26.incl.equipment_connections
+  division: "26"
+  category: inclusion
+  default: true
+  position: 50
+  text: >-
+    Line-voltage power, disconnects and final connections to all equipment
+    furnished by other trades and by the Owner, based on approved shop drawings
+    and equipment schedules.
+
+- key: d26.incl.coordination_study
+  division: "26"
+  category: inclusion
+  default: true
+  position: 60
+  text: >-
+    Short circuit, protective device coordination and arc flash hazard studies
+    by a licensed professional engineer, with equipment labeling applied per the
+    study results.
+
+- key: d26.incl.testing_acceptance_elec
+  division: "26"
+  category: inclusion
+  default: true
+  position: 70
+  text: >-
+    Acceptance testing by a NETA certified agency for all specified equipment,
+    including insulation resistance, ground resistance, breaker and relay
+    testing, with a complete report submitted.
+
+- key: d26.incl.temp_power
+  division: "26"
+  category: inclusion
+  default: false
+  position: 80
+  text: >-
+    Temporary power and temporary lighting for the Project, including
+    distribution, maintenance, relocation as work proceeds, code-required
+    GFCI protection, monthly inspection, and removal at completion.
+
+- key: d26.incl.firestop_elec
+  division: "26"
+  category: inclusion
+  default: true
+  position: 90
+  text: >-
+    Firestopping of all electrical penetrations through rated assemblies using
+    listed systems appropriate to the penetrant, and identification labeling at
+    each location.
+
+- key: d26.excl.low_voltage
+  division: "26"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Structured cabling, audio-visual, security and fire alarm systems, which are
+    by the Division 27 and 28 Subcontractors. Conduit, back boxes and pull
+    strings for those systems are included where shown.
+
+- key: d26.excl.utility_fees
+  division: "26"
+  category: exclusion
+  default: true
+  position: 210
+  text: >-
+    Utility company charges, aid-to-construction fees and transformer costs,
+    which are paid directly by the Owner.
+
+- key: d26.excl.equipment_furnish
+  division: "26"
+  category: exclusion
+  default: false
+  position: 220
+  text: >-
+    Furnishing of mechanical equipment, starters and variable frequency drives,
+    which are furnished by the Mechanical Subcontractor for connection under
+    this Subcontract.
+
+# ===========================================================================
+# Division 27 - Communications
+# ===========================================================================
+- key: d27.incl.structured_cabling
+  division: "27"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Complete structured cabling system including horizontal and backbone
+    cabling, patch panels, racks, cable management, grounding, labeling,
+    testing and certification to the specified performance category.
+
+- key: d27.incl.testing_certification
+  division: "27"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    Testing of every copper and fiber link with a calibrated certification
+    tester, submission of the full test results in electronic form, and a
+    manufacturer's extended system warranty.
+
+- key: d27.incl.pathways
+  division: "27"
+  category: inclusion
+  default: true
+  position: 30
+  text: >-
+    Cable tray, J-hooks, sleeves, innerduct and firestopping of communications
+    pathways, including all penetrations created by this trade.
+
+- key: d27.incl.av
+  division: "27"
+  category: inclusion
+  default: false
+  position: 40
+  text: >-
+    Audio-visual systems including displays, projectors, sound reinforcement,
+    control systems, programming, calibration and Owner training.
+
+- key: d27.excl.conduit_backboxes
+  division: "27"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Conduit, back boxes, and line-voltage power to communications rooms and
+    devices, which are by the Electrical Subcontractor.
+
+- key: d27.excl.active_equipment
+  division: "27"
+  category: exclusion
+  default: false
+  position: 210
+  text: >-
+    Owner-furnished active network equipment, switches, routers and servers.
+    Rack space, patching and cable management for them are included.
+
+# ===========================================================================
+# Division 28 - Electronic Safety and Security
+# ===========================================================================
+- key: d28.incl.fire_alarm
+  division: "28"
+  category: inclusion
+  default: true
+  position: 10
+  text: >-
+    Complete fire alarm system including control panel, initiating devices,
+    notification appliances, wiring, programming, battery calculations, voltage
+    drop calculations, and permit drawings sealed as required by the authority
+    having jurisdiction.
+
+- key: d28.incl.fa_testing
+  division: "28"
+  category: inclusion
+  default: true
+  position: 20
+  text: >-
+    100% device testing and final acceptance testing witnessed by the authority
+    having jurisdiction, including the NFPA 72 record of completion and
+    inspection and testing forms.
+
+- key: d28.incl.interfaces
+  division: "28"
+  category: inclusion
+  default: true
+  position: 30
+  text: >-
+    All interfaces to other systems, including elevator recall and shunt trip,
+    sprinkler tamper and flow monitoring, HVAC smoke control shutdown, door
+    holder release and access control release on alarm.
+
+- key: d28.incl.access_control
+  division: "28"
+  category: inclusion
+  default: false
+  position: 40
+  text: >-
+    Access control system including controllers, readers, request-to-exit
+    devices, door position switches, electrified hardware connection, software
+    configuration, credential enrollment and Owner training.
+
+- key: d28.incl.video
+  division: "28"
+  category: inclusion
+  default: false
+  position: 50
+  text: >-
+    Video surveillance system including cameras, network video recorders,
+    storage sized for the specified retention period, licensing, camera aiming
+    and view documentation.
+
+- key: d28.excl.conduit_power_sec
+  division: "28"
+  category: exclusion
+  default: true
+  position: 200
+  text: >-
+    Conduit, back boxes and line-voltage power, which are by the Electrical
+    Subcontractor from the device locations furnished under this Subcontract.
+
+- key: d28.excl.door_hardware
+  division: "28"
+  category: exclusion
+  default: true
+  position: 210
+  text: >-
+    Furnishing of electrified door hardware, which is furnished by the Division
+    08 Subcontractor and connected under this Subcontract.
+
+- key: d28.excl.monitoring
+  division: "28"
+  category: exclusion
+  default: false
+  position: 220
+  text: >-
+    Ongoing central station monitoring and communication service charges after
+    Substantial Completion, which are contracted directly by the Owner.

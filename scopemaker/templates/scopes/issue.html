@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}Issue {{ scope.document_title }} &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('scopes.edit', scope_id=scope.id) }}">{{ scope.document_title }}</a> / Issue
+</div>
+<div class="pagehead"><div><h1>Issue this scope</h1></div></div>
+
+<div class="callout">
+  Issuing freezes version {{ scope.version }} as an immutable revision and locks
+  the document. The exact text that went out with the subcontract is preserved,
+  which is what you will want if the scope is ever disputed. You can still
+  create revision {{ scope.version + 1 }} afterwards.
+</div>
+
+<div class="card">
+  <div class="card__body">
+    <table class="table">
+      <tbody>
+        <tr><th>Document</th><td>{{ scope.document_title }}</td></tr>
+        <tr><th>Division</th><td>{{ scope.division_code or '—' }} {{ scope.trade_name or '' }}</td></tr>
+        <tr><th>Project</th><td>{{ scope.project.display_title if scope.project else '—' }}</td></tr>
+        <tr><th>Bid package</th><td>{{ scope.bid_package.display_title if scope.bid_package else '—' }}</td></tr>
+        <tr><th>Items</th><td>{{ scope.item_count }}</td></tr>
+        <tr><th>Total amount</th>
+            <td>{{ '${:,.2f}'.format(scope.total_amount) if scope.total_amount is not none else 'TBD' }}</td></tr>
+      </tbody>
+    </table>
+
+    <form method="post" novalidate style="margin-top:1rem">
+      {{ form.hidden_tag() }}
+      {{ field(form.note, placeholder='Optional note recorded against this revision') }}
+      <div class="btnrow">
+        {{ form.submit(class='btn btn--primary') }}
+        <a class="btn btn--secondary" href="{{ url_for('scopes.edit', scope_id=scope.id) }}">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

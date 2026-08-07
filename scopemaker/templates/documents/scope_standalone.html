@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+{# Self-contained document page.
+
+   This is exactly what WeasyPrint is handed and what /exports/<id>/print
+   serves for browser printing. The stylesheet is inlined rather than linked so
+   that both consumers get it: WeasyPrint resolves relative URLs against the
+   package directory while the browser resolves them against the request path,
+   and those two disagree. Inlining sidesteps the whole problem. #}
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ doc.title }}</title>
+  <style>{{ document_css() }}</style>
+</head>
+<body>
+{% include 'documents/scope_body.html' %}
+</body>
+</html>

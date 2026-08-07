@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}Create account &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card__header"><h1 class="card__title">Create your account</h1></div>
+  <div class="card__body">
+    {% if invitation %}
+    <div class="callout callout--info">
+      You were invited to join <strong>{{ invitation.organization.name }}</strong>
+      as {{ invitation.role }}.
+    </div>
+    {% endif %}
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.full_name, autocomplete='name', autofocus=true) }}
+      {{ field(form.email, autocomplete='email', readonly=true if invitation else false) }}
+      {% if form.organization_name is defined %}
+        {{ field(form.organization_name, autocomplete='organization') }}
+      {% endif %}
+      {{ field(form.password, autocomplete='new-password') }}
+      {{ field(form.confirm, autocomplete='new-password') }}
+      <div style="margin-top:1rem">{{ form.submit(class='btn btn--primary btn--block') }}</div>
+    </form>
+  </div>
+  <div class="card__footer small muted">
+    Already registered? <a href="{{ url_for('auth.login') }}">Sign in</a>.
+  </div>
+</div>
+{% endblock %}

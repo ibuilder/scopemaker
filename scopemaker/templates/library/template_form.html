@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field, checkbox %}
+{% block title %}Edit template &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('library.templates') }}">Templates</a> / {{ template.name }}</div>
+<div class="pagehead"><div><h1>Edit template</h1></div></div>
+
+<div class="card">
+  <div class="card__body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.name) }}
+      {{ field(form.description) }}
+      {{ field(form.division_code) }}
+      {{ checkbox(form.is_default) }}
+      {{ checkbox(form.is_active) }}
+      <div class="btnrow">
+        {{ form.submit(class='btn btn--primary') }}
+        <a class="btn btn--secondary" href="{{ url_for('library.templates') }}">Cancel</a>
+      </div>
+    </form>
+  </div>
+  <div class="card__footer small muted">
+    Captured {{ template.payload.get('sections', [])|length }} sections.
+    The saved content itself is edited by re-saving a scope as a new template.
+  </div>
+</div>
+{% endblock %}

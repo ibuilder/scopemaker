@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: scopemaker
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-scopemaker-dev-password}
+      POSTGRES_DB: scopemaker
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scopemaker -d scopemaker"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  web:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      FLASK_ENV: production
+      DATABASE_URL: postgresql+psycopg://scopemaker:${POSTGRES_PASSWORD:-scopemaker-dev-password}@db:5432/scopemaker
+      # Generate real values before exposing this to anyone:
+      #   python -c "import secrets; print(secrets.token_urlsafe(64))"
+      #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?set ENCRYPTION_KEY in .env}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      TRUSTED_PROXY_COUNT: ${TRUSTED_PROXY_COUNT:-0}
+      FORCE_HTTPS: ${FORCE_HTTPS:-0}
+      REGISTRATION_MODE: ${REGISTRATION_MODE:-invite}
+      LOG_FORMAT: json
+      PROCORE_ENABLED: ${PROCORE_ENABLED:-0}
+      PROCORE_CLIENT_ID: ${PROCORE_CLIENT_ID:-}
+      PROCORE_CLIENT_SECRET: ${PROCORE_CLIENT_SECRET:-}
+      PROCORE_REDIRECT_URI: ${PROCORE_REDIRECT_URI:-http://localhost:8000/procore/callback}
+    ports:
+      - "${PORT:-8000}:8000"
+    restart: unless-stopped
+
+volumes:
+  pgdata:

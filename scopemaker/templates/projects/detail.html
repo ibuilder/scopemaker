@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import status_chip, empty_state %}
+{% block title %}{{ project.display_title }} &middot; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('projects.index') }}">Projects</a> / {{ project.name }}</div>
+
+<div class="pagehead">
+  <div>
+    <h1>{{ project.name }}</h1>
+    <p class="pagehead__sub">
+      {% if project.number %}{{ project.number }}{% endif %}
+      {% if project.location %} &middot; {{ project.location }}{% endif %}
+      {% if project.is_archived %} <span class="chip chip--archived">Archived</span>{% endif %}
+    </p>
+  </div>
+  <div class="btnrow">
+    {% if current_user.has_role('editor') %}
+    <a class="btn btn--secondary" href="{{ url_for('projects.edit', project_id=project.id) }}">Edit</a>
+    <a class="btn btn--secondary" href="{{ url_for('projects.create_package', project_id=project.id) }}">Add bid package</a>
+    {% endif %}
+    {% if procore_enabled and project.procore_project_id %}
+    <form method="post" action="{{ url_for('procore.sync_packages', project_id=project.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn--secondary">Sync packages</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid grid--2">
+  <div class="card">
+    <div class="card__header"><h2 class="card__title">Details</h2></div>
+    <div class="card__body">
+      <table class="table">
+        <tbody>
+          <tr><th>Owner</th><td>{{ project.owner_name or '—' }}</td></tr>
+          <tr><th>Architect</th><td>{{ project.architect_name or '—' }}</td></tr>
+          <tr><th>Engineer</th><td>{{ project.engineer_name or '—' }}</td></tr>
+          <tr><th>Contractor</th><td>{{ project.contractor_name or '—' }}</td></tr>
+          <tr><th>Delivery</th><td>{{ project.delivery_method or '—' }}</td></tr>
+          <tr><th>Start</th><td>{{ project.start_date.strftime('%d %b %Y') if project.start_date else '—' }}</td></tr>
+          <tr><th>Completion</th><td>{{ project.completion_date.strftime('%d %b %Y') if project.completion_date else '—' }}</td></tr>
+          {% if project.procore_project_id %}
+          <tr><th>Procore id</th><td class="mono">{{ project.procore_project_id }}</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+    {% if current_user.has_role('editor') %}
+    <div class="card__footer">
+      <form method="post" action="{{ url_for('projects.archive', project_id=project.id) }}"
+            data-confirm="{{ 'Restore' if project.is_archived else 'Archive' }} this project?">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn--sm btn--danger">
+          {{ 'Restore project' if project.is_archived else 'Archive project' }}
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card__header"><h2 class="card__title">Bid packages</h2></div>
+    {% if project.bid_packages %}
+    <div class="table__wrap" style="border:0;border-radius:0">
+      <table class="table">
+        <thead><tr><th>Package</th><th>Division</th><th>Subcontractor</th><th></th></tr></thead>
+        <tbody>
+          {% for package in project.bid_packages %}
+          <tr>
+            <td><strong>{{ package.number }}</strong><br><span class="muted small">{{ package.name }}</span></td>
+            <td>
+              {% if package.division_code %}<span class="chip chip--division">{{ package.division_code }}</span>{% else %}<span class="muted">—</span>{% endif %}
+              {% if package.trade_name %}<br><span class="muted small">{{ package.trade_name }}</span>{% endif %}
+            </td>
+            <td class="small">{{ package.subcontractor_name or '—' }}</td>
+            <td>
+              <div class="btnrow">
+                {% if current_user.has_role('editor') %}
+                <a class="btn btn--sm btn--primary"
+                   href="{{ url_for('scopes.new', bid_package_id=package.id) }}">Scope</a>
+                <a class="btn btn--sm btn--secondary"
+                   href="{{ url_for('projects.edit_package', package_id=package.id) }}">Edit</a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="card__body">
+      {{ empty_state('No bid packages',
+         'Add the packages you are bidding so scopes can carry the right number and trade.',
+         url_for('projects.create_package', project_id=project.id) if current_user.has_role('editor') else none,
+         'Add bid package') }}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__header">
+    <h2 class="card__title">Scopes on this project</h2>
+    {% if current_user.has_role('editor') %}
+    <a class="btn btn--sm btn--primary" href="{{ url_for('scopes.new') }}">New scope</a>
+    {% endif %}
+  </div>
+  {% if scopes %}
+  <div class="table__wrap" style="border:0;border-radius:0">
+    <table class="table">
+      <thead><tr><th>Document</th><th>Division</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+      <tbody>
+        {% for scope in scopes %}
+        <tr>
+          <td><a href="{{ url_for('scopes.edit', scope_id=scope.id) }}"><strong>{{ scope.document_title }}</strong></a></td>
+          <td>{% if scope.division_code %}<span class="chip chip--division">{{ scope.division_code }}</span>{% endif %}</td>
+          <td>{{ status_chip(scope.status, scope.status_label) }}</td>
+          <td class="muted small">{{ scope.updated_at.strftime('%d %b %Y') }}</td>
+          <td><a class="btn btn--sm btn--secondary"
+                 href="{{ url_for('exports.download', scope_id=scope.id, format_key='pdf') }}">PDF</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card__body">{{ empty_state('No scopes yet', 'Generate one from a bid package above.') }}</div>
+  {% endif %}
+</div>
+{% endblock %}

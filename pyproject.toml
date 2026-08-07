@@ -1,0 +1,118 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scopemaker"
+version = "1.0.0"
+description = "Generate, edit and export construction subcontract Scope of Work exhibits from a CSI MasterFormat clause library."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "ibuilder" }]
+keywords = ["construction", "scope of work", "csi", "masterformat", "procore", "subcontract", "flask"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Flask",
+    "Intended Audience :: Other Audience",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "Flask>=3.0,<4.0",
+    "Flask-SQLAlchemy>=3.1,<4.0",
+    "Flask-Migrate>=4.0,<5.0",
+    "Flask-Login>=0.6.3,<0.7",
+    "Flask-WTF>=1.2,<2.0",
+    "Flask-Limiter>=3.5,<4.0",
+    "WTForms>=3.1,<4.0",
+    "SQLAlchemy>=2.0,<3.0",
+    "alembic>=1.13",
+    "argon2-cffi>=23.1",
+    "Authlib>=1.3,<2.0",
+    "requests>=2.31",
+    "WeasyPrint>=61.0",
+    "python-docx>=1.1",
+    "bleach>=6.1",
+    "PyYAML>=6.0",
+    "python-dotenv>=1.0",
+    "pydantic>=2.6,<3.0",
+    "cryptography>=42.0",
+    "email-validator>=2.1",
+    "python-slugify>=8.0",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.1"]
+server = ["gunicorn>=21.2"]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=4.1",
+    "ruff>=0.4",
+    "mypy>=1.9",
+    "types-PyYAML",
+    "types-requests",
+    "types-bleach",
+    "responses>=0.25",
+    "freezegun>=1.4",
+    "pypdf>=4.0",
+]
+
+[project.urls]
+Homepage = "https://ibuilder.github.io/procore-exhibit-generator/"
+Repository = "https://github.com/ibuilder/procore-exhibit-generator"
+Issues = "https://github.com/ibuilder/procore-exhibit-generator/issues"
+
+[project.scripts]
+scopemaker = "scopemaker.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["scopemaker*"]
+
+[tool.setuptools.package-data]
+scopemaker = [
+    "templates/**/*",
+    "static/**/*",
+    "data/seed/*.yaml",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+    "pdf: tests that require the WeasyPrint native stack (GTK/Pango/cairo)",
+]
+filterwarnings = ["ignore::DeprecationWarning:passlib.*"]
+
+[tool.coverage.run]
+source = ["scopemaker"]
+omit = ["*/migrations/*", "*/tests/*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = ["migrations", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+    "B008",    # Flask/WTForms idiomatically call in argument defaults
+    "RUF012",  # SQLAlchemy declarative attrs are not ClassVar
+    # This project generates typeset legal documents: en dashes, non-breaking
+    # spaces and similar punctuation are correct, not accidents.
+    "RUF001",
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# DEFAULT_SECTIONS is a table; aligning it beats wrapping every row.
+"scopemaker/models/scope.py" = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_configs = true
+ignore_missing_imports = true
+exclude = ["migrations/", "tests/", ".venv/"]

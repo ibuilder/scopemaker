@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Registration closed &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card__body empty">
+    <h3>{% if invite_required %}An invitation is required{% else %}Registration is closed{% endif %}</h3>
+    <p class="muted">
+      {% if invite_required %}
+        This deployment only accepts new accounts through an invitation link.
+      {% else %}
+        This deployment does not allow self-service registration. An
+        administrator can create an account for you.
+      {% endif %}
+    </p>
+    <a class="btn btn--secondary" href="{{ url_for('auth.login') }}">Go to sign in</a>
+  </div>
+</div>
+{% endblock %}

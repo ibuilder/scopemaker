@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}Settings: {{ scope.document_title }} &middot; {{ app_name }}{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('scopes.index') }}">Scopes</a> /
+  <a href="{{ url_for('scopes.edit', scope_id=scope.id) }}">{{ scope.document_title }}</a> / Settings
+</div>
+<div class="pagehead"><div><h1>Scope settings</h1></div></div>
+
+{% if scope.is_locked %}
+<div class="callout">
+  This scope is {{ scope.status_label|lower }} and locked. Create a revision from
+  the editor before changing anything here.
+</div>
+{% endif %}
+
+<form method="post" novalidate>
+  {{ form.hidden_tag() }}
+
+  <div class="card">
+    <div class="card__header"><h2 class="card__title">Identity</h2></div>
+    <div class="card__body">
+      <div class="formgrid">
+        {{ field(form.exhibit_label) }}
+        {{ field(form.title) }}
+        {{ field(form.division_code) }}
+        {{ field(form.trade_name) }}
+        {{ field(form.project_id) }}
+        {{ field(form.bid_package_id) }}
+        {{ field(form.status) }}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__header">
+      <h2 class="card__title">Numbering</h2>
+      <span class="muted small">Applies to the PDF, Word, Markdown and JSON alike</span>
+    </div>
+    <div class="card__body">
+      {{ field(form.numbering_scheme) }}
+      <div class="formgrid">
+        {{ field(form.level1_style) }}
+        {{ field(form.level2_style) }}
+        {{ field(form.level3_style) }}
+      </div>
+      <p class="field__hint">
+        Level styles apply to the outline scheme. Legal numbering concatenates
+        the levels, producing 1., 1.1, 1.1.1.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card__header"><h2 class="card__title">Contract amount</h2></div>
+    <div class="card__body">
+      <div class="formgrid">
+        {{ field(form.currency) }}
+        {{ field(form.base_bid_amount) }}
+        {{ field(form.alternates_amount) }}
+        {{ field(form.adjustments_amount) }}
+      </div>
+      <p class="field__hint">Leave an amount blank to print "TBD" on the exhibit.</p>
+    </div>
+  </div>
+
+  <div class="btnrow">
+    {{ form.submit(class='btn btn--primary') }}
+    <a class="btn btn--secondary" href="{{ url_for('scopes.edit', scope_id=scope.id) }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

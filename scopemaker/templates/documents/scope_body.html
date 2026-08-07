@@ -1,0 +1,101 @@
+{# The document itself. Included by both the standalone (PDF/print) page and
+   the in-app live preview, so the two can never disagree. #}
+{% macro render_lines(lines) %}
+<ol class="doc__list">
+  {% for line in lines %}
+  <li class="doc__item doc__item--depth-{{ line.depth }}">
+    <span class="doc__item-label">{{ line.label }}</span>
+    <span class="doc__item-text">{{ line.html|safe }}</span>
+  </li>
+  {% if line.children %}
+  <li class="doc__item doc__item--nested">{{ render_lines(line.children) }}</li>
+  {% endif %}
+  {% endfor %}
+</ol>
+{% endmacro %}
+
+<article class="doc {{ 'doc--draft' if doc.status not in ('issued', 'approved') }}">
+
+  <div class="doc__running-header">
+    {{ [doc.project.name, doc.bid_package.number, doc.trade_name]|select|join(' | ') }}
+  </div>
+
+  <h1 class="doc__title">{{ doc.title }}</h1>
+  {% set subtitle = [doc.division_label, doc.trade_name]|select|join(' – ') %}
+  {% if subtitle %}
+  <p class="doc__subtitle">{{ subtitle }}</p>
+  {% endif %}
+
+  {% set facts = [
+    ('Project', [doc.project.number, doc.project.name]|select|join('  ')),
+    ('Location', doc.project.location),
+    ('Owner', doc.project.owner),
+    ('Architect', doc.project.architect),
+    ('Contractor', doc.project.contractor or doc.organization.name),
+    ('Bid Package', [doc.bid_package.number, doc.bid_package.name]|select|join('  ')),
+    ('Subcontractor', doc.bid_package.subcontractor),
+  ]|selectattr('1')|list %}
+  {% if facts %}
+  <table class="doc__facts">
+    <tbody>
+      {% for label, value in facts %}
+      <tr><th scope="row">{{ label }}</th><td>{{ value }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% for section in doc.enabled_sections %}
+  <section class="doc__section" id="doc-section-{{ section.key }}">
+    <h2 class="doc__heading">
+      <span class="doc__heading-number">{{ section.number }}</span>{{ section.heading }}
+    </h2>
+
+    {% if section.body_html %}
+    <div class="doc__body">{{ section.body_html|safe }}</div>
+    {% endif %}
+
+    {% if section.kind == 'recap' %}
+    <table class="doc__recap">
+      <tbody>
+        {% for row in doc.recap_rows %}
+        <tr>
+          <td>{{ row.label }}</td>
+          <td>
+            {%- if row.amount is none -%}
+              $ TBD
+            {%- else -%}
+              ${{ '{:,.2f}'.format(row.amount) }}
+            {%- endif -%}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% elif section.lines %}
+    {{ render_lines(section.lines) }}
+    {% endif %}
+  </section>
+  {% endfor %}
+
+  {% if doc.status in ('approved', 'issued') %}
+  <table class="doc__signatures">
+    <tbody>
+      <tr>
+        <td>
+          <strong>{{ doc.project.contractor or doc.organization.name or 'Contractor' }}</strong><br>
+          By:<br>Name / Title:<br>Date:
+        </td>
+        <td>
+          <strong>{{ doc.bid_package.subcontractor or 'Subcontractor' }}</strong><br>
+          By:<br>Name / Title:<br>Date:
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  {% endif %}
+
+  <div class="doc__running-footer">
+    {{ doc.title }}{% if doc.version > 1 %} &middot; Revision {{ doc.version }}{% endif %}
+  </div>
+</article>

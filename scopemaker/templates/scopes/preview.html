@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Preview: {{ scope.document_title }} &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--wide{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/document.css') }}">
+{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('scopes.index') }}">Scopes</a> /
+  <a href="{{ url_for('scopes.edit', scope_id=scope.id) }}">{{ scope.document_title }}</a> / Preview
+</div>
+
+<div class="pagehead">
+  <div>
+    <h1>Preview</h1>
+    <p class="pagehead__sub">This is the same markup the PDF is rendered from.</p>
+  </div>
+  <div class="btnrow">
+    <a class="btn btn--secondary" href="{{ url_for('scopes.edit', scope_id=scope.id) }}">Back to editor</a>
+    <a class="btn btn--secondary" href="{{ url_for('exports.print_view', scope_id=scope.id) }}"
+       target="_blank" rel="noopener">Print view</a>
+    {% if pdf_available %}
+    <a class="btn btn--primary" href="{{ url_for('exports.download', scope_id=scope.id, format_key='pdf') }}">Download PDF</a>
+    {% endif %}
+    <a class="btn btn--secondary" href="{{ url_for('exports.download', scope_id=scope.id, format_key='docx') }}">Download Word</a>
+  </div>
+</div>
+
+{% if not pdf_available %}
+<div class="callout">
+  Server-side PDF generation is unavailable on this deployment. Use the print
+  view and your browser's "Save as PDF" in the meantime &mdash; it renders from
+  this same stylesheet.
+</div>
+{% endif %}
+
+<div style="background:var(--slate-100);padding:1.5rem;border-radius:var(--radius-lg)">
+  {{ preview_html|safe }}
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}{{ 'Edit' if package else 'New' }} bid package &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+  <a href="{{ url_for('projects.index') }}">Projects</a> /
+  <a href="{{ url_for('projects.detail', project_id=project.id) }}">{{ project.name }}</a> /
+  {{ package.number if package else 'New package' }}
+</div>
+<div class="pagehead"><div><h1>{{ 'Edit bid package' if package else 'New bid package' }}</h1></div></div>
+
+<div class="card">
+  <div class="card__body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="formgrid">
+        {{ field(form.number, placeholder='BP-21A') }}
+        {{ field(form.name, placeholder='Fire Protection') }}
+      </div>
+      {{ field(form.division_code) }}
+      {{ field(form.trade_name) }}
+      <div class="formgrid">
+        {{ field(form.subcontractor_name) }}
+        {{ field(form.base_bid_amount) }}
+        {{ field(form.bid_due_date) }}
+      </div>
+      <div class="btnrow">
+        {{ form.submit(class='btn btn--primary') }}
+        <a class="btn btn--secondary" href="{{ url_for('projects.detail', project_id=project.id) }}">Cancel</a>
+      </div>
+    </form>
+  </div>
+  {% if package %}
+  <div class="card__footer">
+    <form method="post" action="{{ url_for('projects.delete_package', package_id=package.id) }}"
+          data-confirm="Delete this bid package?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn--sm btn--danger">Delete package</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

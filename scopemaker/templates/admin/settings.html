@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}Organization settings &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('admin.index') }}">Administration</a> / Settings</div>
+<div class="pagehead"><div><h1>Organization settings</h1></div></div>
+
+<div class="card">
+  <div class="card__header">
+    <h2 class="card__title">Details</h2>
+    <span class="muted small">Printed on generated exhibits</span>
+  </div>
+  <div class="card__body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.name) }}
+      {{ field(form.legal_name) }}
+      {{ field(form.address) }}
+      {{ field(form.phone) }}
+      {{ form.submit(class='btn btn--primary') }}
+    </form>
+  </div>
+  <div class="card__footer small muted">
+    Slug: <span class="mono">{{ organization.slug }}</span>
+  </div>
+</div>
+{% endblock %}

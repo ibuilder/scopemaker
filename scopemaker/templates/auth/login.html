@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}Sign in &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card__header"><h1 class="card__title">Sign in</h1></div>
+  <div class="card__body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.email, autocomplete='username', autofocus=true) }}
+      {{ field(form.password, autocomplete='current-password') }}
+      <label class="checkbox">{{ form.remember() }}<span>{{ form.remember.label.text }}</span></label>
+      <div style="margin-top:1rem">{{ form.submit(class='btn btn--primary btn--block') }}</div>
+    </form>
+
+    {% if oidc_enabled %}
+    <p class="muted small" style="text-align:center;margin:1rem 0 .5rem">or</p>
+    <a class="btn btn--secondary btn--block" href="{{ url_for('auth.sso_login') }}">
+      Continue with {{ oidc_display_name }}
+    </a>
+    {% endif %}
+  </div>
+  <div class="card__footer small muted">
+    No account? <a href="{{ url_for('auth.register') }}">Create one</a>.
+  </div>
+</div>
+{% endblock %}

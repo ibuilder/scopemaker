@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import empty_state %}
+{% block title %}Specification sections &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--wide{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <div>
+    <h1>Specification sections</h1>
+    <p class="pagehead__sub">
+      {% if division_obj %}Offered on Division {{ division_obj.code }} scopes{% else %}All sections{% endif %}
+    </p>
+  </div>
+  <div class="btnrow">
+    <a class="btn btn--secondary" href="{{ url_for('library.index') }}">Clauses</a>
+    {% if current_user.has_role('editor') %}
+    <a class="btn btn--primary" href="{{ url_for('library.create_spec_section', division=division or '') }}">New section</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="callout callout--info">
+  A section can be cross-referenced to other divisions. That is what puts
+  Division 07 firestopping on a fire protection package &mdash; the single most
+  common scope gap in a subcontract exhibit.
+</div>
+
+<form class="toolbar" method="get">
+  <div class="field">
+    <label for="division">Show sections offered to</label>
+    <select id="division" name="division">
+      <option value="">All divisions</option>
+      {% for d in divisions %}
+      <option value="{{ d.code }}" {{ 'selected' if d.code == division }}>{{ d.code }} &mdash; {{ d.title }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="btn btn--secondary">Filter</button>
+</form>
+
+{% if sections %}
+<div class="table__wrap">
+  <table class="table">
+    <thead>
+      <tr><th>Number</th><th>Title</th><th>Lives in</th><th>Also offered to</th><th>Flags</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for section in sections %}
+      <tr {% if not section.is_active %}style="opacity:.55"{% endif %}>
+        <td class="mono">{{ section.code }}</td>
+        <td>{{ section.title }}</td>
+        <td><span class="chip chip--division">{{ section.division_code }}</span></td>
+        <td>
+          {% if section.is_universal %}<span class="chip">Every scope</span>
+          {% elif section.related_divisions %}
+            {% for code in section.related_divisions %}<span class="chip chip--division">{{ code }}</span> {% endfor %}
+          {% else %}<span class="muted small">—</span>{% endif %}
+        </td>
+        <td>
+          {% if section.is_system %}<span class="chip chip--system">Shipped</span>
+          {% else %}<span class="chip chip--custom">Yours</span>{% endif %}
+          {% if section.is_default %}<span class="chip">Default</span>{% endif %}
+        </td>
+        <td>
+          {% if current_user.has_role('editor') and not section.is_system %}
+          <div class="btnrow">
+            <a class="btn btn--sm btn--secondary" href="{{ url_for('library.edit_spec_section', section_id=section.id) }}">Edit</a>
+            <form method="post" action="{{ url_for('library.delete_spec_section', section_id=section.id) }}"
+                  data-confirm="Delete this specification section?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn--sm btn--danger">Delete</button>
+            </form>
+          </div>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card"><div class="card__body">
+{{ empty_state('No specification sections',
+   'Add the sections from your project manual so scopes can cross-reference them.',
+   url_for('library.create_spec_section') if current_user.has_role('editor') else none,
+   'New section') }}
+</div></div>
+{% endif %}
+{% endblock %}

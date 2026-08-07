@@ -1,0 +1,102 @@
+"""HTML sanitization.
+
+Scope text is authored in a rich-text editor and is later embedded verbatim in
+HTML previews, PDFs and DOCX files.  Everything that arrives from a client is
+run through here first: the allowlist is deliberately small -- the formatting a
+contract exhibit actually uses -- so there is no route from a pasted clause to
+script execution for the next person who opens the document.
+"""
+
+from __future__ import annotations
+
+import re
+from html import unescape as html_unescape
+
+import bleach
+from markupsafe import Markup
+
+# Formatting genuinely used in scope language. Note the absence of any tag that
+# can execute, load or navigate on its own.
+ALLOWED_TAGS: set[str] = {
+    "p", "br", "span",
+    "strong", "b", "em", "i", "u", "s",
+    "sup", "sub",
+    "ul", "ol", "li",
+    "table", "thead", "tbody", "tr", "th", "td",
+    "a",
+    "blockquote",
+}
+
+ALLOWED_ATTRIBUTES: dict[str, list[str]] = {
+    "a": ["href", "title", "rel", "target"],
+    "span": ["class"],
+    "td": ["colspan", "rowspan"],
+    "th": ["colspan", "rowspan", "scope"],
+    "ol": ["type", "start"],
+    "ul": ["type"],
+}
+
+ALLOWED_PROTOCOLS: list[str] = ["http", "https", "mailto"]
+
+# Inline text only -- used for headings, titles and single-line item text where
+# block structure would break the numbered outline.
+INLINE_TAGS: set[str] = {"strong", "b", "em", "i", "u", "s", "sup", "sub", "span", "br", "a"}
+
+_cleaner = bleach.Cleaner(
+    tags=ALLOWED_TAGS,
+    attributes=ALLOWED_ATTRIBUTES,
+    protocols=ALLOWED_PROTOCOLS,
+    strip=True,
+    strip_comments=True,
+)
+
+_inline_cleaner = bleach.Cleaner(
+    tags=INLINE_TAGS,
+    attributes={"a": ["href", "title", "rel"], "span": ["class"]},
+    protocols=ALLOWED_PROTOCOLS,
+    strip=True,
+    strip_comments=True,
+)
+
+_WHITESPACE = re.compile(r"[ \t]+")
+_EMPTY_PARAGRAPH = re.compile(r"<p>(\s|&nbsp;|<br\s*/?>)*</p>", re.IGNORECASE)
+
+
+def sanitize_html(value: str | None) -> Markup:
+    """Clean block-level rich text and mark it safe for template output."""
+    if not value:
+        return Markup("")
+    cleaned = _cleaner.clean(str(value))
+    cleaned = _EMPTY_PARAGRAPH.sub("", cleaned)
+    return Markup(cleaned.strip())
+
+
+def sanitize_inline(value: str | None) -> Markup:
+    """Clean text that must stay on one line (item text, headings)."""
+    if not value:
+        return Markup("")
+    cleaned = _inline_cleaner.clean(str(value))
+    cleaned = _WHITESPACE.sub(" ", cleaned)
+    return Markup(cleaned.strip())
+
+
+def strip_html(value: str | None) -> str:
+    """Plain text with entities resolved -- for Markdown, JSON and search.
+
+    Entity decoding covers the whole HTML5 table, not a hand-written subset:
+    clause text routinely carries &ndash;, &nbsp; and &amp;, and a partial list
+    leaks the raw entity into exported plain text.
+    """
+    if not value:
+        return ""
+    text = re.sub(r"<br\s*/?>", " ", str(value), flags=re.IGNORECASE)
+    text = re.sub(r"</(p|li|div|tr)>", " ", text, flags=re.IGNORECASE)
+    text = bleach.clean(text, tags=set(), attributes={}, strip=True)
+    # bleach escapes as it strips, so unescape once to get readable text.
+    text = html_unescape(text).replace("\xa0", " ")
+    return " ".join(text.split())
+
+
+def is_effectively_empty(value: str | None) -> bool:
+    """True when the markup carries no visible text."""
+    return not strip_html(value).strip()

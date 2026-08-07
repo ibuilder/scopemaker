@@ -1,113 +1,311 @@
-# Procore Exhibit Generator
+<div align="center">
 
-A web application that connects to Procore via the API to generate standardized exhibit documents for construction contracts. The application allows users to create, preview, and export exhibits to PDF and DOCX formats.
+# ScopeMaker
+
+**Construction scope of work exhibits, generated properly.**
+
+Pick a CSI division, choose from a curated clause library, edit anything you need to,
+and export a paginated PDF, an editable Word file, Markdown or JSON — all carrying
+identical clause numbering.
+
+[![CI](https://github.com/ibuilder/procore-exhibit-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/ibuilder/procore-exhibit-generator/actions/workflows/ci.yml)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
+[![Flask 3](https://img.shields.io/badge/flask-3.x-000000)](https://flask.palletsprojects.com/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+[Documentation](https://ibuilder.github.io/procore-exhibit-generator/) ·
+[Quick start](#quick-start) ·
+[API](#json-api) ·
+[Deployment](docs/deployment.md)
+
+</div>
+
+---
+
+## What this is
+
+Writing the Scope of Work exhibit that gets attached to a subcontract is repetitive,
+and getting it wrong is expensive. Miss the Division 07 firestopping that your fire
+protection subcontractor is contractually responsible for, and you have a scope gap
+that somebody pays for later.
+
+ScopeMaker turns that document into structured data:
+
+- a **clause library** of universal obligations plus trade-specific inclusions,
+  exclusions and clarifications, organised by CSI MasterFormat division;
+- **cross-referenced specification sections**, so a Division 21 package is
+  automatically offered the Division 07 firestopping and Division 08 access doors it
+  actually carries;
+- a **document model** where every line is an editable, reorderable, numberable item;
+- **exports** — PDF, DOCX, HTML, Markdown, JSON — rendered from one numbered tree, so
+  clause `3.2.4` means the same sentence in every one of them.
+
+> [!NOTE]
+> **v1.0.0 is a complete rewrite.** Earlier versions of this repository were a
+> browser-only prototype: a handful of static HTML pages whose JavaScript files were
+> never committed, an OAuth client secret kept in `localStorage`, and a "PDF export"
+> that screenshotted the page with `html2canvas` and pasted the image onto a single
+> A4 sheet. None of that survives. See [What changed in v1.0.0](#what-changed-in-v100).
+
+---
+
+## Quick start
+
+### Docker (recommended)
+
+```bash
+git clone https://github.com/ibuilder/procore-exhibit-generator.git
+cd procore-exhibit-generator
+cp .env.example .env
+```
+
+Generate the two required secrets and put them in `.env`:
+
+```bash
+python -c "import secrets; print('SECRET_KEY=' + secrets.token_urlsafe(64))"
+```
+
+```bash
+python -c "from cryptography.fernet import Fernet; print('ENCRYPTION_KEY=' + Fernet.generate_key().decode())"
+```
+
+Then bring it up:
+
+```bash
+docker compose up --build
+```
+
+The app is on <http://localhost:8000>. Migrations run and the clause library is seeded
+automatically on first boot.
+
+### Local development
+
+```bash
+python -m venv .venv && . .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+cp .env.example .env
+export FLASK_APP=wsgi:app FLASK_ENV=development
+flask db upgrade
+flask seed-library
+flask run
+```
+
+Create yourself an account and organization:
+
+```bash
+flask create-user you@example.com --name "Your Name" --org acme --role admin
+```
+
+Want something to look at immediately?
+
+```bash
+flask demo-data --org acme
+```
+
+That builds a sample project, a `BP-21A Fire Protection` bid package and a fully
+generated Division 21 exhibit.
+
+> [!IMPORTANT]
+> **PDF export needs native libraries.** WeasyPrint renders through Pango and cairo
+> rather than a browser. They are already in the Docker image; on a bare machine
+> install them first, or PDF export will be disabled while every other format keeps
+> working. Run `flask check-pdf` to see where you stand.
+>
+> | Platform | Command |
+> |---|---|
+> | Debian / Ubuntu | `apt-get install libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libcairo2 libgdk-pixbuf-2.0-0` |
+> | macOS | `brew install pango libffi` |
+> | Windows | Install the [GTK3 runtime](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases), then restart your shell |
+
+---
+
+## How a scope gets generated
+
+```
+Division 21 (Fire Suppression)
+        │
+        ├── universal clauses ────────┐
+        ├── Division 21 clauses ──────┤
+        ├── Division 01 spec sections ┤──▶ ScopeDocument ──▶ outline numbering ──┐
+        └── cross-referenced sections ┘         │                                │
+             (07 firestopping,                  │                                │
+              08 access doors,             editable items                        │
+              28 fire alarm…)              in the browser                        │
+                                                                                 ▼
+                                          PDF · DOCX · HTML · Markdown · JSON (identical numbering)
+```
+
+The generated exhibit follows the structure the industry actually writes:
+
+| § | Section | Content |
+|---|---|---|
+| 1 | Intent | Boilerplate, with project facts merged in |
+| 2 | Scope of Work Summary | The furnish-and-install statement, means and methods, and the applicable specification sections nested beneath (2.3.1, 2.3.2 …) |
+| 3 | Trade Specific Scope of Work Items | Inclusions |
+| 4 | Trade Specific Scope Exclusions | Exclusions |
+| 5 | Clarifications and Assumptions | Basis of the price |
+| 6–11 | Allowances · Alternates · Unit Prices · Schedule · Safety · Closeout | Optional |
+| 12 | Recap of Contract Amount | Base bid, alternates, adjustments, total |
+
+Every one of those lines is a database row you can reword, reorder, nest, promote,
+demote or delete before export.
+
+---
 
 ## Features
 
-- **Procore API Integration**: Pull project data directly from your Procore account
-- **Customizable Templates**: Create and save exhibit templates for reuse
-- **Export Options**: Export generated exhibits as PDF or DOCX files
-- **Responsive Design**: Works on desktop and mobile devices
-- **Local Storage**: Save your settings and recent exhibits
+**Scope generation**
+- Full CSI MasterFormat 2020 division list — all 50 numbers, with 15–20, 24, 29, 30,
+  36–39, 47 and 49 correctly marked reserved and never offered for selection
+- 236 shipped clauses across universal obligations and 20+ trades
+- 139 specification sections with cross-division references
+- Reusable templates: save any scope's structure and language and apply it again
 
-## Installation
+**Editing**
+- Live preview rendered from the same stylesheet as the PDF
+- Drag-to-reorder with cycle detection, inline editing, per-section enable/disable
+- Configurable outline numbering: legal (`1.`, `1.1`, `1.1.1`) or outline
+  (`1.`, `A.`, `1)`, `a)`), with per-level styles
 
-### Prerequisites
+**Documents**
+- **PDF** via WeasyPrint: real paged media, running headers and footers,
+  `Page N of M`, selectable and searchable text
+- **DOCX** via python-docx: character-level formatting preserved, live page-number
+  fields, ready to redline
+- **JSON** and **Markdown** for archiving, diffing revisions and downstream systems
 
-- Web server (Apache, Nginx, etc.) or static hosting service
-- Procore API credentials (Client ID, Client Secret)
-- Modern web browser
+**Governance**
+- Organizations with `viewer` / `editor` / `admin` roles, invitations, and OIDC SSO
+- Issuing a scope freezes an immutable revision; further edits create a new version
+- Tenant isolation enforced in one place and covered by tests
 
-### Setup Instructions
+**Integration**
+- Optional, fully server-side Procore: authorization-code OAuth and Developer Managed
+  Service Accounts, tokens encrypted at rest, project and bid-package sync, and
+  pushing finished exhibits onto commitments
+- Token-authenticated JSON API
+- No CDN dependencies — every asset is served from the app, so it runs air-gapped
 
-1. Clone or download this repository to your web server directory
-2. Register your application in the [Procore Developer Portal](https://developers.procore.com/)
-3. Set up the OAuth credentials and redirect URI in your Procore Developer Portal
-4. Launch the application and go to the Settings page to enter your API credentials
+---
+
+## JSON API
+
+Create a token under **Admin → API tokens**, then:
 
 ```bash
-# Example deployment using any static file server
-cd /path/to/webserver/directory
-git clone https://github.com/yourusername/procore-exhibit-generator.git
-cd procore-exhibit-generator
-# If using npm static server
-npx serve
+curl -H "Authorization: Bearer smk_..." https://your-host/api/v1/divisions
 ```
 
-## Directory Structure
+Generate a complete Division 26 scope in one call:
 
-```
-procore-exhibit-generator/
-├── index.html              # Landing page
-├── generator.html          # Main exhibit generator page
-├── settings.html           # API configuration page
-├── preview.html            # Exhibit preview page
-├── callback.html           # OAuth callback handler
-├── js/
-│   ├── procore-api.js      # Procore API service
-│   ├── exhibit-generator.js # Main application logic
-│   ├── database-service.js # Local storage service
-│   └── export-utils.js     # PDF/DOCX export utilities
-├── css/
-│   └── styles.css          # Custom styles
-└── README.md               # This file
+```bash
+curl -X POST https://your-host/api/v1/scopes \
+  -H "Authorization: Bearer smk_..." \
+  -H "Content-Type: application/json" \
+  -d '{"division_code": "26", "use_defaults": true, "title": "Scope of Work"}'
 ```
 
-## Procore API Integration
+Download it as a PDF:
 
-This application uses the Procore REST API to access project data. The key endpoints used include:
+```bash
+curl -H "Authorization: Bearer smk_..." -o exhibit.pdf \
+  https://your-host/api/v1/scopes/<id>/export/pdf
+```
 
-- `/rest/v1.0/projects` - Get all accessible projects
-- `/rest/v1.0/projects/{project_id}/bid_packages` - Get bid packages for a project
-- `/rest/v1.0/projects/{project_id}/specifications` - Get specifications for a project
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/api/v1/divisions` | Selectable CSI divisions, categories and statuses |
+| `GET` | `/api/v1/library/clauses?division=21` | Clauses available for a division |
+| `GET` | `/api/v1/library/spec-sections?division=21` | Specification sections, including cross-references |
+| `GET` `POST` | `/api/v1/scopes` | List / generate scopes |
+| `GET` `PATCH` | `/api/v1/scopes/{id}` | Full numbered document / update |
+| `POST` | `/api/v1/scopes/{id}/issue` `/revise` | Freeze a version / open the next |
+| `GET` | `/api/v1/scopes/{id}/export/{pdf\|docx\|html\|md\|json}` | Download |
+| `GET` `POST` | `/api/v1/projects` | Projects and bid packages |
 
-Authentication is handled via OAuth 2.0. Users need to authorize the application to access their Procore data.
+Errors always come back as `{"error": {"code": ..., "message": ..., "details": ...}}`.
+Full reference: [docs/api.md](docs/api.md).
 
-## Using the Application
+---
 
-1. **Configure API Settings**
-   - Go to the Settings page
-   - Enter your Procore API credentials
-   - Click "Authorize with Procore" to complete OAuth authentication
+## Configuration
 
-2. **Generate an Exhibit**
-   - Go to the Generator page
-   - Select a project and bid package from your Procore account
-   - Customize the exhibit content
-   - Click "Preview Exhibit" to see how it will look
+Everything is environment-driven; see [`.env.example`](.env.example) for the annotated
+list. The settings that matter most:
 
-3. **Export the Exhibit**
-   - Preview the generated exhibit
-   - Choose to export as PDF or DOCX
-   - Save the file to your computer
+| Variable | Purpose |
+|---|---|
+| `SECRET_KEY` | Session signing. **Required in production** |
+| `ENCRYPTION_KEY` | Fernet key encrypting third-party tokens at rest. **Required in production** |
+| `DATABASE_URL` | PostgreSQL in production; SQLite is refused there |
+| `ALLOWED_HOSTS` | Comma-separated hostnames; blocks Host-header poisoning |
+| `REGISTRATION_MODE` | `open`, `invite` or `closed` |
+| `TRUSTED_PROXY_COUNT` | Number of proxies whose `X-Forwarded-*` to trust |
+| `PROCORE_ENABLED` | Off by default; the app is fully usable without it |
+| `OIDC_ENABLED` | Off by default |
 
-## Customization
+`ProductionConfig` refuses to boot without the secrets, and refuses SQLite. A
+misconfigured deploy fails at startup rather than quietly leaking sessions.
 
-### Adding New Templates
+---
 
-You can create and save custom templates by modifying the structure in the `exhibit-generator.js` file. Templates are stored in the browser's local storage.
+## Commands
 
-### Modifying the Exhibit Structure
+| Command | Does |
+|---|---|
+| `flask db upgrade` | Apply migrations |
+| `flask seed-library` | Load or refresh the shipped clause library (idempotent) |
+| `flask create-user EMAIL --org SLUG --role admin` | Create a user and organization |
+| `flask grant-role EMAIL SLUG ROLE` | Change a role |
+| `flask check-pdf` | Report whether PDF rendering is usable |
+| `flask demo-data --org SLUG` | Create a sample project, package and scope |
 
-The structure of the exhibit document is defined in the `generateExhibitHtml` function in `exhibit-generator.js`. You can modify this function to change the layout, styling, and content of the generated exhibits.
+---
 
-## Browser Compatibility
+## Development
 
-This application is compatible with modern browsers that support ES6, including:
+```bash
+pytest                     # full suite
+pytest -m pdf              # PDF rendering (needs the native stack)
+ruff check .               # lint
+mypy scopemaker            # types
+```
 
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
+CI runs the suite on Python 3.11 and 3.12 with the WeasyPrint libraries installed, so
+the PDF tests execute for real; it also exercises the migrations against PostgreSQL
+in both directions, fails the build if the models have drifted from the migrations,
+and builds the Docker image.
+
+Architecture notes are in [docs/architecture.md](docs/architecture.md); the clause
+library format is documented in [docs/clause-library.md](docs/clause-library.md).
+
+---
+
+## What changed in v1.0.0
+
+| Prototype | v1.0.0 |
+|---|---|
+| 5 static HTML pages; the four referenced `js/*.js` files were never committed, so nothing ran | Flask 3 application, app factory, 9 blueprints, service layer |
+| Procore **client secret stored in `localStorage`** | Server-side OAuth only; tokens Fernet-encrypted at rest, secret never leaves the server |
+| Traditional Procore service accounts (retired 2025-03-18) | Authorization-code grant plus Developer Managed Service Accounts |
+| "PDF" = `html2canvas` screenshot pasted onto one A4 page — no pagination, no selectable text | WeasyPrint paged media: real pagination, running headers/footers, `Page N of M`, searchable text |
+| DOCX export was `alert('would be implemented here')` | python-docx with formatting runs and live page-number fields |
+| Hardcoded Fire Protection sample text | 236-clause library across 20+ trades, plus 139 cross-referenced spec sections |
+| 16 hand-typed divisions, several of which do not exist | Canonical MasterFormat 2020, reserved numbers excluded and tested |
+| Browser `localStorage` "database" | PostgreSQL, SQLAlchemy 2.0, Alembic migrations |
+| No accounts | Organizations, roles, invitations, OIDC SSO, immutable revisions |
+| No tests | 214 tests, CI on two Python versions, PostgreSQL migration checks |
+| 8 CDN `<script>` tags | Zero external dependencies at runtime; strict `default-src 'self'` CSP |
+
+---
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT — see [LICENSE](LICENSE).
 
-## Acknowledgments
+Section titles from CSI MasterFormat are used for identification. The complete
+MasterFormat section list is published and copyrighted by the
+[Construction Specifications Institute](https://www.csiresources.org/); load your own
+project specification index for authoritative numbering.
 
-- [Bootstrap](https://getbootstrap.com/) - UI framework
-- [docx.js](https://docx.js.org/) - DOCX generation
-- [jsPDF](https://github.com/parallax/jsPDF) - PDF generation
-- [FileSaver.js](https://github.com/eligrey/FileSaver.js/) - File download functionality
-- [Procore API](https://developers.procore.com/) - Construction project management API
+This project is not affiliated with or endorsed by Procore Technologies, Inc.

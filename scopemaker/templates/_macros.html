@@ -1,0 +1,64 @@
+{# Shared form and display macros.
+
+   Jinja macros cannot declare **kwargs in their signature -- extra keyword
+   arguments arrive through the special `kwargs` variable, which is only
+   populated when the macro body references it. That is why these macros take
+   named options and forward `kwargs` into the widget call. #}
+
+{% macro field(f, wrapper_class='field') %}
+<div class="{{ wrapper_class }}">
+  {{ f.label }}
+  {{ f(aria_invalid='true' if f.errors else 'false', **kwargs) }}
+  {% if f.description %}<p class="field__hint">{{ f.description }}</p>{% endif %}
+  {% for error in f.errors %}<p class="field__error">{{ error }}</p>{% endfor %}
+</div>
+{% endmacro %}
+
+{% macro checkbox(f) %}
+<div class="field">
+  <label class="checkbox">
+    {{ f(**kwargs) }}
+    <span>{{ f.label.text }}{% if f.description %}<br><span class="field__hint">{{ f.description }}</span>{% endif %}</span>
+  </label>
+  {% for error in f.errors %}<p class="field__error">{{ error }}</p>{% endfor %}
+</div>
+{% endmacro %}
+
+{# `groups` is the (subgroup, divisions) list from masterformat.divisions_by_subgroup(),
+   which lives on the form rather than on the field. #}
+{% macro division_select(f, groups) %}
+<div class="field">
+  {{ f.label }}
+  <select id="{{ f.id }}" name="{{ f.name }}" aria-invalid="{{ 'true' if f.errors else 'false' }}">
+    <option value="">-- Select a division --</option>
+    {% for subgroup, items in groups %}
+    <optgroup label="{{ subgroup }}">
+      {% for d in items %}
+      <option value="{{ d.code }}" {{ 'selected' if f.data == d.code }}>{{ d.code }} &mdash; {{ d.title }}</option>
+      {% endfor %}
+    </optgroup>
+    {% endfor %}
+  </select>
+  {% if f.description %}<p class="field__hint">{{ f.description }}</p>{% endif %}
+  {% for error in f.errors %}<p class="field__error">{{ error }}</p>{% endfor %}
+</div>
+{% endmacro %}
+
+{% macro status_chip(status, label) %}
+<span class="chip chip--{{ status }}">{{ label or status }}</span>
+{% endmacro %}
+
+{% macro post_button(action, label, csrf, cls='btn btn--sm btn--secondary', confirm=None) %}
+<form method="post" action="{{ action }}" {% if confirm %}data-confirm="{{ confirm }}"{% endif %}>
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <button type="submit" class="{{ cls }}">{{ label }}</button>
+</form>
+{% endmacro %}
+
+{% macro empty_state(title, message, action_url=None, action_label=None) %}
+<div class="empty">
+  <h3>{{ title }}</h3>
+  <p>{{ message }}</p>
+  {% if action_url %}<a class="btn btn--primary" href="{{ action_url }}">{{ action_label }}</a>{% endif %}
+</div>
+{% endmacro %}

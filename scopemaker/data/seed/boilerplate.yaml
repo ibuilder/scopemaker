@@ -1,0 +1,86 @@
+# Prose boilerplate for the non-list sections of an exhibit.
+#
+# Placeholders in {braces} are substituted by scopemaker.services.scope_builder
+# from the scope, project and bid package. A placeholder with no available value
+# renders as a blank-line marker the author is expected to fill in, never as the
+# literal placeholder text.
+version: 1
+
+boilerplate:
+  intent: |
+    <p>In general, this Bid Package is comprehensive to the specific CSI Division
+    Work and related Work as referenced, indicated on, or implied by the Project
+    Drawings, Specifications and Project Manual. Subcontractor acknowledges that
+    the following Scope of Work detail is provided as a courtesy and must be used
+    in conjunction with <strong><u>all</u></strong> Project Documents. The Scope of
+    Work detail listed is not intended to describe a complete and final work
+    scope; it is provided as a summary overview only. Nothing in this Exhibit
+    relieves the Subcontractor of any obligation set out in the Contract
+    Documents.</p>
+
+  summary_lead: |
+    The Scope of Work shall include the furnishing and installation, complete, of
+    the <strong>{trade_upper} Work</strong> as outlined in the
+    <strong><u>Contract Bidding Requirements</u></strong> and in accordance with
+    the <strong><u>Contract Documents</u></strong>.
+
+  summary_means_and_methods: |
+    This shall include, but is not limited to, all required engineering,
+    submittals (including samples, mock-ups and shop drawings), materials,
+    fabrication, labor, equipment and tools, supervision, hoisting, scaffolding,
+    transportation, licenses, burden and taxes, sales taxes, and insurances as
+    required for a complete and operational installation.
+
+  summary_spec_lead: |
+    The Scope of Work shall include, but not be limited to, all Division 01
+    General Requirements and all the Work in the following Specification
+    Section(s), as further described herein:
+
+  inclusions_lead: |
+    The following is a general outline of items included, but not limited to,
+    under this Agreement for <strong><em>{trade}</em></strong> in accordance with
+    the Contract Documents:
+
+  exclusions_lead: |
+    The following is a list of specific exclusions normally related to this scope
+    of work. Any item not expressly excluded below and reasonably inferable from
+    the Contract Documents is included:
+
+  clarifications_lead: |
+    The following clarifications and assumptions form the basis of this Scope of
+    Work. Where a clarification conflicts with the Contract Documents, the
+    Contract Documents govern:
+
+  allowances_lead: |
+    The following allowances are carried in the Subcontract Amount and will be
+    adjusted by Change Order to reflect actual documented cost:
+
+  alternates_lead: |
+    The following alternates have been priced separately and are included only
+    where expressly accepted in writing:
+
+  unit_prices_lead: |
+    The following unit prices apply to additions to and deductions from the Work
+    and include all labor, material, equipment, overhead and profit:
+
+  schedule_lead: |
+    The following schedule requirements apply to this Scope of Work:
+
+  safety_lead: |
+    The following safety requirements apply in addition to the Contract Documents
+    and all applicable OSHA and jurisdictional requirements:
+
+  closeout_lead: |
+    The following closeout requirements must be satisfied before final payment
+    will be released:
+
+  attachments_lead: |
+    The following documents are attached to and made part of this Exhibit:
+
+  recap_lead: |
+    <strong><u>The Total Subcontract Amount is arrived at and recorded as
+    follows:</u></strong>
+
+  recap_note: |
+    <p>Amounts shown are in {currency} and exclude any taxes for which the
+    Project holds a valid exemption certificate.</p>

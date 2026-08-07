@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Server error &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card__body empty">
+    <h1>500</h1>
+    <h3>Something went wrong on our side</h3>
+    <p class="muted">The error has been logged. Nothing you entered was lost.</p>
+    {% if incident %}
+    <p class="mono small">Incident {{ incident }}</p>
+    <p class="muted small">Quote that reference when reporting this.</p>
+    {% endif %}
+    <a class="btn btn--secondary" href="{{ url_for('main.index') }}">Back to safety</a>
+  </div>
+</div>
+{% endblock %}
