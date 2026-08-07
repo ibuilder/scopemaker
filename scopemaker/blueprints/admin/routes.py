@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from flask import abort, flash, redirect, render_template, request, url_for
+from flask import abort, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from flask_wtf import FlaskForm
 from sqlalchemy import select
@@ -16,6 +16,7 @@ from ...models import ApiToken, Invitation, Membership, User
 from ...models.base import utcnow
 from ...models.organization import ROLE_HIERARCHY, ROLE_LABELS
 from ...security import admin_required
+from ...services import mail
 from ..auth.forms import InviteForm
 from ..helpers import current_org_id
 from . import bp
@@ -114,10 +115,19 @@ def invite():
     db.session.add(invitation)
     db.session.commit()
 
-    # No mail transport is configured by default, so the link is surfaced for
-    # the admin to share rather than silently failing to send.
     link = url_for("auth.accept_invite", token=invitation.token, _external=True)
-    flash(f"Invitation created for {email}. Share this link: {link}", "success")
+    delivered = mail.send_invitation(
+        to=email,
+        organization=organization.name,
+        inviter=current_user.full_name or current_user.email,
+        url=link,
+    )
+    if delivered and current_app.config.get("MAIL_SERVER"):
+        flash(f"Invitation sent to {email}.", "success")
+    else:
+        # Console or failed delivery: surface the link so the admin can still
+        # share it rather than leaving them to guess whether it worked.
+        flash(f"Invitation created for {email}. Share this link: {link}", "success")
     return redirect(url_for("admin.index"))
 
 

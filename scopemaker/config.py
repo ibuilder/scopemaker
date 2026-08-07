@@ -137,6 +137,29 @@ class BaseConfig:
     OIDC_ALLOWED_DOMAINS: list[str] = _csv("OIDC_ALLOWED_DOMAINS")
     OIDC_DEFAULT_ORG: str = os.environ.get("OIDC_DEFAULT_ORG", "")
 
+    # -- Email --------------------------------------------------------------
+    # console | smtp | null. Blank picks smtp when MAIL_SERVER is set, else
+    # console -- so development works with no mail infrastructure at all and
+    # the reset link appears in the log.
+    MAIL_BACKEND: str = os.environ.get("MAIL_BACKEND", "")
+    MAIL_SERVER: str = os.environ.get("MAIL_SERVER", "")
+    MAIL_PORT: int = _int("MAIL_PORT", 587)
+    MAIL_USE_TLS: bool = _bool("MAIL_USE_TLS", True)
+    MAIL_USE_SSL: bool = _bool("MAIL_USE_SSL", False)
+    MAIL_USERNAME: str = os.environ.get("MAIL_USERNAME", "")
+    MAIL_PASSWORD: str = os.environ.get("MAIL_PASSWORD", "")
+    MAIL_SENDER: str = os.environ.get("MAIL_SENDER", "scopemaker@localhost")
+    MAIL_SENDER_NAME: str = os.environ.get("MAIL_SENDER_NAME", "ScopeMaker")
+    MAIL_TIMEOUT: int = _int("MAIL_TIMEOUT", 15)
+
+    # -- Account security ---------------------------------------------------
+    PASSWORD_RESET_HOURS: int = _int("PASSWORD_RESET_HOURS", 2)
+    # Failed sign-ins before an account is temporarily locked. Locking is per
+    # account, not per IP, because IP limits do nothing against credential
+    # stuffing spread across many addresses.
+    LOGIN_MAX_ATTEMPTS: int = _int("LOGIN_MAX_ATTEMPTS", 8)
+    LOGIN_LOCKOUT_SECONDS: int = _int("LOGIN_LOCKOUT_SECONDS", 900)
+
     # -- Logging ------------------------------------------------------------
     LOG_LEVEL: str = os.environ.get("LOG_LEVEL", "INFO").upper()
     LOG_FORMAT: str = os.environ.get("LOG_FORMAT", "text").lower()
@@ -217,6 +240,16 @@ class ProductionConfig(BaseConfig):
         if cls.OIDC_ENABLED and not (cls.OIDC_CLIENT_ID and cls.OIDC_DISCOVERY_URL):
             raise ConfigError(
                 "OIDC_ENABLED=1 requires OIDC_CLIENT_ID and OIDC_DISCOVERY_URL."
+            )
+        # Without real mail delivery a user who forgets their password has no
+        # way back in, and invitations cannot be sent.
+        backend = (cls.MAIL_BACKEND or ("smtp" if cls.MAIL_SERVER else "console")).lower()
+        if backend != "smtp":
+            raise ConfigError(
+                "Production requires working email: set MAIL_SERVER (and "
+                "MAIL_USERNAME/MAIL_PASSWORD if your relay needs them). "
+                "Without it, password resets and invitations cannot be "
+                "delivered. Set MAIL_BACKEND=console only if you accept that."
             )
 
 

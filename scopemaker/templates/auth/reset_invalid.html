@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Reset link not valid &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card__body empty">
+    <h3>This reset link is no longer valid</h3>
+    <p class="muted">
+      Reset links expire, can only be used once, and are replaced whenever a
+      newer one is requested. Ask for a fresh link and use the most recent email.
+    </p>
+    <a class="btn btn--primary" href="{{ url_for('auth.forgot_password') }}">Request a new link</a>
+  </div>
+</div>
+{% endblock %}

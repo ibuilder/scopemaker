@@ -3,6 +3,51 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] — 2026-08-07
+
+Track A of the path to production readiness: make the application safe to put
+real users on. The headline is that **there was no password reset** — a user who
+forgot their password was locked out permanently unless somebody with shell
+access ran a CLI command.
+
+### Added
+
+- **Password reset.** Request and confirm flows with single-use, expiring
+  tokens stored as Argon2 hashes. Requesting a new link invalidates the
+  previous one, and completing a reset signs out every existing session — so a
+  reset genuinely evicts an attacker rather than running alongside them.
+- **Email delivery** on `smtplib`, with three backends: `console` (the
+  development default, writing the message and its link to the log so a reset
+  can be completed with no mail infrastructure at all), `smtp`, and `null` for
+  tests. Delivery failure is logged, never raised into the user's request.
+  Invitations are now emailed instead of only surfacing a link.
+- **Account lockout.** Failed sign-ins are counted per account, with the lock
+  window growing on repeated failures. Per-account rather than per-IP, because
+  an IP limit does nothing against credential stuffing spread across addresses.
+  A locked account fails before the password is checked, and the message is
+  identical to every other failure so a lockout cannot be probed.
+- **Session revocation.** The session cookie carries a per-user epoch; bumping
+  it invalidates every live session. Exposed as "sign out everywhere else" on
+  the profile page, and triggered automatically by password changes and resets.
+- A loud startup warning when rate limiting uses in-memory storage in a
+  multi-worker deployment, where configured limits are silently multiplied by
+  the worker count. Redis is now wired into `docker-compose.yml`.
+
+### Fixed
+
+- **`login_user(current_user)` caused a `RecursionError`.** Flask-Login stores
+  whatever it is handed on `g._login_user`, and `current_user` is a LocalProxy
+  that reads that same slot — so passing the proxy made it resolve to itself.
+  Both call sites now pass the concrete object.
+- **Two forms on the profile page each had a field named `submit`,** so posting
+  either one looked like a submission of both. They now have distinct names.
+
+### Changed
+
+- Production configuration refuses to boot without a mail relay, for the same
+  reason it already refuses to boot without a secret key: a deployment that
+  cannot send a password reset is not a working deployment.
+
 ## [1.1.0] — 2026-08-07
 
 ### Added

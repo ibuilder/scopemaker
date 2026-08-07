@@ -189,3 +189,22 @@ def login(client, email: str, password: str = "correct-horse-battery-staple"):
         data={"email": email, "password": password},
         follow_redirects=True,
     )
+
+
+def drop_login_cache() -> None:
+    """Forget the user Flask-Login cached on the app context.
+
+    Flask-Login memoises the resolved user on ``g``. The ``db`` fixture holds a
+    single app context open for the whole test, and Flask reuses an
+    already-pushed context for test-client requests -- so that cache survives
+    between requests in a way it never does in production, where every request
+    pushes and pops its own context.
+
+    Any test that asserts a session has been *invalidated* has to clear it
+    first, or the stale cached user answers the request and the assertion
+    passes or fails for the wrong reason. Verified against a run with no held
+    context: revocation logs both browsers out exactly as these tests expect.
+    """
+    from flask import g
+
+    g.pop("_login_user", None)

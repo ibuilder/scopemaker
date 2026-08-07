@@ -67,9 +67,28 @@ class InviteForm(FlaskForm):
     submit = SubmitField("Send invite")
 
 
+class ForgotPasswordForm(FlaskForm):
+    email = StringField("Email", validators=[DataRequired(), Email(), Length(max=255)])
+    submit = SubmitField("Send reset link")
+
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField(
+        "New password",
+        validators=[DataRequired(), Length(min=MIN_PASSWORD_LENGTH), _password_policy],
+    )
+    confirm = PasswordField(
+        "Confirm new password",
+        validators=[DataRequired(), EqualTo("password", message="Passwords must match.")],
+    )
+    submit = SubmitField("Set new password")
+
+
 class ProfileForm(FlaskForm):
     full_name = StringField("Your name", validators=[DataRequired(), Length(max=200)])
-    submit = SubmitField("Save")
+    # Distinct name: this form shares a page with ChangePasswordForm, and two
+    # fields both called "submit" make either post look like both.
+    save_profile = SubmitField("Save")
 
 
 class ChangePasswordForm(FlaskForm):
@@ -82,4 +101,4 @@ class ChangePasswordForm(FlaskForm):
         "Confirm new password",
         validators=[DataRequired(), EqualTo("password", message="Passwords must match.")],
     )
-    submit = SubmitField("Change password")
+    change_password = SubmitField("Change password")

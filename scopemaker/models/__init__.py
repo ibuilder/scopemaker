@@ -43,7 +43,7 @@ from .scope import (
     SectionKind,
 )
 from .template import ScopeTemplate
-from .user import ApiToken, User
+from .user import ApiToken, PasswordResetToken, User
 
 __all__ = [
     "CATEGORY_ORDER",
@@ -64,6 +64,7 @@ __all__ = [
     "Membership",
     "Model",
     "Organization",
+    "PasswordResetToken",
     "ProcoreConnection",
     "Project",
     "Scope",

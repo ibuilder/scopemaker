@@ -15,13 +15,15 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required, login_user, logout_user
+from sqlalchemy import select
 
 from ...errors import ScopeMakerError
 from ...extensions import db, limiter, oauth
-from ...models import Organization
+from ...models import Organization, PasswordResetToken
 from ...models.base import utcnow
 from ...models.user import ACTIVE_ORG_SESSION_KEY, User
 from ...security import generate_token, needs_rehash
+from ...services import mail
 from ...services.accounts import (
     accept_invitation,
     create_organization,
@@ -31,12 +33,24 @@ from ...services.accounts import (
     safe_redirect_target,
 )
 from . import bp
-from .forms import ChangePasswordForm, InviteAcceptForm, LoginForm, ProfileForm, RegisterForm
+from .forms import (
+    ChangePasswordForm,
+    ForgotPasswordForm,
+    InviteAcceptForm,
+    LoginForm,
+    ProfileForm,
+    RegisterForm,
+    ResetPasswordForm,
+)
 
 logger = logging.getLogger(__name__)
 
 OAUTH_STATE_KEY = "oidc_state"
 INVITE_TOKEN_KEY = "pending_invite_token"
+
+# One message for every sign-in failure -- wrong password, unknown address, or
+# a locked account. Any variation would confirm which addresses have accounts.
+LOGIN_FAILED_MESSAGE = "Incorrect email address or password."
 
 
 @bp.route("/login", methods=["GET", "POST"])
@@ -48,7 +62,17 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.by_email(form.email.data)
-        # Always run the same work whether or not the account exists, and give
+
+        # A locked account fails before the password is even checked, so a
+        # lockout cannot be probed by password guessing. The message is the
+        # same generic one either way -- telling an attacker "this account is
+        # locked" would confirm the address exists.
+        if user is not None and user.is_locked:
+            logger.warning("Sign-in attempt on locked account %s", user.email)
+            flash(LOGIN_FAILED_MESSAGE, "error")
+            return render_template("auth/login.html", form=form)
+
+        # Always do the same work whether or not the account exists, and give
         # the same message either way, so this endpoint cannot be used to
         # enumerate which email addresses have accounts.
         authenticated = bool(user and user.check_password(form.password.data))
@@ -57,7 +81,9 @@ def login():
             flash("That account has been deactivated. Contact your administrator.", "error")
         elif authenticated:
             if needs_rehash(user.password_hash or ""):
-                user.set_password(form.password.data)
+                # Re-hashing is not a credential change; keep other sessions.
+                user.set_password(form.password.data, revoke_sessions=False)
+            user.clear_lockout()
             user.last_login_at = utcnow()
             db.session.commit()
             login_user(user, remember=form.remember.data)
@@ -67,9 +93,114 @@ def login():
                 safe_redirect_target(request.args.get("next"), url_for("main.dashboard"))
             )
         else:
-            flash("Incorrect email address or password.", "error")
+            if user is not None:
+                locked = user.register_failed_login(
+                    max_attempts=current_app.config["LOGIN_MAX_ATTEMPTS"],
+                    lockout_seconds=current_app.config["LOGIN_LOCKOUT_SECONDS"],
+                )
+                db.session.commit()
+                if locked:
+                    logger.warning(
+                        "Locked account %s after %s failed attempts",
+                        user.email,
+                        user.failed_login_count,
+                    )
+            flash(LOGIN_FAILED_MESSAGE, "error")
 
     return render_template("auth/login.html", form=form)
+
+
+# ---------------------------------------------------------------------------
+# Password reset
+# ---------------------------------------------------------------------------
+
+@bp.route("/forgot", methods=["GET", "POST"])
+@limiter.limit("5 per hour; 20 per day", methods=["POST"])
+def forgot_password():
+    """Start a password reset.
+
+    Always reports success. Saying "no account with that address" would turn
+    this into an account-enumeration oracle, and it is the one endpoint an
+    attacker can hit without credentials.
+    """
+    if current_user.is_authenticated:
+        return redirect(url_for("auth.profile"))
+
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        user = User.by_email(form.email.data)
+        if user is not None and user.is_active and not user.is_sso_only:
+            hours = current_app.config["PASSWORD_RESET_HOURS"]
+            # Invalidate any outstanding reset so only the newest link works.
+            for existing in user.reset_tokens:
+                if existing.is_usable:
+                    existing.consume()
+
+            token, raw = PasswordResetToken.issue(
+                user, hours=hours, ip=request.remote_addr
+            )
+            db.session.add(token)
+            db.session.commit()
+
+            url = url_for("auth.reset_password", token=raw, _external=True)
+            mail.send_password_reset(
+                to=user.email, name=user.full_name, url=url, expires_hours=hours
+            )
+            logger.info("Password reset requested for %s", user.email)
+        elif user is not None and user.is_sso_only:
+            logger.info("Reset requested for SSO-only account %s; ignored", user.email)
+
+        flash(
+            "If that address has an account, a reset link is on its way. "
+            "Check your spam folder if it does not arrive.",
+            "info",
+        )
+        return redirect(url_for("auth.login"))
+
+    return render_template("auth/forgot_password.html", form=form)
+
+
+def _find_reset_token(raw: str) -> PasswordResetToken | None:
+    """Look up a reset by its non-secret prefix, then verify the hash."""
+    if not raw:
+        return None
+    candidates = db.session.scalars(
+        select(PasswordResetToken).where(
+            PasswordResetToken.token_prefix == raw[: PasswordResetToken.PREFIX_LENGTH],
+            PasswordResetToken.used_at.is_(None),
+        )
+    )
+    for candidate in candidates:
+        if candidate.is_usable and candidate.matches(raw):
+            return candidate
+    return None
+
+
+@bp.route("/reset/<token>", methods=["GET", "POST"])
+@limiter.limit("10 per hour", methods=["POST"])
+def reset_password(token: str):
+    record = _find_reset_token(token)
+    if record is None:
+        return render_template("auth/reset_invalid.html"), 400
+
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user = record.user
+        # set_password bumps the session epoch, which signs out every existing
+        # session -- including whoever may have been using a stolen one.
+        user.set_password(form.password.data)
+        record.consume()
+        db.session.commit()
+
+        mail.send_password_changed(to=user.email, name=user.full_name)
+        logger.info("Password reset completed for %s", user.email)
+        flash(
+            "Your password has been changed and all other sessions were signed out.",
+            "success",
+        )
+        return redirect(url_for("auth.login"))
+
+    return render_template("auth/reset_password.html", form=form, token=token)
 
 
 @bp.route("/logout", methods=["POST"])
@@ -241,24 +372,51 @@ def profile():
     form = ProfileForm(obj=current_user)
     password_form = ChangePasswordForm()
 
-    if form.submit.data and form.validate_on_submit():
+    if form.save_profile.data and form.validate_on_submit():
         current_user.full_name = form.full_name.data
         db.session.commit()
         flash("Profile updated.", "success")
         return redirect(url_for("auth.profile"))
 
-    if password_form.submit.data and password_form.validate_on_submit():
+    if password_form.change_password.data and password_form.validate_on_submit():
         if current_user.is_sso_only:
             flash("This account signs in through your identity provider.", "error")
         elif not current_user.check_password(password_form.current_password.data):
             flash("Your current password is incorrect.", "error")
         else:
-            current_user.set_password(password_form.password.data)
+            email, name = current_user.email, current_user.full_name
+            # Bumps the session epoch, so every session dies -- including this
+            # one. Sign the user back in so they are not bounced to the login
+            # page for changing their own password.
+            user = current_user._get_current_object()
+            user.set_password(password_form.password.data)
             db.session.commit()
-            flash("Password changed.", "success")
+            # login_user stores this object on g; passing the LocalProxy
+            # would make it resolve to itself and recurse forever.
+            login_user(user)
+            session.permanent = True
+            mail.send_password_changed(to=email, name=name)
+            flash(
+                "Password changed. Every other signed-in session was ended.",
+                "success",
+            )
             return redirect(url_for("auth.profile"))
 
     return render_template("auth/profile.html", form=form, password_form=password_form)
+
+
+@bp.route("/sessions/revoke", methods=["POST"])
+@login_required
+def revoke_sessions():
+    """Sign out of every browser, then sign this one back in."""
+    user = current_user._get_current_object()
+    user.revoke_sessions()
+    db.session.commit()
+    # Concrete object, not the proxy -- see the note in profile().
+    login_user(user)
+    session.permanent = True
+    flash("All other sessions have been signed out.", "success")
+    return redirect(url_for("auth.profile"))
 
 
 @bp.route("/switch/<organization_id>", methods=["POST"])

@@ -183,6 +183,15 @@ demote or delete before export.
   fields, ready to redline
 - **JSON** and **Markdown** for archiving, diffing revisions and downstream systems
 
+**Accounts and access** *(hardened in 1.2)*
+- Password reset with single-use expiring tokens; completing one signs out every
+  existing session, so a reset evicts an attacker rather than running alongside them
+- Per-account lockout with a growing backoff — an IP limit does nothing against
+  credential stuffing spread across addresses
+- "Sign out everywhere else", and automatic session revocation on password change
+- Email on `smtplib` with a console backend, so development needs no mail server:
+  the reset link appears in the log
+
 **Governance**
 - Organizations with `viewer` / `editor` / `admin` roles, invitations, and OIDC SSO
 - Issuing a scope freezes an immutable revision; further edits create a new version

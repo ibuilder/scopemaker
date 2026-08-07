@@ -14,10 +14,22 @@ services:
       retries: 10
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
   web:
     build: .
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     environment:
       FLASK_ENV: production
@@ -32,6 +44,15 @@ services:
       FORCE_HTTPS: ${FORCE_HTTPS:-0}
       REGISTRATION_MODE: ${REGISTRATION_MODE:-invite}
       LOG_FORMAT: json
+      # Shared rate-limit state. Without this each gunicorn worker keeps its
+      # own counters and the configured limits are silently multiplied.
+      RATELIMIT_STORAGE_URI: redis://redis:6379/0
+      # Password resets and invitations need a real relay.
+      MAIL_SERVER: ${MAIL_SERVER:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SENDER: ${MAIL_SENDER:-scopemaker@localhost}
       PROCORE_ENABLED: ${PROCORE_ENABLED:-0}
       PROCORE_CLIENT_ID: ${PROCORE_CLIENT_ID:-}
       PROCORE_CLIENT_SECRET: ${PROCORE_CLIENT_SECRET:-}

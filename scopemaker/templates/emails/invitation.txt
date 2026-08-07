@@ -1,0 +1,14 @@
+Hello,
+
+{{ inviter }} has invited you to join {{ organization }} on {{ app_name }},
+where teams write and issue construction scope of work exhibits.
+
+Accept the invitation here:
+
+    {{ url }}
+
+If you were not expecting this, you can ignore the message. The invitation
+expires on its own.
+
+--
+{{ app_name }}

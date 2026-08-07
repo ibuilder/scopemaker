@@ -6,6 +6,7 @@ build an isolated instance with ``create_app("testing")``.
 
 from __future__ import annotations
 
+import os
 import time
 import uuid
 
@@ -18,7 +19,7 @@ from .errors import register_error_handlers
 from .extensions import csrf, db, limiter, login_manager, migrate, oauth
 from .logging_config import configure_logging
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __all__ = ["__version__", "create_app"]
 
 # .env is loaded by scopemaker.config at import time -- it has to be, because
@@ -36,6 +37,7 @@ def create_app(config_name: str | None = None, **overrides: object) -> Flask:
     app.config.update(overrides)
 
     configure_logging(app)
+    _warn_about_shared_state(app)
     _configure_proxy(app)
     _init_extensions(app)
     _register_blueprints(app)
@@ -55,6 +57,32 @@ def create_app(config_name: str | None = None, **overrides: object) -> Flask:
         app.config["OIDC_ENABLED"],
     )
     return app
+
+
+def _warn_about_shared_state(app: Flask) -> None:
+    """Shout when rate limiting is per-process but the deploy is multi-process.
+
+    Flask-Limiter's in-memory storage is per worker, so with N gunicorn workers
+    a "10 per minute" limit is really 10N per minute -- and the operator has no
+    way to tell from the outside. This is the kind of misconfiguration that
+    looks fine until someone is brute-forcing an account.
+    """
+    if not app.config.get("RATELIMIT_ENABLED", True):
+        return
+    storage = str(app.config.get("RATELIMIT_STORAGE_URI", "memory://"))
+    if not storage.startswith("memory://"):
+        return
+
+    workers = os.environ.get("WEB_CONCURRENCY")
+    multi_process = bool(workers and workers.isdigit() and int(workers) > 1)
+    if multi_process or not app.debug:
+        app.logger.warning(
+            "Rate limiting is using in-memory storage, which is per worker "
+            "process%s. Configured limits are effectively multiplied by the "
+            "worker count. Set RATELIMIT_STORAGE_URI to a shared backend "
+            "(for example redis://redis:6379/0) before relying on them.",
+            f" and WEB_CONCURRENCY={workers}" if multi_process else "",
+        )
 
 
 def _configure_proxy(app: Flask) -> None:
@@ -83,8 +111,27 @@ def _init_extensions(app: Flask) -> None:
     from .models.user import User
 
     @login_manager.user_loader
-    def _load_user(user_id: str):
-        return db.session.get(User, user_id)
+    def _load_user(raw_id: str):
+        """Resolve the session cookie, honouring session revocation.
+
+        The cookie carries the user's session epoch. If it no longer matches
+        the stored one -- because the password changed or somebody signed out
+        everywhere -- the cookie resolves to nobody and the request is
+        anonymous.
+        """
+        user_id, epoch = User.parse_session_id(raw_id)
+        if not user_id:
+            return None
+        user = db.session.get(User, user_id)
+        if user is None:
+            return None
+        if epoch is None:
+            # A cookie predating session epochs. Treat as stale rather than
+            # trusting it, so the mechanism cannot be bypassed by stripping it.
+            return None
+        if epoch != user.session_epoch:
+            return None
+        return user
 
     @login_manager.unauthorized_handler
     def _unauthorized():

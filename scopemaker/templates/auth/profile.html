@@ -11,7 +11,7 @@
     <form method="post" novalidate>
       {{ form.hidden_tag() }}
       {{ field(form.full_name) }}
-      {{ form.submit(class='btn btn--primary') }}
+      {{ form.save_profile(class='btn btn--primary') }}
     </form>
   </div>
 </div>
@@ -30,9 +30,25 @@
       {{ field(password_form.current_password, autocomplete='current-password') }}
       {{ field(password_form.password, autocomplete='new-password') }}
       {{ field(password_form.confirm, autocomplete='new-password') }}
-      {{ password_form.submit(class='btn btn--secondary') }}
+      {{ password_form.change_password(class='btn btn--secondary') }}
     </form>
     {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__header"><h2 class="card__title">Sessions</h2></div>
+  <div class="card__body">
+    <p class="muted">
+      Signed in somewhere you no longer trust &mdash; a shared machine, a lost
+      phone? Ending all sessions signs out every browser and keeps you signed in
+      here.
+    </p>
+    <form method="post" action="{{ url_for('auth.revoke_sessions') }}"
+          data-confirm="Sign out of every other browser?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn--danger">Sign out everywhere else</button>
+    </form>
   </div>
 </div>
 
