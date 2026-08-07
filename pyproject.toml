@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "ibuilder" }]
-keywords = ["construction", "scope of work", "csi", "masterformat", "procore", "subcontract", "flask"]
+keywords = ["construction", "scope of work", "csi", "masterformat", "subcontract", "specifications", "flask"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Framework :: Flask",
@@ -61,9 +61,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://ibuilder.github.io/procore-exhibit-generator/"
-Repository = "https://github.com/ibuilder/procore-exhibit-generator"
-Issues = "https://github.com/ibuilder/procore-exhibit-generator/issues"
+Homepage = "https://ibuilder.github.io/scopemaker/"
+Repository = "https://github.com/ibuilder/scopemaker"
+Issues = "https://github.com/ibuilder/scopemaker/issues"
 
 [project.scripts]
 scopemaker = "scopemaker.cli:main"

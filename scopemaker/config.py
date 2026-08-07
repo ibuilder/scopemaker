@@ -167,8 +167,8 @@ class BaseConfig:
     # -- Product metadata ---------------------------------------------------
     APP_NAME = "ScopeMaker"
     APP_TAGLINE = "Construction scope of work exhibits, generated properly."
-    DOCS_URL = "https://ibuilder.github.io/procore-exhibit-generator/"
-    SOURCE_URL = "https://github.com/ibuilder/procore-exhibit-generator"
+    DOCS_URL = "https://ibuilder.github.io/scopemaker/"
+    SOURCE_URL = "https://github.com/ibuilder/scopemaker"
 
     TESTING = False
     DEBUG = False

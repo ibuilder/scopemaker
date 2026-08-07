@@ -195,4 +195,4 @@ substance of it.
 - `index.html`, `generator.html`, `settings.html`, `preview_page.html`,
   `callback.html`, `installation-guide.md` — the static prototype.
 
-[1.0.0]: https://github.com/ibuilder/procore-exhibit-generator/releases/tag/v1.0.0
+[1.0.0]: https://github.com/ibuilder/scopemaker/releases/tag/v1.0.0

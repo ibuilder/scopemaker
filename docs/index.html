@@ -109,7 +109,7 @@ footer a{color:#cbd5e1}
       <a href="#how">How it works</a>
       <a href="#features">Features</a>
       <a href="#start">Get started</a>
-      <a href="https://github.com/ibuilder/procore-exhibit-generator">GitHub</a>
+      <a href="https://github.com/ibuilder/scopemaker">GitHub</a>
     </nav>
   </div>
 </header>
@@ -124,7 +124,7 @@ footer a{color:#cbd5e1}
     </p>
     <div class="cta">
       <a class="btn btn-p" href="#start">Get started</a>
-      <a class="btn btn-s" href="https://github.com/ibuilder/procore-exhibit-generator">View source</a>
+      <a class="btn btn-s" href="https://github.com/ibuilder/scopemaker">View source</a>
     </div>
     <div class="badges">
       <span class="badge">Flask 3 · Python 3.11+</span>
@@ -260,7 +260,7 @@ footer a{color:#cbd5e1}
       <div class="card"><span class="ico">📝</span><h3>Word you can redline</h3><p>python-docx output with bold, italic and underline preserved as character runs, and live page-number fields. Contracts get marked up in Word.</p></div>
       <div class="card"><span class="ico">🗂️</span><h3>Versioned and auditable</h3><p>Issuing a scope freezes an immutable snapshot. Later edits create a new version, so the text that went out with the subcontract is preserved verbatim.</p></div>
       <div class="card"><span class="ico">👥</span><h3>Organizations and roles</h3><p>Viewer, editor and admin; invitations; optional OIDC single sign-on. Every record is tenant-scoped, and cross-tenant access returns 404.</p></div>
-      <div class="card"><span class="ico">🔌</span><h3>Procore, server-side</h3><p>Optional. Authorization-code OAuth and Developer Managed Service Accounts, tokens encrypted at rest, project sync, and pushing exhibits onto commitments.</p></div>
+      <div class="card"><span class="ico">🔌</span><h3>Connects to what you use</h3><p>Optional integrations, off by default. Import projects and bid packages, and push finished exhibits back. Credentials stay server-side and are encrypted at rest.</p></div>
       <div class="card"><span class="ico">🔒</span><h3>No CDN, tight CSP</h3><p>Every asset is served by the app, so <code>default-src 'self'</code> holds and it runs on an air-gapped jobsite network. Argon2id passwords, Fernet-encrypted tokens.</p></div>
     </div>
   </div>
@@ -294,8 +294,8 @@ footer a{color:#cbd5e1}
   <div class="wrap">
     <div class="sec-head"><h2>Get started</h2><p>Docker is the shortest path — the PDF stack is already in the image.</p></div>
 
-<pre><code>git clone https://github.com/ibuilder/procore-exhibit-generator.git
-cd procore-exhibit-generator
+<pre><code>git clone https://github.com/ibuilder/scopemaker.git
+cd scopemaker
 cp .env.example .env
 
 # generate the two required secrets into .env
@@ -316,12 +316,13 @@ docker compose exec web flask demo-data --org acme</code></pre>
     </div>
 
     <div class="grid" style="margin-top:2rem">
-      <div class="card"><h3><a href="https://github.com/ibuilder/procore-exhibit-generator#readme">README</a></h3><p>Overview, quick start and the full feature list.</p></div>
-      <div class="card"><h3><a href="https://github.com/ibuilder/procore-exhibit-generator/blob/main/docs/deployment.md">Deployment</a></h3><p>Secrets, PostgreSQL, reverse proxy, health checks, upgrades.</p></div>
-      <div class="card"><h3><a href="https://github.com/ibuilder/procore-exhibit-generator/blob/main/docs/clause-library.md">Clause library</a></h3><p>The YAML format, cross-references, and customising it for your company.</p></div>
-      <div class="card"><h3><a href="https://github.com/ibuilder/procore-exhibit-generator/blob/main/docs/api.md">JSON API</a></h3><p>Token auth, generating a scope in one call, exports.</p></div>
-      <div class="card"><h3><a href="https://github.com/ibuilder/procore-exhibit-generator/blob/main/docs/architecture.md">Architecture</a></h3><p>The document model, numbering, rendering and security posture.</p></div>
-      <div class="card"><h3><a href="https://github.com/ibuilder/procore-exhibit-generator/issues">Issues</a></h3><p>Bugs, ideas and clause library contributions are welcome.</p></div>
+      <div class="card"><h3><a href="https://github.com/ibuilder/scopemaker#readme">README</a></h3><p>Overview, quick start and the full feature list.</p></div>
+      <div class="card"><h3><a href="https://github.com/ibuilder/scopemaker/blob/main/docs/deployment.md">Deployment</a></h3><p>Secrets, PostgreSQL, reverse proxy, health checks, upgrades.</p></div>
+      <div class="card"><h3><a href="https://github.com/ibuilder/scopemaker/blob/main/docs/clause-library.md">Clause library</a></h3><p>The YAML format, cross-references, and customising it for your company.</p></div>
+      <div class="card"><h3><a href="https://github.com/ibuilder/scopemaker/blob/main/docs/api.md">JSON API</a></h3><p>Token auth, generating a scope in one call, exports.</p></div>
+      <div class="card"><h3><a href="https://github.com/ibuilder/scopemaker/blob/main/docs/architecture.md">Architecture</a></h3><p>The document model, numbering, rendering and security posture.</p></div>
+      <div class="card"><h3><a href="https://github.com/ibuilder/scopemaker/blob/main/docs/integrations.md">Integrations</a></h3><p>Optional connectors — Procore and OIDC single sign-on. Off by default.</p></div>
+      <div class="card"><h3><a href="https://github.com/ibuilder/scopemaker/issues">Issues</a></h3><p>Bugs, ideas and clause library contributions are welcome.</p></div>
     </div>
   </div>
 </section>
@@ -340,9 +341,9 @@ docker compose exec web flask demo-data --org acme</code></pre>
       <a href="https://www.csiresources.org/">Construction Specifications Institute</a>.
     </div>
     <div>
-      <a href="https://github.com/ibuilder/procore-exhibit-generator">GitHub</a> ·
-      <a href="https://github.com/ibuilder/procore-exhibit-generator/blob/main/docs/api.md">API</a> ·
-      <a href="https://github.com/ibuilder/procore-exhibit-generator/releases">Releases</a>
+      <a href="https://github.com/ibuilder/scopemaker">GitHub</a> ·
+      <a href="https://github.com/ibuilder/scopemaker/blob/main/docs/api.md">API</a> ·
+      <a href="https://github.com/ibuilder/scopemaker/releases">Releases</a>
     </div>
   </div>
 </footer>

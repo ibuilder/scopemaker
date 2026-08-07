@@ -8,12 +8,12 @@ Pick a CSI division, choose from a curated clause library, edit anything you nee
 and export a paginated PDF, an editable Word file, Markdown or JSON — all carrying
 identical clause numbering.
 
-[![CI](https://github.com/ibuilder/procore-exhibit-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/ibuilder/procore-exhibit-generator/actions/workflows/ci.yml)
+[![CI](https://github.com/ibuilder/scopemaker/actions/workflows/ci.yml/badge.svg)](https://github.com/ibuilder/scopemaker/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
 [![Flask 3](https://img.shields.io/badge/flask-3.x-000000)](https://flask.palletsprojects.com/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-[Documentation](https://ibuilder.github.io/procore-exhibit-generator/) ·
+[Documentation](https://ibuilder.github.io/scopemaker/) ·
 [Quick start](#quick-start) ·
 [API](#json-api) ·
 [Deployment](docs/deployment.md)
@@ -41,11 +41,13 @@ ScopeMaker turns that document into structured data:
   clause `3.2.4` means the same sentence in every one of them.
 
 > [!NOTE]
-> **v1.0.0 is a complete rewrite.** Earlier versions of this repository were a
-> browser-only prototype: a handful of static HTML pages whose JavaScript files were
-> never committed, an OAuth client secret kept in `localStorage`, and a "PDF export"
-> that screenshotted the page with `html2canvas` and pasted the image onto a single
-> A4 sheet. None of that survives. See [What changed in v1.0.0](#what-changed-in-v100).
+> **This repository was previously `procore-exhibit-generator`.** v1.0.0 replaced a
+> browser-only prototype — a handful of static HTML pages whose JavaScript was never
+> committed, an OAuth client secret kept in `localStorage`, and a "PDF export" that
+> screenshotted the page onto a single A4 sheet. None of that survives, and the
+> product is now **ScopeMaker**: the scope engine is the point, and the Procore
+> connector is one optional integration among others. Old URLs redirect.
+> See [What changed in v1.0.0](#what-changed-in-v100).
 
 ---
 
@@ -54,8 +56,8 @@ ScopeMaker turns that document into structured data:
 ### Docker (recommended)
 
 ```bash
-git clone https://github.com/ibuilder/procore-exhibit-generator.git
-cd procore-exhibit-generator
+git clone https://github.com/ibuilder/scopemaker.git
+cd scopemaker
 cp .env.example .env
 ```
 
@@ -198,11 +200,9 @@ demote or delete before export.
 - Tenant isolation enforced in one place and covered by tests
 
 **Integration**
-- Optional, fully server-side Procore: authorization-code OAuth and Developer Managed
-  Service Accounts, tokens encrypted at rest, project and bid-package sync, and
-  pushing finished exhibits onto commitments
 - Token-authenticated JSON API
 - No CDN dependencies — every asset is served from the app, so it runs air-gapped
+- Optional connectors, all off by default — see [Integrations](docs/integrations.md)
 
 ---
 
@@ -295,7 +295,8 @@ in both directions, fails the build if the models have drifted from the migratio
 and builds the Docker image.
 
 Architecture notes are in [docs/architecture.md](docs/architecture.md); the clause
-library format is documented in [docs/clause-library.md](docs/clause-library.md).
+library format is documented in [docs/clause-library.md](docs/clause-library.md);
+optional connectors are in [docs/integrations.md](docs/integrations.md).
 
 ---
 
