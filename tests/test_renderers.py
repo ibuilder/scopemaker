@@ -94,6 +94,33 @@ def test_html_is_standalone_and_paged(app, scope, organization):
     assert "EXHIBIT B" in html
 
 
+def test_inlined_stylesheet_is_not_html_escaped(app, scope, organization):
+    """Jinja autoescaping silently corrupts an inlined stylesheet.
+
+    `"` becomes `&#34;` and `>` becomes `&gt;`, which breaks
+    `content: "Page " counter(page)` in the @page margin boxes and every child
+    combinator. The PDF then renders with no page numbers -- and nothing else
+    complains, because CSS parse errors are only warnings.
+    """
+    html = render_html(scope, organization=organization, standalone=True)
+    style = html[html.index("<style>") : html.index("</style>")]
+
+    for entity in ("&#34;", "&quot;", "&gt;", "&lt;", "&amp;"):
+        assert entity not in style, f"{entity} in the inlined stylesheet"
+
+    # The rules that the escaping used to break.
+    assert 'content: "Page " counter(page) " of " counter(pages);' in style
+    assert "> .doc__item-label" in style
+
+
+def test_running_elements_are_declared_for_the_page_margins(app, scope, organization):
+    html = render_html(scope, organization=organization, standalone=True)
+    assert "position: running(doc-header)" in html
+    assert "position: running(doc-footer)" in html
+    assert "content: element(doc-header)" in html
+    assert "content: element(doc-footer)" in html
+
+
 def test_html_body_fragment_is_not_a_full_page(app, scope, organization):
     body = render_html(scope, organization=organization, standalone=False)
     assert "<!DOCTYPE" not in body

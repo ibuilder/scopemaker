@@ -11,6 +11,7 @@ import uuid
 
 from dotenv import load_dotenv
 from flask import Flask, Response, abort, g, request
+from markupsafe import Markup
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .config import BaseConfig, get_config
@@ -228,11 +229,21 @@ def _register_template_helpers(app: Flask) -> None:
             app.logger.error("document.css is missing at %s", css_path)
             return ""
 
-    def document_css() -> str:
-        """The paged-media stylesheet, inlined into standalone documents."""
+    def document_css() -> Markup:
+        """The paged-media stylesheet, inlined into standalone documents.
+
+        Returned as Markup so Jinja does not autoescape it. Escaping a
+        stylesheet silently corrupts it: `"` becomes `&#34;` and `>` becomes
+        `&gt;`, which breaks `content: ... " of " counter(pages)` in the @page
+        footer and every child-combinator selector -- the PDF then renders with
+        no page numbers and no running header.
+
+        This is safe to mark: the content is a static file shipped with the
+        application, never anything a user supplied.
+        """
         if app.debug:  # pick up edits without a restart
             _read_document_css.cache_clear()
-        return _read_document_css()
+        return Markup(_read_document_css())
 
     app.jinja_env.globals["document_css"] = document_css
 

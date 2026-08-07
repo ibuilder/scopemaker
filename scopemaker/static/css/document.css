@@ -15,25 +15,44 @@
   size: Letter portrait;
   margin: 25mm 20mm 22mm 20mm;
 
+  /* The header and footer are *running elements*: the marked-up blocks below
+   * declare `position: running(...)`, which lifts them out of the document
+   * flow entirely and makes them available to these margin boxes. That is
+   * more robust than hiding a copy off-canvas, which risks contributing an
+   * extra page. */
   @top-center {
-    content: string(doc-running-header);
+    content: element(doc-header);
     font-family: "Times New Roman", Times, serif;
     font-size: 8.5pt;
     color: #555;
     padding-bottom: 4mm;
   }
 
-  @bottom-center {
-    content: string(doc-running-footer) "    Page " counter(page) " of " counter(pages);
+  @bottom-left {
+    content: element(doc-footer);
     font-family: "Times New Roman", Times, serif;
     font-size: 8.5pt;
     color: #555;
     padding-top: 4mm;
   }
+
+  /* Page numbering lives in its own margin box. A margin box takes a single
+   * `content` value, so combining running text and counters in one box is not
+   * possible -- splitting them is what keeps "Page N of M" working. */
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 8.5pt;
+    color: #555;
+    padding-top: 4mm;
+    white-space: pre;
+  }
 }
 
+/* The title block already identifies the document, so the first page does not
+ * need the running header repeating it. */
 @page :first {
-  @top-center { content: ""; }
+  @top-center { content: none; }
 }
 
 .doc {
@@ -45,22 +64,16 @@
   counter-reset: none;
 }
 
-/* The running header/footer strings are lifted out of these elements and are
- * never displayed inline. */
+/* Taken out of the flow and rendered only inside the page margin boxes above.
+ * They never appear inline in the body. */
 .doc__running-header {
-  string-set: doc-running-header content();
-  position: absolute;
-  left: -9999px;
-  height: 0;
-  overflow: hidden;
+  position: running(doc-header);
+  text-align: center;
 }
 
 .doc__running-footer {
-  string-set: doc-running-footer content();
-  position: absolute;
-  left: -9999px;
-  height: 0;
-  overflow: hidden;
+  position: running(doc-footer);
+  text-align: left;
 }
 
 /* ---------------------------------------------------------------------------
