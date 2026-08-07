@@ -3,6 +3,63 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] — 2026-08-07
+
+Track C: the work that decides whether this holds up under more than one user at
+a time. Everything here was measured before and after rather than assumed.
+
+### Added
+
+- **Render cache.** Every export is keyed on a fingerprint of the document's
+  actual content — scope fields, project, bid package, every section and item.
+  An unchanged scope is served from stored bytes and renders nothing. The
+  obvious implementation, hashing `updated_at`, is wrong here: the edit routes
+  set `updated_by_id` to mark a scope dirty, and assigning the *same* user id is
+  not a change, so no `UPDATE` fires and `onupdate` never triggers. One person
+  editing twice in a row would have been served a document missing their edit.
+- **Render queue.** With `RENDER_ASYNC=1` a needed render is handed to a worker
+  (`flask run-worker`) and the request returns a waiting page that polls. The
+  queue is a database table, not Redis — this deployment already runs
+  PostgreSQL, and requiring a broker to download a PDF is a poor trade. Workers
+  claim jobs with a conditional `UPDATE` rather than `FOR UPDATE SKIP LOCKED`,
+  so the same code works on SQLite and PostgreSQL and several workers can share
+  one queue. Jobs orphaned by a dead worker are requeued after ten minutes and
+  abandoned after three attempts; results expire after seven days. Async is off
+  by default, because turning it on without a worker means exports never finish.
+- **Optimistic locking on scopes** (`row_version`). Two people editing the same
+  scope now get an explicit conflict instead of a silent overwrite.
+- **Prometheus metrics** at `/metrics`: request counts and latency histograms,
+  render timings by format, export cache hit rate, and live queue depth. No
+  `prometheus_client` dependency — the text format is simple enough to emit
+  directly, and most self-hosters will never scrape it. The endpoint returns 404
+  until `METRICS_TOKEN` is set and then requires the token. Requests are
+  labelled by Flask endpoint, never by path: paths contain scope ids, and one
+  time series per document is how a Prometheus instance falls over.
+- **`scripts/load_test.py`** — builds a throwaway dataset and reports latency
+  percentiles alongside the query count per page, because query count is the
+  number that transfers between a laptop and production.
+
+### Changed
+
+- **The editor's N+1.** Rendering a scope walked `item.children` per item, one
+  query each. The item tree is now built from the already-loaded flat collection
+  with `set_committed_value`, which also stops SQLAlchemy from re-fetching it.
+
+  Measured on 13 scopes / 843 items:
+
+  | Page | Before | After |
+  |---|---|---|
+  | editor | 167 ms, 73 queries | 110 ms, 11 queries |
+  | DOCX export (repeat) | 341 ms, 20 queries | 13 ms, 7 queries |
+
+### Fixed
+
+- Deleting a parent item promoted its children to the top level instead of
+  deleting them, quietly corrupting the outline. The relationship now cascades
+  with `passive_deletes`.
+- `render_now` never stamped `started_at` on the synchronous path, so those jobs
+  reported no duration.
+
 ## [1.3.0] — 2026-08-07
 
 Track B: what it takes to survive a customer's security questionnaire. Also

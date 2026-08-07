@@ -30,6 +30,7 @@ from .organization import (
 )
 from .procore import ProcoreConnection
 from .project import BidPackage, Project
+from .render import RenderJob
 from .scope import (
     CATEGORY_TO_SECTION,
     DEFAULT_SECTIONS,
@@ -72,6 +73,7 @@ __all__ = [
     "PasswordResetToken",
     "ProcoreConnection",
     "Project",
+    "RenderJob",
     "Scope",
     "ScopeItem",
     "ScopeRevision",

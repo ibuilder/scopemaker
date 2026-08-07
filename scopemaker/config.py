@@ -152,6 +152,12 @@ class BaseConfig:
     MAIL_SENDER_NAME: str = os.environ.get("MAIL_SENDER_NAME", "ScopeMaker")
     MAIL_TIMEOUT: int = _int("MAIL_TIMEOUT", 15)
 
+    # -- Document rendering -------------------------------------------------
+    # Off by default: async rendering needs a `flask run-worker` process, and
+    # turning it on without one would leave every export queued forever.
+    # Caching works either way.
+    RENDER_ASYNC: bool = _bool("RENDER_ASYNC", False)
+
     # -- Account security ---------------------------------------------------
     PASSWORD_RESET_HOURS: int = _int("PASSWORD_RESET_HOURS", 2)
     # Failed sign-ins before an account is temporarily locked. Locking is per
@@ -159,6 +165,11 @@ class BaseConfig:
     # stuffing spread across many addresses.
     LOGIN_MAX_ATTEMPTS: int = _int("LOGIN_MAX_ATTEMPTS", 8)
     LOGIN_LOCKOUT_SECONDS: int = _int("LOGIN_LOCKOUT_SECONDS", 900)
+
+    # -- Metrics ------------------------------------------------------------
+    # /metrics returns 404 unless this is set (or the app is in debug), because
+    # request volumes and queue depth are operational detail, not public data.
+    METRICS_TOKEN: str = os.environ.get("METRICS_TOKEN", "")
 
     # -- Logging ------------------------------------------------------------
     LOG_LEVEL: str = os.environ.get("LOG_LEVEL", "INFO").upper()

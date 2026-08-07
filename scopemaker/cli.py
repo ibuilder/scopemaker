@@ -20,6 +20,8 @@ def register_commands(app: Flask) -> None:
     app.cli.add_command(grant_role)
     app.cli.add_command(check_pdf)
     app.cli.add_command(demo_data)
+    app.cli.add_command(run_worker)
+    app.cli.add_command(render_queue_status)
 
 
 @click.command("init-db")
@@ -219,6 +221,38 @@ def demo_data(org: str) -> None:
         f"{scope.document_title} with {scope.item_count} items.",
         fg="green",
     )
+
+
+@click.command("run-worker")
+@click.option("--poll", default=2.0, help="Seconds to wait when the queue is empty.")
+@click.option("--once", is_flag=True, help="Process at most one job, then exit.")
+@click.option("--max-jobs", type=int, default=None, help="Exit after this many jobs.")
+@with_appcontext
+def run_worker(poll: float, once: bool, max_jobs: int | None) -> None:
+    """Render queued documents. Run one or more alongside the web process."""
+    from .services.render_queue import run_worker as run
+
+    processed = run(poll_seconds=poll, once=once, max_jobs=max_jobs)
+    click.secho(f"Processed {processed} job(s).", fg="green")
+
+
+@click.command("render-queue")
+@with_appcontext
+def render_queue_status() -> None:
+    """Show the render queue's depth."""
+    from .services.render_queue import purge_expired, queue_stats, requeue_stale
+
+    requeued = requeue_stale()
+    stats = queue_stats()
+    click.echo(
+        f"queued={stats['queued']}  running={stats['running']}  "
+        f"complete={stats['complete']}  failed={stats['failed']}"
+    )
+    if requeued:
+        click.secho(f"Requeued {requeued} stale job(s).", fg="yellow")
+    purged = purge_expired()
+    if purged:
+        click.echo(f"Purged {purged} expired result(s).")
 
 
 def main() -> None:  # pragma: no cover - console-script entry point

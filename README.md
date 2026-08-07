@@ -165,6 +165,19 @@ demote or delete before export.
   protection excluding the fire alarm is only safe if Division 28 is actually coming
 - CSV export for buyout meetings, plus `GET /api/v1/projects/{id}/coverage`
 
+**Performance and operations** *(new in 1.4)*
+- Exports are cached by a fingerprint of the document's content, so an unchanged
+  scope is served from stored bytes — a repeat DOCX download went from 341 ms to
+  13 ms, and from 20 queries to 7
+- Optional worker process (`RENDER_ASYNC=1` + `flask run-worker`) takes rendering
+  off the request path; workers claim jobs with a conditional `UPDATE`, so several
+  can share one queue with no broker to run
+- Optimistic locking on scopes: two people editing the same document get a clear
+  conflict instead of one silently overwriting the other
+- Prometheus metrics at `/metrics`, gated on `METRICS_TOKEN` and labelled by
+  endpoint rather than path
+- `scripts/load_test.py` reports latency percentiles *and query counts* per page
+
 **Scope generation**
 - Full CSI MasterFormat 2020 division list — all 50 numbers, with 15–20, 24, 29, 30,
   36–39, 47 and 49 correctly marked reserved and never offered for selection
@@ -267,6 +280,8 @@ list. The settings that matter most:
 | `ALLOWED_HOSTS` | Comma-separated hostnames; blocks Host-header poisoning |
 | `REGISTRATION_MODE` | `open`, `invite` or `closed` |
 | `TRUSTED_PROXY_COUNT` | Number of proxies whose `X-Forwarded-*` to trust |
+| `RENDER_ASYNC` | Render documents on a worker instead of in the request. Needs `flask run-worker` |
+| `METRICS_TOKEN` | Enables `/metrics`; without it the endpoint is 404 |
 | `PROCORE_ENABLED` | Off by default; the app is fully usable without it |
 | `OIDC_ENABLED` | Off by default |
 
@@ -285,6 +300,8 @@ misconfigured deploy fails at startup rather than quietly leaking sessions.
 | `flask grant-role EMAIL SLUG ROLE` | Change a role |
 | `flask check-pdf` | Report whether PDF rendering is usable |
 | `flask demo-data --org SLUG` | Create a sample project, package and scope |
+| `flask run-worker` | Render queued documents; run one or more alongside the web process |
+| `flask render-queue` | Show queue depth, requeue stale jobs, purge expired results |
 
 ---
 

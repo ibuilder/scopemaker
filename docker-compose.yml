@@ -57,8 +57,38 @@ services:
       PROCORE_CLIENT_ID: ${PROCORE_CLIENT_ID:-}
       PROCORE_CLIENT_SECRET: ${PROCORE_CLIENT_SECRET:-}
       PROCORE_REDIRECT_URI: ${PROCORE_REDIRECT_URI:-http://localhost:8000/procore/callback}
+      # Rendering happens in the worker below, off the request path.
+      RENDER_ASYNC: "1"
+      # /metrics stays 404 until this is set.
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
     ports:
       - "${PORT:-8000}:8000"
+    restart: unless-stopped
+
+  # Renders queued documents. Scale it with `docker compose up -d --scale
+  # worker=3`; workers claim jobs with a conditional UPDATE, so several can
+  # share one queue safely.
+  worker:
+    build: .
+    command: ["flask", "run-worker"]
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+    environment:
+      FLASK_ENV: production
+      DATABASE_URL: postgresql+psycopg://scopemaker:${POSTGRES_PASSWORD:-scopemaker-dev-password}@db:5432/scopemaker
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?set ENCRYPTION_KEY in .env}
+      # The web service already migrated and seeded; doing it again here would
+      # just be two processes racing for the same lock.
+      RUN_MIGRATIONS: "0"
+      SEED_LIBRARY: "0"
+      MAIL_SERVER: ${MAIL_SERVER:-}
+      MAIL_SENDER: ${MAIL_SENDER:-scopemaker@localhost}
+      LOG_FORMAT: json
+      RENDER_ASYNC: "1"
     restart: unless-stopped
 
 volumes:

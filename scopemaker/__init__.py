@@ -19,7 +19,7 @@ from .errors import register_error_handlers
 from .extensions import csrf, db, limiter, login_manager, migrate, oauth
 from .logging_config import configure_logging
 
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __all__ = ["__version__", "create_app"]
 
 # .env is loaded by scopemaker.config at import time -- it has to be, because
@@ -44,6 +44,10 @@ def create_app(config_name: str | None = None, **overrides: object) -> Flask:
     _register_request_hooks(app)
     _register_template_helpers(app)
     register_error_handlers(app)
+
+    from .services import metrics
+
+    metrics.register(app)
 
     from . import cli
 

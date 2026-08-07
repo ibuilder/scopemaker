@@ -132,6 +132,12 @@ class Scope(Model):
     adjustments_amount: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
     currency: Mapped[str] = mapped_column(String(3), default="USD", nullable=False)
 
+    # -- Concurrency --------------------------------------------------------
+    # SQLAlchemy bumps this on every UPDATE and adds it to the WHERE clause, so
+    # a write built from a stale read affects zero rows and raises
+    # StaleDataError instead of silently overwriting somebody else's edit.
+    row_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+
     # -- Audit --------------------------------------------------------------
     created_by_id: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     updated_by_id: Mapped[str | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
@@ -139,6 +145,8 @@ class Scope(Model):
 
     procore_commitment_id: Mapped[str | None] = mapped_column(String(60), index=True)
     procore_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    __mapper_args__ = {"version_id_col": row_version}
 
     project: Mapped[Project | None] = relationship(back_populates="scopes")
     bid_package: Mapped[BidPackage | None] = relationship(back_populates="scopes")
@@ -242,10 +250,36 @@ class ScopeSection(Model):
 
     @property
     def root_items(self) -> list[ScopeItem]:
-        """Top-level items, ordered. Children hang off ``item.children``."""
+        """Top-level items, ordered. Children hang off ``item.children``.
+
+        Accessing this also primes every item's ``children`` collection from
+        the rows already loaded in ``self.items``, so walking the tree costs no
+        further queries.
+        """
+        self._prime_children()
         return sorted(
             (i for i in self.items if i.parent_id is None), key=lambda i: i.position
         )
+
+    def _prime_children(self) -> None:
+        """Populate each item's children from the flat collection.
+
+        ``section.items`` is one query for the whole section, so the children
+        of every item are already in memory. Letting the relationship lazy-load
+        instead issued a SELECT per item -- 73 queries to open a single scope.
+        Setting the collections directly turns that into zero.
+        """
+        from sqlalchemy.orm.attributes import set_committed_value
+
+        by_parent: dict[str | None, list[ScopeItem]] = {}
+        for item in self.items:
+            by_parent.setdefault(item.parent_id, []).append(item)
+
+        for item in self.items:
+            kids = sorted(by_parent.get(item.id, []), key=lambda i: i.position)
+            # set_committed_value marks the collection as loaded without
+            # marking the object dirty, so this never causes a write.
+            set_committed_value(item, "children", kids)
 
     def to_dict(self, *, include_items: bool = True) -> dict[str, Any]:
         payload: dict[str, Any] = {
@@ -300,12 +334,16 @@ class ScopeItem(Model):
     # top-level items -- they would reappear in the exhibit under new numbers.
     # passive_deletes lets the FK's ON DELETE CASCADE handle unloaded rows.
     # remote_side belongs only on the many-to-one side.
+    # lazy="joined" rather than "selectin": section.items already fetches every
+    # row in the section in one query, so the children of any item are always
+    # present in the identity map. selectin issued a fresh SELECT per item
+    # anyway -- 73 queries to open one scope. See ScopeSection.item_tree().
     children: Mapped[list[ScopeItem]] = relationship(
         back_populates="parent",
         cascade="save-update, merge, delete",
         passive_deletes=True,
         order_by="ScopeItem.position",
-        lazy="selectin",
+        lazy="select",
     )
     parent: Mapped[ScopeItem | None] = relationship(
         back_populates="children", remote_side="ScopeItem.id"

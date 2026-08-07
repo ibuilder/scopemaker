@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Preparing your document &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card__header"><h1 class="card__title">Preparing your document</h1></div>
+  <div class="card__body" style="text-align:center;padding:2.5rem 1.5rem">
+    <p class="muted" id="status-text">
+      Rendering {{ scope.document_title if scope }} as {{ job.format|upper }}.
+      This usually takes a second or two.
+    </p>
+    <p class="muted small">The download starts on its own. You can leave this page open.</p>
+    <noscript>
+      <p class="field__error">
+        This page refreshes itself with JavaScript.
+        <a href="{{ url_for('exports.job_status', job_id=job.id) }}">Reload manually</a>
+        in a moment.
+      </p>
+    </noscript>
+    <div class="btnrow" style="justify-content:center;margin-top:1.2rem">
+      <a class="btn btn--secondary"
+         href="{{ url_for('scopes.edit', scope_id=job.scope_id) }}">Back to the scope</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/render-poll.js') }}"
+        data-state-url="{{ url_for('exports.job_state', job_id=job.id) }}"
+        data-download-url="{{ url_for('exports.job_status', job_id=job.id) }}" defer></script>
+{% endblock %}
