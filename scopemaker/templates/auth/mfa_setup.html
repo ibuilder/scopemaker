@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}Set up two-factor &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('auth.profile') }}">Profile</a> / Two-factor</div>
+<div class="pagehead"><div><h1>Set up two-factor authentication</h1></div></div>
+
+<div class="card">
+  <div class="card__header"><h2 class="card__title">1. Scan this code</h2></div>
+  <div class="card__body" style="text-align:center">
+    <div style="display:inline-block;padding:1rem;background:#fff;border:1px solid var(--line, #e2e8f0);border-radius:8px">
+      {{ qr_svg|safe }}
+    </div>
+    <p class="muted small" style="margin-top:1rem">
+      Use any authenticator app — 1Password, Bitwarden, Google Authenticator,
+      Authy, or your password manager.
+    </p>
+    <details class="details" style="text-align:left;margin-top:1rem">
+      <summary>Can't scan it?</summary>
+      <div class="details__body">
+        <p class="muted small">Enter this key manually:</p>
+        <div class="tokenbox" id="mfa-secret">{{ secret }}</div>
+        <button type="button" class="btn btn--sm btn--secondary" data-copy="#mfa-secret"
+                style="margin-top:.6rem">Copy key</button>
+      </div>
+    </details>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__header"><h2 class="card__title">2. Confirm it works</h2></div>
+  <div class="card__body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.code, autocomplete='one-time-code', inputmode='numeric',
+               autofocus=true, placeholder='000000') }}
+      <div class="btnrow">
+        {{ form.submit(class='btn btn--primary') }}
+        <a class="btn btn--secondary" href="{{ url_for('auth.profile') }}">Cancel</a>
+      </div>
+    </form>
+    <p class="field__hint" style="margin-top:.8rem">
+      Nothing is saved to your account until a code is verified, so an abandoned
+      setup leaves no half-configured secret behind.
+    </p>
+  </div>
+</div>
+{% endblock %}

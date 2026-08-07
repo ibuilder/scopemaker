@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import checkbox %}
+{% block title %}Security policy &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('admin.index') }}">Administration</a> / Security</div>
+<div class="pagehead"><div><h1>Security policy</h1><p class="pagehead__sub">{{ organization.name }}</p></div></div>
+
+<div class="callout callout--info">
+  These apply to sessions that are already signed in, not just to the next
+  login &mdash; turning one on takes effect immediately.
+</div>
+
+<div class="card">
+  <div class="card__body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+
+      {{ checkbox(form.require_mfa) }}
+      <p class="field__hint" style="margin:-.5rem 0 1.2rem 1.9rem">
+        Members without two-factor are sent to set it up before they can do
+        anything else. Accounts that sign in through {{ oidc_display_name }} are
+        exempt, since the identity provider owns that.
+      </p>
+
+      {{ checkbox(form.sso_only) }}
+      <p class="field__hint" style="margin:-.5rem 0 1.2rem 1.9rem">
+        Password sign-in is refused even when the password is correct.
+        {% if not oidc_enabled %}
+        <strong>Single sign-on is not configured on this deployment</strong>, so
+        this cannot be enabled &mdash; it would lock everyone out.
+        {% endif %}
+      </p>
+
+      {{ form.submit(class='btn btn--primary') }}
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__header">
+    <h2 class="card__title">Two-factor coverage</h2>
+    <span class="chip {{ 'chip--gap' if without_mfa else 'chip--issued' }}">
+      {{ members|length - without_mfa|length }} of {{ members|length }}
+    </span>
+  </div>
+  {% if without_mfa %}
+  <div class="table__wrap" style="border:0;border-radius:0">
+    <table class="table">
+      <thead><tr><th>Member</th><th>Role</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for membership in without_mfa %}
+        <tr>
+          <td class="small">{{ membership.user.email }}</td>
+          <td><span class="chip">{{ membership.role }}</span></td>
+          <td><span class="chip chip--gap">No two-factor</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card__footer small muted">
+    Turning on the requirement above will prompt these people to enrol the next
+    time they use the app.
+  </div>
+  {% else %}
+  <div class="card__body"><p class="muted">Everyone has two-factor enabled.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -19,7 +19,7 @@ from .errors import register_error_handlers
 from .extensions import csrf, db, limiter, login_manager, migrate, oauth
 from .logging_config import configure_logging
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __all__ = ["__version__", "create_app"]
 
 # .env is loaded by scopemaker.config at import time -- it has to be, because
@@ -204,6 +204,56 @@ def _register_request_hooks(app: Flask) -> None:
         if host not in {h.lower() for h in allowed}:
             app.logger.warning("Rejected request with unexpected Host header: %r", request.host)
             abort(400)
+
+    @app.before_request
+    def _enforce_org_policy():
+        """Apply the organization's access policy to a live session.
+
+        Checked per request rather than only at sign-in so that turning a
+        policy on takes effect immediately for people who are already signed
+        in, instead of waiting for their next login.
+        """
+        from flask_login import current_user
+
+        if not current_user.is_authenticated:
+            return None
+        # Never bounce the endpoints needed to *satisfy* the policy, or the
+        # user has no way out of the redirect.
+        exempt = {
+            "auth.mfa_setup",
+            "auth.mfa_recovery_codes",
+            "auth.mfa_regenerate_recovery_codes",
+            "auth.logout",
+            "auth.profile",
+            "static",
+            "main.healthz",
+            "main.readyz",
+        }
+        if request.endpoint in exempt or request.path.startswith("/static/"):
+            return None
+
+        organization = current_user.active_organization
+        if organization is None:
+            return None
+
+        user = current_user._get_current_object()
+        if organization.setting("require_mfa") and not user.mfa_enabled and not user.is_sso_only:
+            from flask import flash, redirect, url_for
+
+            if request.path.startswith("/api/"):
+                return {
+                    "error": {
+                        "code": "mfa_required",
+                        "message": "This organization requires two-factor authentication.",
+                    }
+                }, 403
+            flash(
+                f"{organization.name} requires two-factor authentication. "
+                "Set it up to continue.",
+                "warning",
+            )
+            return redirect(url_for("auth.mfa_setup"))
+        return None
 
     @app.after_request
     def _security_headers(response: Response) -> Response:

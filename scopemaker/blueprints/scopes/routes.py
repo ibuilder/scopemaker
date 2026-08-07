@@ -430,7 +430,8 @@ def update_item(scope_id: str, item_id: str):
     db.session.commit()
     flash("Item updated.", "success")
     section = db.session.get(ScopeSection, item.section_id)
-    return redirect(url_for("scopes.edit", scope_id=scope.id) + f"#section-{section.key}")
+    anchor = f"#section-{section.key}" if section else ""
+    return redirect(url_for("scopes.edit", scope_id=scope.id) + anchor)
 
 
 @bp.route("/<scope_id>/items/<item_id>/delete", methods=["POST"])
@@ -445,11 +446,12 @@ def delete_item(scope_id: str, item_id: str):
         return redirect(url_for("scopes.edit", scope_id=scope.id))
 
     section = db.session.get(ScopeSection, item.section_id)
+    anchor = f"#section-{section.key}" if section else ""
     db.session.delete(item)
     scope.updated_by_id = current_user.id
     db.session.commit()
     flash("Item removed.", "info")
-    return redirect(url_for("scopes.edit", scope_id=scope.id) + f"#section-{section.key}")
+    return redirect(url_for("scopes.edit", scope_id=scope.id) + anchor)
 
 
 @bp.route("/<scope_id>/items/reorder", methods=["POST"])

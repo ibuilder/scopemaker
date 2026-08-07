@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}Two-factor authentication &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card__header"><h1 class="card__title">Enter your code</h1></div>
+  <div class="card__body">
+    <p class="muted">
+      Open your authenticator app and enter the six-digit code. If you cannot
+      reach your device, enter one of your recovery codes instead.
+    </p>
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.code, autocomplete='one-time-code', inputmode='numeric',
+               autofocus=true, placeholder='000000') }}
+      {{ form.submit(class='btn btn--primary btn--block') }}
+    </form>
+  </div>
+  <div class="card__footer small muted">
+    <form method="post" action="{{ url_for('auth.mfa_cancel') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn--sm btn--secondary">Cancel and sign in as someone else</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

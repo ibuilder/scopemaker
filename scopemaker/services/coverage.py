@@ -311,12 +311,12 @@ def analyse_project(project: Project, *, include_archived: bool = False) -> Cove
         )
     )
     by_code: dict[str, SpecSection] = {}
-    for section in catalogue:
+    for candidate in catalogue:
         # Organization rows take precedence over the shipped ones.
-        existing = by_code.get(section.code)
+        existing = by_code.get(candidate.code)
         if existing is None or (existing.organization_id is None
-                                and section.organization_id is not None):
-            by_code[section.code] = section
+                                and candidate.organization_id is not None):
+            by_code[candidate.code] = candidate
 
     expected: set[str] = set(claims)
     for section in by_code.values():
@@ -326,9 +326,11 @@ def analyse_project(project: Project, *, include_archived: bool = False) -> Cove
             expected.add(section.code)
 
     for code in sorted(expected):
-        section = by_code.get(code)
-        title = section.title if section else "Unknown section"
-        division_code = section.division_code if section else code[:2]
+        # A claimed code with no catalogue entry is possible: somebody typed a
+        # section number by hand that is not in the library.
+        known: SpecSection | None = by_code.get(code)
+        title = known.title if known else "Unknown section"
+        division_code = known.division_code if known else code[:2]
         report.sections.append(
             SectionCoverage(
                 code=code,
@@ -337,9 +339,9 @@ def analyse_project(project: Project, *, include_archived: bool = False) -> Cove
                 claimed_by=sorted(
                     claims.get(code, []), key=lambda r: (r.division_code or "", r.label)
                 ),
-                is_shared_by_design=bool(section and section.related_divisions),
+                is_shared_by_design=bool(known and known.related_divisions),
                 is_procedural=division_code in PROCEDURAL_DIVISIONS
-                or bool(section and section.is_universal),
+                or bool(known and known.is_universal),
             )
         )
 

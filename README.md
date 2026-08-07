@@ -185,7 +185,15 @@ demote or delete before export.
   fields, ready to redline
 - **JSON** and **Markdown** for archiving, diffing revisions and downstream systems
 
-**Accounts and access** *(hardened in 1.2)*
+**Security and governance** *(hardened in 1.2–1.3)*
+- Two-factor authentication with single-use recovery codes; the enrolment QR is
+  an inline SVG, so the shared secret never leaves the server
+- Organization policy to require two-factor or single sign-on, enforced on
+  sessions that are already open rather than only at the next login
+- Append-only audit log of every privileged action, with CSV export
+- See [SECURITY.md](SECURITY.md) for the full posture and the hardening checklist
+
+**Accounts and access**
 - Password reset with single-use expiring tokens; completing one signs out every
   existing session, so a reset evicts an attacker rather than running alongside them
 - Per-account lockout with a growing backoff — an IP limit does nothing against

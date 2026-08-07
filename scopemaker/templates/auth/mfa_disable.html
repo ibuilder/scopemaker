@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}Turn off two-factor &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('auth.profile') }}">Profile</a> / Two-factor</div>
+<div class="pagehead"><div><h1>Turn off two-factor authentication</h1></div></div>
+
+<div class="callout callout--danger">
+  This removes the second factor from your account and destroys your recovery
+  codes. Your password alone will be enough to sign in.
+</div>
+
+<div class="card">
+  <div class="card__body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.password, autocomplete='current-password', autofocus=true) }}
+      <div class="btnrow">
+        {{ form.submit(class='btn btn--danger') }}
+        <a class="btn btn--secondary" href="{{ url_for('auth.profile') }}">Keep it on</a>
+      </div>
+    </form>
+    <p class="field__hint" style="margin-top:.8rem">
+      Your password is required because removing a second factor is exactly what
+      a hijacked session would want to do.
+    </p>
+  </div>
+</div>
+{% endblock %}

@@ -17,7 +17,14 @@ from flask import (
 from flask_login import current_user, login_required
 from flask_wtf import FlaskForm
 from sqlalchemy import select
-from wtforms import IntegerField, SelectField, StringField, SubmitField, TextAreaField
+from wtforms import (
+    BooleanField,
+    IntegerField,
+    SelectField,
+    StringField,
+    SubmitField,
+    TextAreaField,
+)
 from wtforms.validators import DataRequired, Length, NumberRange, Optional
 
 from ...extensions import db
@@ -37,6 +44,19 @@ class OrganizationForm(FlaskForm):
     address = TextAreaField("Address", validators=[Optional(), Length(max=500)])
     phone = StringField("Phone", validators=[Optional(), Length(max=60)])
     submit = SubmitField("Save")
+
+
+class SecurityPolicyForm(FlaskForm):
+    """Organization-wide access policy.
+
+    Both settings are enforced by a before_request hook rather than only at
+    sign-in, so turning one on takes effect for users who are already signed in
+    instead of waiting for their next login.
+    """
+
+    require_mfa = BooleanField("Require two-factor authentication for everyone")
+    sso_only = BooleanField("Require single sign-on (disable password sign-in)")
+    submit = SubmitField("Save policy")
 
 
 class ApiTokenForm(FlaskForm):
@@ -290,6 +310,62 @@ def tokens():
     )
     return render_template(
         "admin/tokens.html", form=form, tokens=existing, issued_token=issued_token
+    )
+
+
+@bp.route("/security", methods=["GET", "POST"])
+@login_required
+@admin_required
+def security_policy():
+    organization = current_user.active_organization
+    settings = dict(organization.settings or {})
+    form = SecurityPolicyForm(
+        data={
+            "require_mfa": bool(settings.get("require_mfa")),
+            "sso_only": bool(settings.get("sso_only")),
+        }
+    )
+
+    if form.validate_on_submit():
+        if form.sso_only.data and not current_app.config.get("OIDC_ENABLED"):
+            flash(
+                "Single sign-on is not configured on this deployment. Enabling "
+                "this would lock everyone out.",
+                "error",
+            )
+            return redirect(url_for("admin.security_policy"))
+
+        before = {k: settings.get(k) for k in ("require_mfa", "sso_only")}
+        settings["require_mfa"] = bool(form.require_mfa.data)
+        settings["sso_only"] = bool(form.sso_only.data)
+        organization.settings = settings
+
+        audit.record(
+            audit.AuditAction.SETTINGS_CHANGED,
+            summary="Security policy updated",
+            target_type="organization", target_id=organization.id,
+            target_label=organization.name,
+            context={"before": before, "after": {
+                "require_mfa": settings["require_mfa"],
+                "sso_only": settings["sso_only"],
+            }},
+        )
+        db.session.commit()
+        flash("Security policy saved.", "success")
+        return redirect(url_for("admin.security_policy"))
+
+    members = list(
+        db.session.scalars(
+            select(Membership).where(Membership.organization_id == organization.id)
+        )
+    )
+    return render_template(
+        "admin/security.html",
+        form=form,
+        organization=organization,
+        members=members,
+        without_mfa=[m for m in members if not m.user.mfa_enabled and not m.user.is_sso_only],
+        oidc_enabled=current_app.config.get("OIDC_ENABLED"),
     )
 
 

@@ -46,6 +46,33 @@ def _resolve_token(raw: str) -> ApiToken | None:
     return None
 
 
+class PolicyError(ScopeMakerError):
+    status_code = 403
+    code = "mfa_required"
+
+
+def _enforce_organization_policy(user, organization_id: str) -> None:
+    """Apply the organization's access policy to a bearer-token request.
+
+    The request hook that enforces this for browsers keys off Flask-Login, and
+    an API token is not a session -- so without this check a token would be a
+    way around a policy the organization has explicitly turned on. A token
+    issued *before* the policy was enabled is exactly the case that matters.
+    """
+    from ...models import Organization
+
+    organization = db.session.get(Organization, organization_id)
+    if organization is None or not organization.setting("require_mfa"):
+        return
+    if user is None or user.mfa_enabled or user.is_sso_only:
+        return
+    raise PolicyError(
+        "This organization requires two-factor authentication. Enable it on "
+        "the account that owns this token, or have an administrator issue a "
+        "token from a compliant account."
+    )
+
+
 def authenticate() -> None:
     """Populate ``g`` with the caller's identity, or raise 401."""
     raw = _token_from_request()
@@ -56,6 +83,8 @@ def authenticate() -> None:
         # A best-effort last-used stamp; not worth failing a request over.
         token.last_used_at = utcnow()
         db.session.commit()
+        _enforce_organization_policy(token.user, token.organization_id)
+
         g.api_token = token
         g.api_organization_id = token.organization_id
         g.api_scopes = set(token.scopes.split())

@@ -7,6 +7,7 @@ Create Date: 2026-08-07 08:32:20.980487
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import Text  # referenced by the rendered JSONB(astext_type=...)
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.

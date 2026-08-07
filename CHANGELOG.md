@@ -3,6 +3,59 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] — 2026-08-07
+
+Track B: what it takes to survive a customer's security questionnaire. Also
+renames the repository — the product is ScopeMaker, and the Procore connector is
+one optional integration among others.
+
+### Added
+
+- **Append-only audit log.** Sign-ins and failures, lockouts, password resets,
+  session revocation, role changes, member removal, invitations, API token
+  issue and revocation, scope issue/revise/archive, MFA changes, and
+  integration connect/disconnect/sync. Entries outlive the deletion of their
+  actor: the foreign key is nulled but the actor's email is preserved, so
+  removing a member does not erase what they did. Admin UI with an action
+  filter, a security-events-only view, and CSV export.
+- **Two-factor authentication.** TOTP with single-use recovery codes. The
+  enrolment QR is an **inline SVG** — the shared secret is never handed to an
+  image host, which also keeps the strict CSP intact. Secrets are encrypted at
+  rest; recovery codes are stored as Argon2 hashes. A correct password alone
+  does not authenticate: it parks a pending challenge that expires, is
+  invalidated by a password change, and shares the account lockout so the
+  second factor cannot be brute-forced separately. Turning MFA off requires the
+  password, because that is exactly what a hijacked session would try.
+- **Organization security policy** (Admin → Security): require two-factor for
+  everyone, and require single sign-on. Enforced on every request rather than
+  only at sign-in, so enabling a policy takes effect for sessions that are
+  already open — which is the window an administrator turns it on to close.
+  `sso_only` cannot be enabled when no identity provider is configured.
+- **SECURITY.md** with a private disclosure route, and an explicit statement of
+  what the application does *not* protect against.
+- **Dependabot** for pip, GitHub Actions and Docker, and a CI job running
+  `pip-audit --strict` plus a CycloneDX SBOM artifact.
+
+### Changed
+
+- **The repository is now `ibuilder/scopemaker`.** GitHub redirects the old
+  URLs. Procore documentation moved out of the README headline into
+  `docs/integrations.md` alongside OIDC; the integration itself is unchanged and
+  still fully supported, off by default.
+- **mypy now blocks CI.** It was advisory, which meant nobody read it. The
+  seven type errors it was hiding are fixed — including two
+  `ScopeSection | None` dereferences that would have been 500s.
+
+### Fixed
+
+- **API tokens bypassed the organization's MFA requirement.** The request hook
+  that enforces policy keys off Flask-Login, and a bearer token is not a
+  session — so a token issued before the policy was enabled kept working.
+  Enforcement now also happens where the bearer identity resolves.
+- Alembic renders JSONB columns as `JSONB(astext_type=Text())` without
+  importing `Text`, producing a `NameError` the moment the migration runs. Fixed
+  in the affected migrations and in `script.py.mako`, so it cannot recur.
+
 ## [1.2.0] — 2026-08-07
 
 Track A of the path to production readiness: make the application safe to put

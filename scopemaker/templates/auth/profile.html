@@ -37,6 +37,48 @@
 </div>
 
 <div class="card">
+  <div class="card__header">
+    <h2 class="card__title">Two-factor authentication</h2>
+    {% if current_user.mfa_enabled %}
+    <span class="chip chip--issued">On</span>
+    {% else %}
+    <span class="chip chip--draft">Off</span>
+    {% endif %}
+  </div>
+  <div class="card__body">
+    {% if current_user.is_sso_only %}
+    <p class="muted">Managed by {{ oidc_display_name }}.</p>
+    {% elif current_user.mfa_enabled %}
+    <p class="muted">
+      Enabled {{ current_user.mfa_confirmed_at.strftime('%d %b %Y') if current_user.mfa_confirmed_at }}.
+      You have <strong>{{ current_user.recovery_codes_remaining }}</strong>
+      recovery code{{ '' if current_user.recovery_codes_remaining == 1 else 's' }} left.
+    </p>
+    {% if current_user.recovery_codes_remaining <= 2 %}
+    <div class="callout">
+      You are running low on recovery codes. Generate a fresh set so you are not
+      locked out if you lose your device.
+    </div>
+    {% endif %}
+    <div class="btnrow">
+      <form method="post" action="{{ url_for('auth.mfa_regenerate_recovery_codes') }}"
+            data-confirm="Generate new recovery codes? The current ones stop working.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn--secondary">New recovery codes</button>
+      </form>
+      <a class="btn btn--danger" href="{{ url_for('auth.mfa_disable') }}">Turn off</a>
+    </div>
+    {% else %}
+    <p class="muted">
+      Adds a six-digit code from your phone on top of your password. If your
+      password is ever stolen, it alone will not get anyone in.
+    </p>
+    <a class="btn btn--primary" href="{{ url_for('auth.mfa_setup') }}">Set up two-factor</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
   <div class="card__header"><h2 class="card__title">Sessions</h2></div>
   <div class="card__body">
     <p class="muted">

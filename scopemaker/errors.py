@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from typing import Any
 
 from flask import Flask, Response, jsonify, render_template, request
 from werkzeug.exceptions import HTTPException
@@ -29,10 +30,10 @@ class ScopeMakerError(Exception):
         self.details = details or {}
 
     def to_dict(self) -> dict:
-        payload = {"error": {"code": self.code, "message": self.message}}
+        error: dict[str, Any] = {"code": self.code, "message": self.message}
         if self.details:
-            payload["error"]["details"] = self.details
-        return payload
+            error["details"] = self.details
+        return {"error": error}
 
 
 class ValidationError(ScopeMakerError):

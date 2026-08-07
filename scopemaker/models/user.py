@@ -7,12 +7,18 @@ from typing import TYPE_CHECKING
 
 from flask import session
 from flask_login import UserMixin
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, select
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, select
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..extensions import db
-from ..security import generate_token, hash_password, verify_password
-from .base import Model
+from ..security import (
+    decrypt_secret,
+    encrypt_secret,
+    generate_token,
+    hash_password,
+    verify_password,
+)
+from .base import JSONType, Model
 from .organization import Membership, Organization
 
 if TYPE_CHECKING:
@@ -45,6 +51,17 @@ class User(UserMixin, Model):
     # credential stuffing spread across many addresses at one account.
     failed_login_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    # -- Two-factor ---------------------------------------------------------
+    # The TOTP secret is encrypted at rest with the same key that protects
+    # third-party tokens: a leaked database should not let anyone mint codes.
+    _mfa_secret: Mapped[str | None] = mapped_column("mfa_secret", Text)
+    mfa_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    mfa_confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    #: Argon2 hashes of the single-use recovery codes, never the codes.
+    mfa_recovery_hashes: Mapped[list] = mapped_column(
+        JSONType, default=list, nullable=False
+    )
 
     # -- Session revocation -------------------------------------------------
     # Bumped to invalidate every signed-in session at once. The value is baked
@@ -110,6 +127,25 @@ class User(UserMixin, Model):
         if not self.password_hash:
             return False
         return verify_password(self.password_hash, password)
+
+    # -- Two-factor ---------------------------------------------------------
+    @property
+    def mfa_secret(self) -> str | None:
+        return decrypt_secret(self._mfa_secret)
+
+    @mfa_secret.setter
+    def mfa_secret(self, value: str | None) -> None:
+        self._mfa_secret = encrypt_secret(value)
+
+    @property
+    def recovery_codes_remaining(self) -> int:
+        return len(self.mfa_recovery_hashes or [])
+
+    def disable_mfa(self) -> None:
+        self._mfa_secret = None
+        self.mfa_enabled = False
+        self.mfa_confirmed_at = None
+        self.mfa_recovery_hashes = []
 
     # -- Lockout ------------------------------------------------------------
     @property

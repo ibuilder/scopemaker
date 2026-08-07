@@ -252,7 +252,11 @@ def edit_spec_section(section_id: str):
     if form.validate_on_submit():
         section.code = form.code.data.strip()
         section.title = form.title.data.strip()
-        section.division_code = normalize_code(form.division_code.data)
+        # The form restricts choices to real divisions, so this cannot be None;
+        # fall back to the existing value rather than writing NULL.
+        section.division_code = (
+            normalize_code(form.division_code.data) or section.division_code
+        )
         section.related_divisions = _parse_divisions(form.related_divisions.data)
         section.is_universal = form.is_universal.data
         section.is_default = form.is_default.data

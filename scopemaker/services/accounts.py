@@ -190,4 +190,4 @@ def is_safe_redirect(target: str | None) -> bool:
 
 
 def safe_redirect_target(target: str | None, fallback: str) -> str:
-    return target if is_safe_redirect(target) else fallback
+    return target if (target and is_safe_redirect(target)) else fallback

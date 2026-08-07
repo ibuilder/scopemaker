@@ -77,6 +77,19 @@ def login():
         # enumerate which email addresses have accounts.
         authenticated = bool(user and user.check_password(form.password.data))
 
+        # An organization can require SSO. Refuse the password even when it is
+        # correct, so switching the policy on actually closes that door.
+        if authenticated and any(
+            m.organization.setting("sso_only") for m in user.memberships
+        ):
+            logger.info("Password sign-in refused for %s: org requires SSO", user.email)
+            flash(
+                "Your organization requires single sign-on. Use the "
+                "single sign-on button below.",
+                "error",
+            )
+            return render_template("auth/login.html", form=form)
+
         if authenticated and not user.is_active:
             flash("That account has been deactivated. Contact your administrator.", "error")
         elif authenticated:
@@ -86,6 +99,17 @@ def login():
             user.clear_lockout()
             user.last_login_at = utcnow()
             db.session.commit()
+            # A correct password is not a sign-in when a second factor is
+            # configured: park the user and prove the factor first.
+            if user.mfa_enabled:
+                from .mfa_routes import begin_challenge
+
+                return begin_challenge(
+                    user,
+                    remember=form.remember.data,
+                    next_url=request.args.get("next"),
+                )
+
             audit.record(
                 audit.AuditAction.SIGN_IN,
                 summary=f"{user.email} signed in",
@@ -480,7 +504,8 @@ def switch_organization(organization_id: str):
     if not current_user.switch_organization(organization_id):
         abort(403)
     organization = db.session.get(Organization, organization_id)
-    flash(f"Switched to {organization.name}.", "info")
+    if organization is not None:
+        flash(f"Switched to {organization.name}.", "info")
     return redirect(
         safe_redirect_target(request.form.get("next"), url_for("main.dashboard"))
     )

@@ -29,8 +29,9 @@ jobs:
       - name: ruff
         run: ruff check --output-format=github .
       - name: mypy
+        # No longer advisory: the type errors it was hiding are fixed, and a
+        # non-blocking check is one nobody reads.
         run: mypy scopemaker
-        continue-on-error: true
 
   test:
     name: Tests (Python ${{ matrix.python-version }})
@@ -84,6 +85,31 @@ jobs:
           name: coverage
           path: coverage.xml
           if-no-files-found: warn
+
+  security:
+    name: Dependency audit and SBOM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install ".[dev]" pip-audit cyclonedx-bom
+
+      - name: Audit dependencies for known vulnerabilities
+        # No ignore list. If something needs suppressing, it gets added here
+        # deliberately with a comment saying why and when to revisit it.
+        run: pip-audit --progress-spinner off --strict
+
+      - name: Generate a CycloneDX SBOM
+        run: cyclonedx-py environment --output-format JSON --outfile sbom.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.json
+          retention-days: 90
 
   migrations:
     name: Migrations against PostgreSQL
