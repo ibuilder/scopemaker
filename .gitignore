@@ -44,3 +44,8 @@ instance/
 Thumbs.db
 sbom*.json
 audit-requirements.txt
+
+# Demo assets are regenerated from the clause library on every Pages deploy.
+docs/demo/library.json
+docs/demo/document.css
+docs/demo/exhibits/

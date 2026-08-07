@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "docs/**"
+      - "scopemaker/**"          # the demo data is exported from the library
+      - "scripts/build_demo.py"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -25,6 +27,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install ".[dev]"
+
+      - name: Regenerate the demo from the real clause library
+        # Rebuilt on every deploy rather than committed-and-hoped, so the demo
+        # cannot drift from the library it claims to be showing.
+        run: python scripts/build_demo.py
+
+      - name: Check the demo data is what we expect
+        run: |
+          python - <<'PY'
+          import json, pathlib, sys
+          lib = json.loads(pathlib.Path("docs/demo/library.json").read_text(encoding="utf-8"))
+          problems = []
+          if len(lib["clauses"]) < 200:
+              problems.append(f"only {len(lib['clauses'])} clauses exported")
+          if len(lib["spec_sections"]) < 100:
+              problems.append(f"only {len(lib['spec_sections'])} sections exported")
+          if not lib["boilerplate"].get("intent"):
+              problems.append("boilerplate is missing the intent text")
+          # The cross-division reference is the whole point of the demo.
+          firestop = [s for s in lib["spec_sections"] if s["code"] == "078413"]
+          if not firestop or "21" not in firestop[0]["related"]:
+              problems.append("078413 is not cross-referenced to Division 21")
+          if problems:
+              print("\n".join("::error::" + p for p in problems))
+              sys.exit(1)
+          print(f"{len(lib['clauses'])} clauses, {len(lib['spec_sections'])} sections exported")
+          PY
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
