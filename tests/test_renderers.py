@@ -176,18 +176,26 @@ def test_pdf_is_paginated_with_selectable_text(app, scope, organization):
     reader = PdfReader(io.BytesIO(payload))
     assert len(reader.pages) >= 2, "a full scope should not fit on one page"
 
-    text = "\n".join(page.extract_text() or "" for page in reader.pages)
+    # Justified text makes the extractor emit runs of spaces at the positions
+    # where glyphs were spread apart, so compare on normalised whitespace.
+    text = " ".join(
+        " ".join(page.extract_text() or "" for page in reader.pages).split()
+    )
     assert "EXHIBIT B" in text.upper()
     assert "SCOPE OF WORK" in text.upper()
 
     doc = build_document(scope, organization=organization)
     inclusions = next(s for s in doc.enabled_sections if s.key == "inclusions")
     first = inclusions.lines[0]
-    # A distinctive fragment of real clause text must be extractable.
-    assert first.text.split(",")[0][:40] in text.replace("\n", " ")
+    # A distinctive fragment of real clause text must be extractable -- this is
+    # what the prototype's rasterised PDF could never satisfy.
+    fragment = " ".join(first.text.split(",")[0].split())[:40]
+    assert fragment and fragment in text
 
-    # Running footer with "Page N of M".
-    assert "Page" in text and " of " in text
+    # Running footer with "Page N of M", and the running header on later pages.
+    assert "Page 1 of" in text
+    assert f"of {len(reader.pages)}" in text
+    assert doc.project["name"] in text
 
 
 @pytest.mark.pdf
