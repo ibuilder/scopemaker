@@ -4,7 +4,16 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from flask import abort, current_app, flash, redirect, render_template, request, url_for
+from flask import (
+    Response,
+    abort,
+    current_app,
+    flash,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from flask_login import current_user, login_required
 from flask_wtf import FlaskForm
 from sqlalchemy import select
@@ -12,11 +21,11 @@ from wtforms import IntegerField, SelectField, StringField, SubmitField, TextAre
 from wtforms.validators import DataRequired, Length, NumberRange, Optional
 
 from ...extensions import db
-from ...models import ApiToken, Invitation, Membership, User
+from ...models import ACTION_LABELS, ApiToken, Invitation, Membership, User
 from ...models.base import utcnow
 from ...models.organization import ROLE_HIERARCHY, ROLE_LABELS
 from ...security import admin_required
-from ...services import mail
+from ...services import audit, mail
 from ..auth.forms import InviteForm
 from ..helpers import current_org_id
 from . import bp
@@ -83,6 +92,12 @@ def settings():
     form = OrganizationForm(obj=organization)
     if form.validate_on_submit():
         form.populate_obj(organization)
+        audit.record(
+            audit.AuditAction.SETTINGS_CHANGED,
+            summary="Organization settings updated",
+            target_type="organization", target_id=organization.id,
+            target_label=organization.name,
+        )
         db.session.commit()
         flash("Organization settings saved.", "success")
         return redirect(url_for("admin.settings"))
@@ -113,6 +128,12 @@ def invite():
         invited_by_id=current_user.id,
     )
     db.session.add(invitation)
+    audit.record(
+        audit.AuditAction.MEMBER_INVITED,
+        summary=f"{email} invited as {invitation.role}",
+        target_type="invitation", target_label=email,
+        context={"role": invitation.role},
+    )
     db.session.commit()
 
     link = url_for("auth.accept_invite", token=invitation.token, _external=True)
@@ -138,6 +159,11 @@ def revoke_invite(invitation_id: str):
     invitation = db.session.get(Invitation, invitation_id)
     if invitation is None or invitation.organization_id != current_org_id():
         abort(404)
+    audit.record(
+        audit.AuditAction.INVITE_REVOKED,
+        summary=f"Invitation for {invitation.email} revoked",
+        target_type="invitation", target_label=invitation.email,
+    )
     db.session.delete(invitation)
     db.session.commit()
     flash("Invitation revoked.", "info")
@@ -170,7 +196,15 @@ def change_role(membership_id: str):
         )
         return redirect(url_for("admin.index"))
 
+    previous = membership.role
     membership.role = role
+    audit.record(
+        audit.AuditAction.ROLE_CHANGED,
+        summary=f"{membership.user.email} changed from {previous} to {role}",
+        target_type="user", target_id=membership.user_id,
+        target_label=membership.user.email,
+        context={"from": previous, "to": role},
+    )
     db.session.commit()
     flash(f"Role updated to {role}.", "success")
     return redirect(url_for("admin.index"))
@@ -188,6 +222,13 @@ def remove_member(membership_id: str):
         flash("You cannot remove the only administrator.", "error")
         return redirect(url_for("admin.index"))
 
+    audit.record(
+        audit.AuditAction.MEMBER_REMOVED,
+        summary=f"{membership.user.email} removed from the organization",
+        target_type="user", target_id=membership.user_id,
+        target_label=membership.user.email,
+        context={"role": membership.role},
+    )
     db.session.delete(membership)
     db.session.commit()
     flash("Member removed from this organization.", "info")
@@ -231,6 +272,12 @@ def tokens():
             expires_at=expires_at,
         )
         db.session.add(token)
+        audit.record(
+            audit.AuditAction.TOKEN_ISSUED,
+            summary=f"API token '{token.name}' issued with scopes: {token.scopes}",
+            target_type="api_token", target_label=token.name,
+            context={"scopes": token.scopes, "prefix": token.token_prefix},
+        )
         db.session.commit()
         flash("Token created. Copy it now -- it will not be shown again.", "success")
 
@@ -246,6 +293,60 @@ def tokens():
     )
 
 
+@bp.route("/audit")
+@login_required
+@admin_required
+def audit_log():
+    """Who did what, and when."""
+    org_id = current_org_id()
+    action = request.args.get("action") or ""
+    security_only = request.args.get("security") == "1"
+    page = max(int(request.args.get("page", 1) or 1), 1)
+    per_page = 100
+
+    events = audit.query(
+        org_id,
+        action=action or None,
+        security_only=security_only,
+        limit=per_page + 1,
+        offset=(page - 1) * per_page,
+    )
+    has_next = len(events) > per_page
+    return render_template(
+        "admin/audit.html",
+        events=events[:per_page],
+        action=action,
+        security_only=security_only,
+        page=page,
+        has_next=has_next,
+        action_labels=ACTION_LABELS,
+    )
+
+
+@bp.route("/audit.csv")
+@login_required
+@admin_required
+def audit_csv():
+    org_id = current_org_id()
+    events = audit.query(
+        org_id,
+        action=request.args.get("action") or None,
+        security_only=request.args.get("security") == "1",
+        limit=10_000,
+    )
+    audit.record(
+        audit.AuditAction.SETTINGS_CHANGED,
+        summary=f"Audit log exported ({len(events)} entries)",
+        target_type="audit", target_label="export",
+        commit=True,
+    )
+    return Response(
+        audit.to_csv(events),
+        mimetype="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="audit-log.csv"'},
+    )
+
+
 @bp.route("/tokens/<token_id>/revoke", methods=["POST"])
 @login_required
 @admin_required
@@ -254,6 +355,11 @@ def revoke_token(token_id: str):
     if token is None or token.organization_id != current_org_id():
         abort(404)
     token.revoked_at = utcnow()
+    audit.record(
+        audit.AuditAction.TOKEN_REVOKED,
+        summary=f"API token '{token.name}' revoked",
+        target_type="api_token", target_id=token.id, target_label=token.name,
+    )
     db.session.commit()
     flash("Token revoked.", "info")
     return redirect(url_for("admin.tokens"))

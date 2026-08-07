@@ -23,7 +23,7 @@ from ...models import Organization, PasswordResetToken
 from ...models.base import utcnow
 from ...models.user import ACTIVE_ORG_SESSION_KEY, User
 from ...security import generate_token, needs_rehash
-from ...services import mail
+from ...services import audit, mail
 from ...services.accounts import (
     accept_invitation,
     create_organization,
@@ -86,6 +86,16 @@ def login():
             user.clear_lockout()
             user.last_login_at = utcnow()
             db.session.commit()
+            audit.record(
+                audit.AuditAction.SIGN_IN,
+                summary=f"{user.email} signed in",
+                user_id=user.id,
+                actor_label=user.email,
+                organization_id=user.memberships[0].organization_id
+                if user.memberships
+                else None,
+                commit=True,
+            )
             login_user(user, remember=form.remember.data)
             session.permanent = True
             logger.info("User %s signed in", user.email)
@@ -99,11 +109,27 @@ def login():
                     lockout_seconds=current_app.config["LOGIN_LOCKOUT_SECONDS"],
                 )
                 db.session.commit()
+                audit.record(
+                    audit.AuditAction.SIGN_IN_FAILED,
+                    summary=f"Failed sign-in for {user.email}",
+                    user_id=user.id,
+                    actor_label=user.email,
+                    context={"attempts": user.failed_login_count},
+                    commit=True,
+                )
                 if locked:
                     logger.warning(
                         "Locked account %s after %s failed attempts",
                         user.email,
                         user.failed_login_count,
+                    )
+                    audit.record(
+                        audit.AuditAction.ACCOUNT_LOCKED,
+                        summary=f"{user.email} locked after "
+                        f"{user.failed_login_count} failed attempts",
+                        user_id=user.id,
+                        actor_label=user.email,
+                        commit=True,
                     )
             flash(LOGIN_FAILED_MESSAGE, "error")
 
@@ -145,6 +171,13 @@ def forgot_password():
             url = url_for("auth.reset_password", token=raw, _external=True)
             mail.send_password_reset(
                 to=user.email, name=user.full_name, url=url, expires_hours=hours
+            )
+            audit.record(
+                audit.AuditAction.PASSWORD_RESET_REQUESTED,
+                summary=f"Password reset requested for {user.email}",
+                user_id=user.id,
+                actor_label=user.email,
+                commit=True,
             )
             logger.info("Password reset requested for %s", user.email)
         elif user is not None and user.is_sso_only:
@@ -192,6 +225,13 @@ def reset_password(token: str):
         record.consume()
         db.session.commit()
 
+        audit.record(
+            audit.AuditAction.PASSWORD_RESET_COMPLETED,
+            summary=f"Password reset completed for {user.email}",
+            user_id=user.id,
+            actor_label=user.email,
+            commit=True,
+        )
         mail.send_password_changed(to=user.email, name=user.full_name)
         logger.info("Password reset completed for %s", user.email)
         flash(
@@ -206,6 +246,11 @@ def reset_password(token: str):
 @bp.route("/logout", methods=["POST"])
 @login_required
 def logout():
+    audit.record(
+        audit.AuditAction.SIGN_OUT,
+        summary=f"{current_user.email} signed out",
+        commit=True,
+    )
     logout_user()
     session.pop(ACTIVE_ORG_SESSION_KEY, None)
     flash("You have been signed out.", "info")
@@ -393,6 +438,11 @@ def profile():
             db.session.commit()
             # login_user stores this object on g; passing the LocalProxy
             # would make it resolve to itself and recurse forever.
+            audit.record(
+                audit.AuditAction.PASSWORD_CHANGED,
+                summary=f"{email} changed their password",
+                user_id=user.id, actor_label=email, commit=True,
+            )
             login_user(user)
             session.permanent = True
             mail.send_password_changed(to=email, name=name)
@@ -411,6 +461,11 @@ def revoke_sessions():
     """Sign out of every browser, then sign this one back in."""
     user = current_user._get_current_object()
     user.revoke_sessions()
+    audit.record(
+        audit.AuditAction.SESSIONS_REVOKED,
+        summary=f"{user.email} signed out all other sessions",
+        user_id=user.id, actor_label=user.email,
+    )
     db.session.commit()
     # Concrete object, not the proxy -- see the note in profile().
     login_user(user)

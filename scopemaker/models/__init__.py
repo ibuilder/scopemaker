@@ -11,6 +11,7 @@ import sqlite3
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
+from .audit import ACTION_LABELS, SECURITY_ACTIONS, AuditAction, AuditEvent
 from .base import Model, new_uuid, utcnow
 from .library import (
     CATEGORY_ORDER,
@@ -46,6 +47,7 @@ from .template import ScopeTemplate
 from .user import ApiToken, PasswordResetToken, User
 
 __all__ = [
+    "ACTION_LABELS",
     "CATEGORY_ORDER",
     "CATEGORY_TO_SECTION",
     "CLAUSE_CATEGORIES",
@@ -55,8 +57,11 @@ __all__ = [
     "ROLE_LABELS",
     "SCOPE_STATUSES",
     "SECTION_KEYS",
+    "SECURITY_ACTIONS",
     "STATUS_LABELS",
     "ApiToken",
+    "AuditAction",
+    "AuditEvent",
     "BidPackage",
     "Clause",
     "ClauseSuppression",

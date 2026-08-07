@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import empty_state %}
+{% block title %}Audit log &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--wide{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{{ url_for('admin.index') }}">Administration</a> / Audit log</div>
+
+<div class="pagehead">
+  <div>
+    <h1>Audit log</h1>
+    <p class="pagehead__sub">Who did what, and when. Append-only.</p>
+  </div>
+  <a class="btn btn--secondary"
+     href="{{ url_for('admin.audit_csv', action=action, security='1' if security_only else '') }}">Download CSV</a>
+</div>
+
+<form class="toolbar" method="get">
+  <div class="field">
+    <label for="action">Action</label>
+    <select id="action" name="action">
+      <option value="">All actions</option>
+      {% for key, label in action_labels.items() %}
+      <option value="{{ key }}" {{ 'selected' if key == action }}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <label class="checkbox" style="margin-bottom:.35rem">
+    <input type="checkbox" name="security" value="1" {{ 'checked' if security_only }}>
+    <span>Security events only</span>
+  </label>
+  <button type="submit" class="btn btn--secondary">Filter</button>
+  {% if action or security_only %}
+  <a class="btn btn--ghost" style="color:var(--slate-600)" href="{{ url_for('admin.audit_log') }}">Clear</a>
+  {% endif %}
+</form>
+
+{% if events %}
+<div class="table__wrap">
+  <table class="table">
+    <thead>
+      <tr><th>When</th><th>Actor</th><th>Action</th><th>Detail</th><th>Source</th></tr>
+    </thead>
+    <tbody>
+      {% for event in events %}
+      <tr>
+        <td class="small muted" style="white-space:nowrap">
+          {{ event.created_at.strftime('%d %b %Y') }}<br>{{ event.created_at.strftime('%H:%M:%S') }}
+        </td>
+        <td class="small">{{ event.actor_label }}</td>
+        <td>
+          <span class="chip {{ 'chip--gap' if event.is_security_event }}">{{ event.label }}</span>
+        </td>
+        <td class="small">
+          {{ event.summary }}
+          {% if event.context %}
+          <br><span class="muted mono" style="font-size:.78rem">
+            {%- for key, value in event.context.items() %}{{ key }}={{ value }}{{ ' ' if not loop.last }}{% endfor -%}
+          </span>
+          {% endif %}
+        </td>
+        <td class="small muted mono" style="white-space:nowrap">
+          {{ event.ip_address or '—' }}
+          {% if event.request_id %}<br>{{ event.request_id }}{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="btnrow" style="margin-top:1rem;justify-content:space-between">
+  {% if page > 1 %}
+  <a class="btn btn--secondary"
+     href="{{ url_for('admin.audit_log', action=action, security='1' if security_only else '', page=page-1) }}">Newer</a>
+  {% else %}<span></span>{% endif %}
+  {% if has_next %}
+  <a class="btn btn--secondary"
+     href="{{ url_for('admin.audit_log', action=action, security='1' if security_only else '', page=page+1) }}">Older</a>
+  {% endif %}
+</div>
+{% else %}
+<div class="card"><div class="card__body">
+{{ empty_state('Nothing recorded yet',
+   'Sign-ins, role changes, issued scopes, token activity and integration changes all appear here.') }}
+</div></div>
+{% endif %}
+{% endblock %}

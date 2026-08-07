@@ -11,8 +11,8 @@ from ...extensions import db
 from ...models import BidPackage, Project, Scope, ScopeItem, ScopeSection, ScopeTemplate
 from ...models.scope import DEFAULT_SECTIONS, SCOPE_STATUSES, STATUS_LABELS
 from ...security import editor_required
+from ...services import audit, scope_builder
 from ...services import library as library_service
-from ...services import scope_builder
 from ...services.numbering import build_numberer
 from ...services.renderers import PDF_AVAILABLE, render_html
 from ...services.sanitize import sanitize_html, sanitize_inline
@@ -551,6 +551,14 @@ def issue(scope_id: str):
             flash("This scope has already been issued.", "info")
         else:
             scope_builder.issue_scope(scope, user_id=current_user.id, note=form.note.data)
+            audit.record(
+                audit.AuditAction.SCOPE_ISSUED,
+                summary=f"{scope.document_title} issued as version {scope.version}",
+                target_type="scope", target_id=scope.id,
+                target_label=scope.document_title,
+                context={"version": scope.version, "note": form.note.data or None},
+                commit=True,
+            )
             flash(
                 f"{scope.document_title} issued as version {scope.version} and locked. "
                 "Create a revision to make further changes.",
@@ -569,6 +577,13 @@ def revise(scope_id: str):
         flash("This scope is already editable.", "info")
     else:
         scope_builder.revise_scope(scope, user_id=current_user.id)
+        audit.record(
+            audit.AuditAction.SCOPE_REVISED,
+            summary=f"{scope.document_title} reopened as version {scope.version}",
+            target_type="scope", target_id=scope.id,
+            target_label=scope.document_title,
+            context={"version": scope.version}, commit=True,
+        )
         flash(f"Now editing version {scope.version}.", "success")
     return redirect(url_for("scopes.edit", scope_id=scope.id))
 
@@ -590,6 +605,11 @@ def archive(scope_id: str):
     scope = get_scope_or_404(scope_id)
     scope.status = "archived"
     scope.updated_by_id = current_user.id
+    audit.record(
+        audit.AuditAction.SCOPE_ARCHIVED,
+        summary=f"{scope.document_title} archived",
+        target_type="scope", target_id=scope.id, target_label=scope.document_title,
+    )
     db.session.commit()
     flash("Scope archived.", "info")
     return redirect(url_for("scopes.index"))

@@ -5,6 +5,7 @@
 <div class="pagehead">
   <div><h1>Administration</h1><p class="pagehead__sub">{{ organization.name }}</p></div>
   <div class="btnrow">
+    <a class="btn btn--secondary" href="{{ url_for('admin.audit_log') }}">Audit log</a>
     <a class="btn btn--secondary" href="{{ url_for('admin.settings') }}">Organization settings</a>
     <a class="btn btn--secondary" href="{{ url_for('admin.tokens') }}">API tokens</a>
   </div>

@@ -20,7 +20,7 @@ from ...errors import IntegrationError
 from ...extensions import db, limiter
 from ...models import ProcoreConnection
 from ...security import admin_required, constant_time_equals, editor_required, generate_token
-from ...services import procore_sync
+from ...services import audit, procore_sync
 from ...services.procore_client import (
     ProcoreClient,
     authorize_url,
@@ -134,6 +134,14 @@ def callback():
         flash(exc.message, "error")
         return redirect(url_for("procore.index"))
 
+    audit.record(
+        audit.AuditAction.INTEGRATION_CONNECTED,
+        summary=f"Procore connected as {connection.procore_user_name or 'unknown'}",
+        target_type="integration", target_label="procore",
+        context={"grant_type": connection.grant_type,
+                 "company_id": connection.company_id},
+        commit=True,
+    )
     flash(
         f"Connected to Procore as {connection.procore_user_name or 'your account'}.",
         "success",
@@ -206,6 +214,11 @@ def disconnect():
     connection = get_connection(current_org_id())
     if connection is not None:
         connection.disconnect()
+        audit.record(
+            audit.AuditAction.INTEGRATION_DISCONNECTED,
+            summary="Procore disconnected",
+            target_type="integration", target_label="procore",
+        )
         db.session.commit()
     flash("Disconnected from Procore. Imported projects were kept.", "info")
     return redirect(url_for("procore.index"))
@@ -231,6 +244,11 @@ def sync_projects():
         flash(exc.message, "error")
         return redirect(url_for("procore.index"))
 
+    audit.record(
+        audit.AuditAction.INTEGRATION_SYNCED,
+        summary=f"Procore project sync: {result.summary()}",
+        target_type="integration", target_label="procore", commit=True,
+    )
     flash(f"Sync complete: {result.summary()}.", "success")
     return redirect(url_for("projects.index"))
 
