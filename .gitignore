@@ -42,3 +42,5 @@ instance/
 .vscode/
 .DS_Store
 Thumbs.db
+sbom*.json
+audit-requirements.txt
