@@ -9,7 +9,6 @@ from __future__ import annotations
 import time
 import uuid
 
-from dotenv import load_dotenv
 from flask import Flask, Response, abort, g, request
 from markupsafe import Markup
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -22,7 +21,9 @@ from .logging_config import configure_logging
 __version__ = "1.0.0"
 __all__ = ["__version__", "create_app"]
 
-load_dotenv()
+# .env is loaded by scopemaker.config at import time -- it has to be, because
+# the config classes read os.environ when they are defined. Doing it here as
+# well would be too late to have any effect.
 
 
 def create_app(config_name: str | None = None, **overrides: object) -> Flask:

@@ -12,7 +12,26 @@ import os
 import secrets
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# .env has to be loaded *here*, before the config classes below are defined,
+# because their attributes are evaluated at class-definition time -- that is,
+# at import. Loading it in the application factory would be too late: by the
+# time create_app() runs, this module has already been imported and every
+# setting has already been read from a bare environment.
+#
+# The `flask` CLI happens to load dotenv itself, which masks this; anything
+# else (gunicorn, a maintenance script, a cron job) would silently fall back to
+# the default SQLite path and present as a mysteriously empty database.
+#
+# The path is explicit because a bare load_dotenv() searches upward from the
+# *calling* file, so it misses .env whenever the entry point lives elsewhere.
+# override=False keeps a real environment variable winning over the file,
+# which is what you want in a container.
+load_dotenv(BASE_DIR / ".env", override=False)
+load_dotenv(override=False)  # conventional cwd-relative fallback
 
 
 class ConfigError(RuntimeError):
