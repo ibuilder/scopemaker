@@ -98,9 +98,16 @@ jobs:
       - run: pip install ".[dev]" pip-audit cyclonedx-bom
 
       - name: Audit dependencies for known vulnerabilities
-        # No ignore list. If something needs suppressing, it gets added here
-        # deliberately with a comment saying why and when to revisit it.
-        run: pip-audit --progress-spinner off --strict
+        # Audits an explicit requirements list rather than the environment:
+        # under --strict, pip-audit fails on any package it cannot look up, and
+        # scopemaker itself is not on PyPI. Filtering it out keeps --strict
+        # meaningful for the dependencies that matter.
+        #
+        # No ignore list. If something ever needs suppressing it gets added
+        # here deliberately, with a comment saying why and when to revisit it.
+        run: |
+          pip freeze --exclude-editable | grep -vi '^scopemaker' > audit-requirements.txt
+          pip-audit --progress-spinner off --strict -r audit-requirements.txt
 
       - name: Generate a CycloneDX SBOM
         run: cyclonedx-py environment --output-format JSON --outfile sbom.json
