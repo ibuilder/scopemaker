@@ -207,6 +207,55 @@
     });
   }
 
+  /* ------------------------------------------------- keyboard reordering */
+  /* Drag and drop is a pointer gesture with no keyboard equivalent, so on its
+   * own it makes reordering impossible for anyone not using a mouse. These
+   * buttons drive exactly the same persistOrder path.
+   *
+   * Focus has to be restored deliberately: moving an element in the DOM blurs
+   * it, which would dump the user back at the top of the document after every
+   * press and make repeated moves unusable. */
+  function initKeyboardReorder() {
+    document.addEventListener('click', function (event) {
+      var button = event.target.closest('[data-move]');
+      if (!button) { return; }
+      event.preventDefault();
+
+      var item = button.closest('.item');
+      var list = button.closest('[data-reorder]');
+      if (!item || !list) { return; }
+
+      var direction = button.getAttribute('data-move');
+      var siblings = Array.prototype.filter.call(
+        item.parentNode.children,
+        function (node) { return node.classList.contains('item'); }
+      );
+      var index = siblings.indexOf(item);
+      var target = direction === 'up' ? siblings[index - 1] : siblings[index + 1];
+
+      if (!target) {
+        announce(direction === 'up'
+          ? 'Already the first item.'
+          : 'Already the last item.');
+        return;
+      }
+
+      if (direction === 'up') {
+        target.parentNode.insertBefore(item, target);
+      } else {
+        target.parentNode.insertBefore(item, target.nextSibling);
+      }
+
+      // The node moved, so the button inside it lost focus.
+      var moved = item.querySelector('[data-move="' + direction + '"]');
+      if (moved) { moved.focus(); }
+
+      announce('Moved ' + direction + ' to position ' +
+               (direction === 'up' ? index : index + 2) + '.');
+      persistOrder(list);
+    });
+  }
+
   function persistOrder(list) {
     var url = list.getAttribute('data-reorder-url');
     var sectionKey = list.getAttribute('data-section-key');
@@ -279,6 +328,7 @@
     initDependentPackages();
     initInlineEdit();
     initReorder();
+    initKeyboardReorder();
     initCopy();
   });
 })();

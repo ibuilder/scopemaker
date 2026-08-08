@@ -26,6 +26,15 @@
 
     {% if not scope.is_locked and current_user.has_role('editor') %}
     <div class="item__actions">
+      {# Dragging is mouse-only. These are the keyboard path to the same
+         reordering, not a decorative extra -- without them the outline cannot
+         be rearranged from a keyboard or a screen reader at all. #}
+      <button type="button" class="btn btn--sm btn--secondary item__move"
+              data-move="up"
+              aria-label="Move item {{ node.label }} in {{ section.heading }} up"><span aria-hidden="true">&uarr;</span></button>
+      <button type="button" class="btn btn--sm btn--secondary item__move"
+              data-move="down"
+              aria-label="Move item {{ node.label }} in {{ section.heading }} down"><span aria-hidden="true">&darr;</span></button>
       <button type="button" class="btn btn--sm btn--secondary" data-edit-item>Edit</button>
       <form method="post"
             action="{{ url_for('scopes.delete_item', scope_id=scope.id, item_id=node.item.id) }}"

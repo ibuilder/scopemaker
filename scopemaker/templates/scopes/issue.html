@@ -19,12 +19,12 @@
   <div class="card__body">
     <table class="table">
       <tbody>
-        <tr><th>Document</th><td>{{ scope.document_title }}</td></tr>
-        <tr><th>Division</th><td>{{ scope.division_code or '—' }} {{ scope.trade_name or '' }}</td></tr>
-        <tr><th>Project</th><td>{{ scope.project.display_title if scope.project else '—' }}</td></tr>
-        <tr><th>Bid package</th><td>{{ scope.bid_package.display_title if scope.bid_package else '—' }}</td></tr>
-        <tr><th>Items</th><td>{{ scope.item_count }}</td></tr>
-        <tr><th>Total amount</th>
+        <tr><th scope="col">Document</th><td>{{ scope.document_title }}</td></tr>
+        <tr><th scope="col">Division</th><td>{{ scope.division_code or '—' }} {{ scope.trade_name or '' }}</td></tr>
+        <tr><th scope="col">Project</th><td>{{ scope.project.display_title if scope.project else '—' }}</td></tr>
+        <tr><th scope="col">Bid package</th><td>{{ scope.bid_package.display_title if scope.bid_package else '—' }}</td></tr>
+        <tr><th scope="col">Items</th><td>{{ scope.item_count }}</td></tr>
+        <tr><th scope="col">Total amount</th>
             <td>{{ '${:,.2f}'.format(scope.total_amount) if scope.total_amount is not none else 'TBD' }}</td></tr>
       </tbody>
     </table>

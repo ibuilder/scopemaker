@@ -18,7 +18,7 @@
 {% if templates %}
 <div class="table__wrap">
   <table class="table">
-    <thead><tr><th>Name</th><th>Division</th><th>Sections</th><th>Flags</th><th></th></tr></thead>
+    <thead><tr><th scope="col">Name</th><th scope="col">Division</th><th scope="col">Sections</th><th scope="col">Flags</th><th scope="col"></th></tr></thead>
     <tbody>
       {% for template in templates %}
       <tr {% if not template.is_active %}style="opacity:.55"{% endif %}>

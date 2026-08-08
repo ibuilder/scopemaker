@@ -88,7 +88,7 @@
   </div>
   <div class="table__wrap" style="border:0;border-radius:0">
     <table class="table">
-      <thead><tr><th>Section</th><th>Title</th><th>Lives in</th><th>Who should carry it?</th></tr></thead>
+      <thead><tr><th scope="col">Section</th><th scope="col">Title</th><th scope="col">Lives in</th><th scope="col">Who should carry it?</th></tr></thead>
       <tbody>
         {% for section in report.gaps %}
         <tr>
@@ -113,7 +113,7 @@
   </div>
   <div class="table__wrap" style="border:0;border-radius:0">
     <table class="table">
-      <thead><tr><th>Section</th><th>Title</th><th>Lives in</th><th>Claimed by</th></tr></thead>
+      <thead><tr><th scope="col">Section</th><th scope="col">Title</th><th scope="col">Lives in</th><th scope="col">Claimed by</th></tr></thead>
       <tbody>
         {% for section in report.overlaps %}
         <tr>
@@ -142,7 +142,7 @@
   </div>
   <div class="table__wrap" style="border:0;border-radius:0">
     <table class="table">
-      <thead><tr><th>Section</th><th>Title</th><th>Lives in</th><th>Carried by</th></tr></thead>
+      <thead><tr><th scope="col">Section</th><th scope="col">Title</th><th scope="col">Lives in</th><th scope="col">Carried by</th></tr></thead>
       <tbody>
         {% for section in report.shared %}
         <tr>
@@ -173,7 +173,7 @@
   </div>
   <div class="table__wrap" style="border:0;border-radius:0">
     <table class="table">
-      <thead><tr><th>Scope</th><th>Hands work to</th><th>Exclusion</th></tr></thead>
+      <thead><tr><th scope="col">Scope</th><th scope="col">Hands work to</th><th scope="col">Exclusion</th></tr></thead>
       <tbody>
         {% for redirect in report.redirects %}
         <tr>
@@ -217,7 +217,7 @@
   <div class="details__body" style="padding:0">
     <div class="table__wrap" style="border:0">
       <table class="table">
-        <thead><tr><th>Section</th><th>Title</th><th>Division</th><th>Status</th><th>Claimed by</th></tr></thead>
+        <thead><tr><th scope="col">Section</th><th scope="col">Title</th><th scope="col">Division</th><th scope="col">Status</th><th scope="col">Claimed by</th></tr></thead>
         <tbody>
           {% for section in report.sections %}
           <tr>

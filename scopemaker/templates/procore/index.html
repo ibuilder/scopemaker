@@ -17,17 +17,17 @@
   <div class="card__body">
     <table class="table">
       <tbody>
-        <tr><th>Grant type</th><td>{{ connection.grant_type.replace('_', ' ') }}</td></tr>
-        <tr><th>Procore user</th>
+        <tr><th scope="col">Grant type</th><td>{{ connection.grant_type.replace('_', ' ') }}</td></tr>
+        <tr><th scope="col">Procore user</th>
             <td>{{ connection.procore_user_name or '—' }}
               {% if connection.procore_user_email %}<span class="muted small">({{ connection.procore_user_email }})</span>{% endif %}</td></tr>
-        <tr><th>Company</th><td>{{ connection.company_name or connection.company_id or '—' }}</td></tr>
-        <tr><th>Token expires</th>
+        <tr><th scope="col">Company</th><td>{{ connection.company_name or connection.company_id or '—' }}</td></tr>
+        <tr><th scope="col">Token expires</th>
             <td>{{ connection.token_expires_at.strftime('%d %b %Y at %H:%M') if connection.token_expires_at else '—' }}</td></tr>
-        <tr><th>Last sync</th>
+        <tr><th scope="col">Last sync</th>
             <td>{{ connection.last_sync_at.strftime('%d %b %Y at %H:%M') if connection.last_sync_at else 'Never' }}</td></tr>
         {% if connection.last_error %}
-        <tr><th>Last error</th><td class="small" style="color:var(--red-700)">{{ connection.last_error }}</td></tr>
+        <tr><th scope="col">Last error</th><td class="small" style="color:var(--red-700)">{{ connection.last_error }}</td></tr>
         {% endif %}
       </tbody>
     </table>

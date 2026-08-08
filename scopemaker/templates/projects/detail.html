@@ -34,15 +34,15 @@
     <div class="card__body">
       <table class="table">
         <tbody>
-          <tr><th>Owner</th><td>{{ project.owner_name or '—' }}</td></tr>
-          <tr><th>Architect</th><td>{{ project.architect_name or '—' }}</td></tr>
-          <tr><th>Engineer</th><td>{{ project.engineer_name or '—' }}</td></tr>
-          <tr><th>Contractor</th><td>{{ project.contractor_name or '—' }}</td></tr>
-          <tr><th>Delivery</th><td>{{ project.delivery_method or '—' }}</td></tr>
-          <tr><th>Start</th><td>{{ project.start_date.strftime('%d %b %Y') if project.start_date else '—' }}</td></tr>
-          <tr><th>Completion</th><td>{{ project.completion_date.strftime('%d %b %Y') if project.completion_date else '—' }}</td></tr>
+          <tr><th scope="col">Owner</th><td>{{ project.owner_name or '—' }}</td></tr>
+          <tr><th scope="col">Architect</th><td>{{ project.architect_name or '—' }}</td></tr>
+          <tr><th scope="col">Engineer</th><td>{{ project.engineer_name or '—' }}</td></tr>
+          <tr><th scope="col">Contractor</th><td>{{ project.contractor_name or '—' }}</td></tr>
+          <tr><th scope="col">Delivery</th><td>{{ project.delivery_method or '—' }}</td></tr>
+          <tr><th scope="col">Start</th><td>{{ project.start_date.strftime('%d %b %Y') if project.start_date else '—' }}</td></tr>
+          <tr><th scope="col">Completion</th><td>{{ project.completion_date.strftime('%d %b %Y') if project.completion_date else '—' }}</td></tr>
           {% if project.procore_project_id %}
-          <tr><th>Procore id</th><td class="mono">{{ project.procore_project_id }}</td></tr>
+          <tr><th scope="col">Procore id</th><td class="mono">{{ project.procore_project_id }}</td></tr>
           {% endif %}
         </tbody>
       </table>
@@ -65,7 +65,7 @@
     {% if project.bid_packages %}
     <div class="table__wrap" style="border:0;border-radius:0">
       <table class="table">
-        <thead><tr><th>Package</th><th>Division</th><th>Subcontractor</th><th></th></tr></thead>
+        <thead><tr><th scope="col">Package</th><th scope="col">Division</th><th scope="col">Subcontractor</th><th scope="col"></th></tr></thead>
         <tbody>
           {% for package in project.bid_packages %}
           <tr>
@@ -111,7 +111,7 @@
   {% if scopes %}
   <div class="table__wrap" style="border:0;border-radius:0">
     <table class="table">
-      <thead><tr><th>Document</th><th>Division</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+      <thead><tr><th scope="col">Document</th><th scope="col">Division</th><th scope="col">Status</th><th scope="col">Updated</th><th scope="col"></th></tr></thead>
       <tbody>
         {% for scope in scopes %}
         <tr>
