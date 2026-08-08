@@ -393,3 +393,74 @@ def test_unknown_page_renders_the_404_template(auth_client):
     response = auth_client.get("/scopes/does-not-exist")
     assert response.status_code == 404
     assert b"404" in response.data
+
+
+def test_the_scopes_list_does_not_scale_its_queries(auth_client, db, organization,
+                                                    project, user):
+    """A listing must cost the same whether it shows 3 documents or 30.
+
+    Found by the PostgreSQL load test, which reported 32 queries for 25 scopes
+    and 16 for 12. Each row lazily loaded its bid package; projects repeat and
+    were answered from the identity map, but packages are distinct, so the
+    count tracked the length of the list.
+
+    Verified to fail without the fix: 10 queries for 3 scopes, 20 for 13.
+    """
+    from sqlalchemy import event
+
+    from scopemaker.models import BidPackage
+    from scopemaker.services import library as library_service
+    from scopemaker.services.scope_builder import ScopeDraft, build_scope
+
+    def make(count: int) -> None:
+        for index in range(count):
+            package = BidPackage(
+                project_id=project.id,
+                organization_id=organization.id,
+                number=f"BP-Q{index:03d}",
+                name=f"Query package {index}",
+                division_code="23",
+            )
+            db.session.add(package)
+            db.session.commit()
+            build_scope(
+                ScopeDraft(
+                    organization_id=organization.id,
+                    division_code="23",
+                    project_id=project.id,
+                    bid_package_id=package.id,
+                    clause_ids=library_service.default_clause_ids(
+                        organization.id, "23"
+                    ),
+                    spec_section_ids=[],
+                    created_by_id=user.id,
+                )
+            )
+
+    def count_queries() -> int:
+        total = 0
+
+        def bump(*args, **kwargs):
+            nonlocal total
+            total += 1
+
+        # expire_all rather than remove: the fixtures stay attached to this
+        # session, but every instance re-reads from the database, so a lazy
+        # load in the template costs a query the way it would in production.
+        db.session.expire_all()
+        event.listen(db.engine, "before_cursor_execute", bump)
+        try:
+            assert auth_client.get("/scopes/").status_code == 200
+        finally:
+            event.remove(db.engine, "before_cursor_execute", bump)
+        return total
+
+    make(2)
+    small = count_queries()
+    make(10)
+    large = count_queries()
+
+    assert large <= small, (
+        f"queries grew with the list: {small} for 3 scopes, {large} for 13. "
+        "Something in the listing is lazy loading per row."
+    )

@@ -60,7 +60,7 @@
         </td>
         <td>{% if scope.division_code %}<span class="chip chip--division">{{ scope.division_code }}</span>{% else %}<span class="muted">&mdash;</span>{% endif %}</td>
         <td>{{ status_chip(scope.status, scope.status_label) }}{% if scope.version > 1 %} <span class="muted small">v{{ scope.version }}</span>{% endif %}</td>
-        <td class="numeric">{{ scope.item_count }}</td>
+        <td class="numeric">{{ item_counts.get(scope.id, 0) }}</td>
         <td class="muted small">{{ scope.updated_at.strftime('%d %b %Y') }}</td>
         <td>
           <div class="btnrow">

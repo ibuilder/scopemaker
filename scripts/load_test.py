@@ -27,6 +27,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -87,14 +88,17 @@ class QueryCounter:
     --concurrency the naive version reports the whole fleet's queries as though
     one request had issued them. The handler runs in the thread that issued the
     statement, so comparing thread identity is enough to attribute it.
+
+    The engine is passed in rather than read from ``db.engine``, because that
+    needs an application context and this deliberately runs without one.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, engine: Any) -> None:
         self.total = 0
+        self._engine = engine
         self._thread = threading.get_ident()
 
     def __enter__(self) -> QueryCounter:
-        self._engine = db.engine
         event.listen(self._engine, "before_cursor_execute", self._count)
         return self
 
@@ -224,8 +228,8 @@ def sign_in(app, email: str):
     return client
 
 
-def run_scenario(app, email: str, name: str, path: str, headers: dict[str, str],
-                 runs: int, concurrency: int) -> Result:
+def run_scenario(app, engine: Any, email: str, name: str, path: str,
+                 headers: dict[str, str], runs: int, concurrency: int) -> Result:
     result = Result(name)
     local = threading.local()
 
@@ -243,18 +247,17 @@ def run_scenario(app, email: str, name: str, path: str, headers: dict[str, str],
 
     def one(_index: int) -> tuple[float, int, int, str | None]:
         client = client_for()
-        # Flask-SQLAlchemy scopes its session to the application context, not
-        # the thread, and a worker thread has neither -- so each one pushes its
-        # own. This is also what gives every request a cold identity map: reuse
-        # it and the second run of a scenario reports a query count no
-        # production process ever sees.
-        with app.app_context():
-            db.session.remove()
-            with QueryCounter() as counter:
-                started = time.perf_counter()
-                response = client.get(path, headers=headers)
-                response.get_data()
-                elapsed = (time.perf_counter() - started) * 1000
+        # No application context is held around the request, deliberately.
+        # Flask reuses an already-pushed context rather than making a new one,
+        # which would share `g` -- and therefore Flask-Login's cached user --
+        # across every request in the run. Letting each request push and pop
+        # its own is what production does, and it also hands each one a fresh
+        # session, so the query counts are the ones a real process would issue.
+        with QueryCounter(engine) as counter:
+            started = time.perf_counter()
+            response = client.get(path, headers=headers)
+            response.get_data()
+            elapsed = (time.perf_counter() - started) * 1000
         return elapsed, counter.total, response.status_code, response.headers.get(
             "X-Render-Cache"
         )
@@ -309,19 +312,22 @@ def main() -> int:
             f"{time.perf_counter() - started:.1f}s\n"
         )
 
-        engine = db.engine.url
-        print(f"Database: {engine.drivername}   concurrency: {args.concurrency}   "
-              f"runs: {args.runs}\n")
+        engine = db.engine
+        print(f"Database: {engine.url.drivername}   "
+              f"concurrency: {args.concurrency}   runs: {args.runs}\n")
 
-        try:
-            for name, path, headers in scenarios(scope_ids, project_id, api_token):
-                result = run_scenario(
-                    app, email, name, path, headers, args.runs, args.concurrency
-                )
-                if result.statuses - {200}:
-                    print(f"  ! {name} returned {sorted(result.statuses)}")
-                print(result.row(), flush=True)
-        finally:
+    # Measured outside any application context -- see the note in one().
+    try:
+        for name, path, headers in scenarios(scope_ids, project_id, api_token):
+            result = run_scenario(
+                app, engine, email, name, path, headers,
+                args.runs, args.concurrency,
+            )
+            if result.statuses - {200}:
+                print(f"  ! {name} returned {sorted(result.statuses)}")
+            print(result.row(), flush=True)
+    finally:
+        with app.app_context():
             if args.keep:
                 print(f"\nKept organization {organization_id}.")
             else:

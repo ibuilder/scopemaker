@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from flask import flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
+from sqlalchemy.orm import joinedload
 
 from ...data.masterformat import get_division, normalize_code
 from ...extensions import db
@@ -93,15 +94,47 @@ def index():
             or_(Scope.title.ilike(pattern), Scope.trade_name.ilike(pattern))
         )
 
+    # Each row shows its scope's project and bid package. Lazily loaded that is
+    # a query per row -- projects repeat and are answered from the identity
+    # map, but bid packages are distinct, so the count grew with the list: 32
+    # queries for 25 scopes against PostgreSQL, 16 for 12.
+    stmt = stmt.options(
+        joinedload(Scope.project), joinedload(Scope.bid_package)
+    )
     scopes = list(db.session.scalars(stmt.order_by(Scope.updated_at.desc()).limit(200)))
+
+    item_counts = _item_counts([s.id for s in scopes])
+
     return render_template(
         "scopes/index.html",
         scopes=scopes,
+        item_counts=item_counts,
         status=status,
         division=division,
         query=query,
         statuses=[(s, STATUS_LABELS[s]) for s in SCOPE_STATUSES],
     )
+
+
+def _item_counts(scope_ids: list[str]) -> dict[str, int]:
+    """Item totals for a list of scopes, in one query.
+
+    ``Scope.item_count`` sums ``len(section.items)``. Sections and items are
+    selectin-loaded, so that costs a fixed number of queries rather than one
+    per row -- but it still drags every section and every item of every listed
+    scope across the wire to print one integer per line. A count is all the
+    listing needs.
+    """
+    if not scope_ids:
+        return {}
+    rows = db.session.execute(
+        select(ScopeSection.scope_id, func.count(ScopeItem.id))
+        .select_from(ScopeSection)
+        .outerjoin(ScopeItem, ScopeItem.section_id == ScopeSection.id)
+        .where(ScopeSection.scope_id.in_(scope_ids))
+        .group_by(ScopeSection.scope_id)
+    ).all()
+    return {row[0]: row[1] for row in rows}
 
 
 # ---------------------------------------------------------------------------
