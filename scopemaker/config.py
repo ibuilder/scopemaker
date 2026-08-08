@@ -136,6 +136,12 @@ class BaseConfig:
     OIDC_SCOPES: str = os.environ.get("OIDC_SCOPES", "openid email profile")
     OIDC_ALLOWED_DOMAINS: list[str] = _csv("OIDC_ALLOWED_DOMAINS")
     OIDC_DEFAULT_ORG: str = os.environ.get("OIDC_DEFAULT_ORG", "")
+    # An SSO identity may only be linked to an *existing* local account when
+    # the provider reports the email address as verified. Turning this off
+    # trusts the issuer's unverified email claim, which is enough to take over
+    # an account. Only do it for an IdP that omits the claim and that you
+    # control.
+    OIDC_REQUIRE_VERIFIED_EMAIL: bool = _bool("OIDC_REQUIRE_VERIFIED_EMAIL", True)
 
     # -- Email --------------------------------------------------------------
     # console | smtp | null. Blank picks smtp when MAIL_SERVER is set, else

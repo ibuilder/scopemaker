@@ -110,3 +110,23 @@ Before exposing this to anyone:
 - [ ] `MAIL_SERVER` configured and a test reset actually delivered
 - [ ] Two-factor required for the organization (**Admin → Security**)
 - [ ] Database backups running, and a restore tested
+
+## Single sign-on and account linking
+
+An OIDC identity is matched to a local account by the issuer's subject first.
+A subject is issued by the provider and cannot be chosen by the person signing
+in, so matching on it is always safe.
+
+Falling back to the email claim is not. Claiming a *pre-existing* account on an
+email claim alone trusts the provider to have verified that address, and plenty
+do not — a multi-tenant IdP with self-service signup will issue a token
+asserting somebody else's address. ScopeMaker therefore refuses to link an
+incoming identity to an existing account unless the provider reports
+`email_verified`, and treats an absent claim as unverified rather than as
+consent.
+
+Creating a *new* account from an unverified address carries no such risk: it
+gets its own organization and can reach nothing that already exists.
+
+`OIDC_REQUIRE_VERIFIED_EMAIL=0` disables the check for an identity provider
+that omits the claim entirely. Only set it for an issuer you operate.

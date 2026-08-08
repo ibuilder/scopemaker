@@ -124,6 +124,8 @@ def provision_sso_user(claims: dict) -> User:
                 f"Sign-in is not permitted for the {domain} domain."
             )
 
+    # Subject first. It is issued by the provider and cannot be chosen by the
+    # person signing in, so matching on it is always safe.
     user = None
     if subject:
         user = db.session.scalar(
@@ -131,8 +133,35 @@ def provision_sso_user(claims: dict) -> User:
                 User.sso_subject == subject, User.sso_provider == provider
             )
         )
+
     if user is None:
-        user = db.session.scalar(select(User).where(func.lower(User.email) == email))
+        existing = db.session.scalar(
+            select(User).where(func.lower(User.email) == email)
+        )
+        if existing is not None:
+            # Claiming an account that already exists, on the strength of an
+            # email claim alone, trusts the provider to have verified that
+            # address. Plenty do not: a multi-tenant IdP with self-service
+            # signup will issue a token asserting somebody else's address, and
+            # whoever holds it would inherit that person's account, their
+            # organizations and their documents without ever knowing the
+            # password.
+            #
+            # Creating a *new* account from an unverified address is not the
+            # same risk -- it gets its own organization and reaches nothing --
+            # so the check applies only to linking.
+            if _requires_verified_email() and not _claims_verified_email(claims):
+                logger.warning(
+                    "Refused to link SSO identity %r to existing account %s: "
+                    "the provider did not report the address as verified",
+                    subject, email,
+                )
+                raise ValidationError(
+                    "Your identity provider did not confirm that this email "
+                    "address is verified, so it cannot be linked to the "
+                    "existing account. Contact your administrator."
+                )
+            user = existing
 
     if user is None:
         user = User(email=email, full_name=claims.get("name") or email.split("@")[0])
@@ -150,6 +179,23 @@ def provision_sso_user(claims: dict) -> User:
         _attach_default_organization(user, email)
 
     return user
+
+
+def _requires_verified_email() -> bool:
+    return bool(current_app.config.get("OIDC_REQUIRE_VERIFIED_EMAIL", True))
+
+
+def _claims_verified_email(claims: dict) -> bool:
+    """Whether the provider actually said the address is verified.
+
+    Absent is not true. An issuer that omits ``email_verified`` has told us
+    nothing, and treating silence as confirmation is exactly the mistake this
+    check exists to prevent. Some providers send the value as a string.
+    """
+    value = claims.get("email_verified")
+    if isinstance(value, str):
+        return value.strip().lower() == "true"
+    return value is True
 
 
 def _attach_default_organization(user: User, email: str) -> None:
