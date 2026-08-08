@@ -165,6 +165,13 @@ demote or delete before export.
   protection excluding the fire alarm is only safe if Division 28 is actually coming
 - CSV export for buyout meetings, plus `GET /api/v1/projects/{id}/coverage`
 
+**Accessibility and data rights** *(new in 1.5)*
+- The outline is reorderable from the keyboard, not only by dragging — move
+  up/down on every clause, announced to screen readers
+- Export everything held about your account as JSON; delete your account, with
+  the audit trail and shared organizations' documents deliberately preserved
+- Table headers scoped, every control labelled, one `h1` and a skip link per page
+
 **Performance and operations** *(new in 1.4)*
 - Exports are cached by a fingerprint of the document's content, so an unchanged
   scope is served from stored bytes — a repeat DOCX download went from 341 ms to
@@ -176,7 +183,11 @@ demote or delete before export.
   conflict instead of one silently overwriting the other
 - Prometheus metrics at `/metrics`, gated on `METRICS_TOKEN` and labelled by
   endpoint rather than path
-- `scripts/load_test.py` reports latency percentiles *and query counts* per page
+- `scripts/load_test.py` reports latency percentiles *and query counts* per page;
+  CI runs it against PostgreSQL with 8 concurrent clients every push
+- CI rehearses the backup procedure on every push: dump, drop the schema,
+  restore, and verify the restored database renders the same document byte for
+  byte
 
 **Scope generation**
 - Full CSI MasterFormat 2020 division list — all 50 numbers, with 15–20, 24, 29, 30,

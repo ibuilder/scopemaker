@@ -173,6 +173,21 @@ application cost.
 Back up the PostgreSQL database. That is all the state there is — the clause library is
 re-seedable from the image, and no files are written at runtime.
 
+This is not advice we have only written down. `scripts/backup_drill.py` runs on every
+push: it populates a database, `pg_dump`s it, drops the schema, restores, and asserts
+both that the row counts match and that the restored database renders a reference
+exhibit byte for byte. Row counts alone would pass with the encrypted columns coming
+back as mush, which is why it re-renders.
+
+Run it against your own instance before you rely on it:
+
+```bash
+DATABASE_URL=postgresql+psycopg://... python scripts/backup_drill.py
+```
+
+It is destructive — it drops the schema it just dumped — so point it at a scratch
+database, never production.
+
 Issued scopes are stored as immutable revision snapshots. If a scope is ever disputed,
 the exact text that went out is in `scope_revisions`, not reconstructed.
 

@@ -3,17 +3,55 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.5.0] — 2026-08-08
+
+Everything here came from looking at the product rather than reading the code:
+rendering an exhibit and inspecting it, measuring against a real database, and
+driving the editor from a keyboard.
+
+### Added
+
+- **Export your data, and delete your account.** The export is personal data,
+  not the employer's documents — it lists the scopes you authored without their
+  contents, because those belong to the organization. Tests assert no password
+  hash, token hash, raw token or MFA secret appears anywhere in it.
+
+  Deletion preserves what has to survive it: the audit log keeps `actor_label`
+  when the foreign key nulls out, so deleting an account cannot erase what it
+  did, and shared organizations keep their scopes. The last administrator of an
+  organization with other members is blocked rather than warned. An
+  organization whose only member leaves is deleted with them — nobody could
+  sign in to it again — and the confirmation page names it.
+- **Keyboard reordering in the editor.** Dragging was the only way to reorder
+  clauses, so the core editing action was impossible without a mouse
+  (WCAG 2.1.1). Each item now has move up/down buttons driving the same code
+  path, announcing the new position, with focus restored to the moved button.
+- **A backup and restore drill in CI.** `docs/deployment.md` said to back up
+  PostgreSQL and that this was all the state there was. Nobody had ever
+  restored one. CI now populates a database, `pg_dump`s it, drops the schema,
+  restores, and asserts both the row counts *and* that the restored database
+  renders a reference exhibit byte for byte — row counts alone would pass with
+  the encrypted columns coming back as mush.
+- **A PostgreSQL load test in CI**, with real concurrency, published to the job
+  summary. SQLite serialises writers, so the local numbers were measuring lock
+  contention.
+- **Page-fill assertions on the PDF.** The existing tests checked that text was
+  present and that the document paginated; both passed while a page was 45%
+  blank. These measure how far down each page the content reaches.
 
 ### Fixed
 
-- **A clause with a long sub-list no longer jumps the page whole.** Page 1 of
-  the Division 21 sample was 45% blank: clause 3 has 22 specification sections
+- **A clause with a long sub-list jumped the page whole.** Page 1 of the
+  Division 21 exhibit was 45% blank: clause 3 has 22 specification sections
   under it, and the wrapper `<li>` holding that sub-list inherited
-  `break-inside: avoid` from `.doc__item`, making the entire block unbreakable.
-  The wrapper carries no text of its own, so it now breaks freely; the leaf
-  items keep their own rule, so a break can land between clauses but never
-  inside one. Found by rendering a sample in CI and looking at it.
+  `break-inside: avoid`, making the whole block unbreakable. Found by rendering
+  a sample in CI and looking at it.
+- **The scopes list issued a query per row.** 32 queries at 25 scopes, 16 at 12
+  — each row lazily loaded its bid package. Projects repeat and came from the
+  identity map, which is why a single-project dataset looked fine. Now a
+  constant 7. Found by the PostgreSQL load test.
+- The admin role dropdown had no accessible name, so every row announced
+  identically; no table declared `scope` on its header cells.
 
 ## [1.4.1] — 2026-08-08
 
