@@ -51,6 +51,9 @@ class AuditAction:
     INVITE_REVOKED = "access.invite_revoked"
     TOKEN_ISSUED = "access.token_issued"
     TOKEN_REVOKED = "access.token_revoked"
+    ACCOUNT_DELETED = "access.account_deleted"
+    ACCOUNT_EXPORTED = "access.account_exported"
+    ORGANIZATION_DELETED = "access.organization_deleted"
 
     # Documents
     SCOPE_CREATED = "scope.created"
@@ -77,6 +80,8 @@ SECURITY_ACTIONS: frozenset[str] = frozenset(
     {
         AuditAction.SIGN_IN_FAILED,
         AuditAction.ACCOUNT_LOCKED,
+        AuditAction.ACCOUNT_DELETED,
+        AuditAction.ORGANIZATION_DELETED,
         AuditAction.PASSWORD_RESET_COMPLETED,
         AuditAction.SESSIONS_REVOKED,
         AuditAction.MFA_DISABLED,
@@ -91,6 +96,9 @@ SECURITY_ACTIONS: frozenset[str] = frozenset(
 )
 
 ACTION_LABELS: dict[str, str] = {
+    AuditAction.ACCOUNT_DELETED: "Account deleted",
+    AuditAction.ACCOUNT_EXPORTED: "Account data exported",
+    AuditAction.ORGANIZATION_DELETED: "Organization deleted",
     AuditAction.SIGN_IN: "Signed in",
     AuditAction.SIGN_IN_FAILED: "Failed sign-in",
     AuditAction.SIGN_OUT: "Signed out",

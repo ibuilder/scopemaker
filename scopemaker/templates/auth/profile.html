@@ -37,6 +37,19 @@
 </div>
 
 <div class="card">
+  <div class="card__header"><h2 class="card__title">Your data</h2></div>
+  <div class="card__body">
+    <p class="muted">
+      Download everything held about your account, or close it for good.
+    </p>
+    <p>
+      <a class="btn btn--secondary" href="{{ url_for('auth.export_account') }}">Export my data</a>
+      <a class="btn btn--danger" href="{{ url_for('auth.delete_account') }}">Delete my account</a>
+    </p>
+  </div>
+</div>
+
+<div class="card">
   <div class="card__header">
     <h2 class="card__title">Two-factor authentication</h2>
     {% if current_user.mfa_enabled %}

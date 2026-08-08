@@ -91,6 +91,23 @@ class ProfileForm(FlaskForm):
     save_profile = SubmitField("Save")
 
 
+class DeleteAccountForm(FlaskForm):
+    """Deleting an account is irreversible, so make it deliberate.
+
+    Typing the email address is the confirmation for everyone; a password is
+    additionally required for accounts that have one. SSO-only accounts have no
+    password to check, and demanding one would lock them out of a right they
+    are supposed to have.
+    """
+
+    confirm_email = StringField(
+        "Type your email address to confirm",
+        validators=[DataRequired(), Length(max=255)],
+    )
+    password = PasswordField("Your password")
+    delete_account = SubmitField("Delete my account")
+
+
 class ChangePasswordForm(FlaskForm):
     current_password = PasswordField("Current password", validators=[DataRequired()])
     password = PasswordField(

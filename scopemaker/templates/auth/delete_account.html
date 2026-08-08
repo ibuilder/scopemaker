@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}Delete your account &middot; {{ app_name }}{% endblock %}
+{% block main_class %}shell shell--narrow{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <div>
+    <h1>Delete your account</h1>
+    <p class="pagehead__sub">{{ current_user.email }}</p>
+  </div>
+</div>
+
+<p><a href="{{ url_for('auth.profile') }}">&larr; Back to your profile</a></p>
+
+{% if blockers %}
+<div class="card">
+  <div class="card__header"><h2 class="card__title">Not yet</h2></div>
+  <div class="card__body">
+    <div class="callout" role="alert">
+      <ul>
+        {% for blocker in blockers %}<li>{{ blocker }}</li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% else %}
+
+<div class="card">
+  <div class="card__header"><h2 class="card__title">What this removes</h2></div>
+  <div class="card__body">
+    <div class="callout" role="alert">
+      <p><strong>This cannot be undone.</strong> Your profile, your
+        memberships and your API tokens are deleted immediately.</p>
+    </div>
+
+    {% if doomed %}
+    <p>
+      These organizations will be deleted along with everything in them
+      &mdash; their projects, scopes and clause libraries &mdash; because you
+      are the only member, so nobody could ever sign in to them again:
+    </p>
+    <ul>
+      {% for organization in doomed %}<li><strong>{{ organization.name }}</strong></li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    <p class="muted">
+      Scopes you wrote in organizations you share with other people stay where
+      they are. They keep their contents and lose only your name as the author.
+      The audit log keeps a record of what your account did; that is deliberate
+      and cannot be removed.
+    </p>
+
+    <p>
+      <a class="btn btn--secondary" href="{{ url_for('auth.export_account') }}">
+        Download your data first
+      </a>
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card__header"><h2 class="card__title">Confirm</h2></div>
+  <div class="card__body">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.confirm_email, autocomplete='off', spellcheck='false',
+               autocapitalize='none') }}
+      {% if not current_user.is_sso_only %}
+      {{ field(form.password, autocomplete='current-password') }}
+      {% endif %}
+      {{ form.delete_account(class='btn btn--danger') }}
+      <a class="btn btn--secondary" href="{{ url_for('auth.profile') }}">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

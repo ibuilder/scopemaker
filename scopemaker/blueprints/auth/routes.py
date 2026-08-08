@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 import logging
 
 from flask import (
+    Response,
     abort,
     current_app,
     flash,
@@ -35,6 +37,7 @@ from ...services.accounts import (
 from . import bp
 from .forms import (
     ChangePasswordForm,
+    DeleteAccountForm,
     ForgotPasswordForm,
     InviteAcceptForm,
     LoginForm,
@@ -477,6 +480,72 @@ def profile():
             return redirect(url_for("auth.profile"))
 
     return render_template("auth/profile.html", form=form, password_form=password_form)
+
+
+@bp.route("/account/export")
+@login_required
+@limiter.limit("6 per hour")
+def export_account():
+    """Download everything held about this account, as JSON."""
+    from ...services import account_data
+
+    user = current_user._get_current_object()
+    payload = account_data.export_account(user)
+
+    audit.record(
+        audit.AuditAction.ACCOUNT_EXPORTED,
+        summary=f"{user.email} exported their account data",
+        user_id=user.id, actor_label=user.email, commit=True,
+    )
+
+    body = json.dumps(payload, indent=2, ensure_ascii=False)
+    stamp = payload["exported_at"][:10]
+    response = Response(body, mimetype="application/json")
+    response.headers["Content-Disposition"] = (
+        f'attachment; filename="scopemaker-account-{stamp}.json"'
+    )
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@bp.route("/account/delete", methods=["GET", "POST"])
+@login_required
+@limiter.limit("10 per hour", methods=["POST"])
+def delete_account():
+    """Delete this account, after confirming the person means it."""
+    from ...services import account_data
+
+    user = current_user._get_current_object()
+    form = DeleteAccountForm()
+    form.confirm_email.description = f"Type {user.email} exactly."
+    blockers = account_data.deletion_blockers(user)
+    doomed = account_data.organizations_deleted_with(user)
+
+    if form.validate_on_submit() and not blockers:
+        typed = (form.confirm_email.data or "").strip().lower()
+        if typed != user.email.lower():
+            flash("That is not the email address on this account.", "error")
+        elif not user.is_sso_only and not user.check_password(form.password.data or ""):
+            flash("Your password is incorrect.", "error")
+        else:
+            email = user.email
+            summary = account_data.delete_account(user)
+            logout_user()
+            session.clear()
+            removed = summary["organizations_deleted"]
+            flash(
+                f"The account {email} has been deleted."
+                + (f" So were: {', '.join(removed)}." if removed else ""),
+                "success",
+            )
+            return redirect(url_for("main.index"))
+
+    return render_template(
+        "auth/delete_account.html",
+        form=form,
+        blockers=blockers,
+        doomed=doomed,
+    )
 
 
 @bp.route("/sessions/revoke", methods=["POST"])
