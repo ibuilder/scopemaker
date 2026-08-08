@@ -3,7 +3,8 @@
 {% macro render_lines(lines) %}
 <ol class="doc__list">
   {% for line in lines %}
-  <li class="doc__item doc__item--depth-{{ line.depth }}">
+  <li class="doc__item doc__item--depth-{{ line.depth }}
+             {{- ' doc__item--has-children' if line.children }}">
     <span class="doc__item-label">{{ line.label }}</span>
     <span class="doc__item-text">{{ line.html|safe }}</span>
   </li>

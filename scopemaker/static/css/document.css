@@ -176,6 +176,24 @@
   page-break-inside: avoid;
 }
 
+/* The wrapper around a nested list is an .doc__item only so the numbering
+ * lines up -- it holds no text of its own. Letting it inherit break-inside:
+ * avoid makes the entire sub-list one unbreakable block, so a clause with 22
+ * specification sections under it jumps whole to the next page and leaves half
+ * the previous one blank. The leaf items inside keep their own avoid rule, so
+ * a break can land between clauses but never inside one. */
+.doc__item--nested {
+  break-inside: auto;
+  page-break-inside: auto;
+  display: block;
+}
+
+/* Do not strand a parent clause at the foot of a page with its list overleaf. */
+.doc__item--has-children {
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
 .doc__item-label {
   flex: 0 0 auto;
   min-width: 2.4em;
