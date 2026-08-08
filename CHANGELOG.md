@@ -3,6 +3,18 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- **A clause with a long sub-list no longer jumps the page whole.** Page 1 of
+  the Division 21 sample was 45% blank: clause 3 has 22 specification sections
+  under it, and the wrapper `<li>` holding that sub-list inherited
+  `break-inside: avoid` from `.doc__item`, making the entire block unbreakable.
+  The wrapper carries no text of its own, so it now breaks freely; the leaf
+  items keep their own rule, so a break can land between clauses but never
+  inside one. Found by rendering a sample in CI and looking at it.
+
 ## [1.4.1] — 2026-08-08
 
 ### Added
