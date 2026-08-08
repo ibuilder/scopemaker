@@ -102,11 +102,10 @@ def test_a_long_nested_list_splits_across_pages(app, db, scope, organization):
     for index in range(40):
         db.session.add(
             ScopeItem(
-                scope_id=scope.id,
                 section_id=section.id,
                 parent_id=parent.id,
                 position=existing + index,
-                text_html=f"<p>0{index:05d} &ndash; Additional specification section</p>",
+                text_html=f"0{index:05d} &ndash; Additional specification section",
             )
         )
     db.session.commit()

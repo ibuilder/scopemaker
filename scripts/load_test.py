@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import statistics
 import sys
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
@@ -80,10 +81,17 @@ class Result:
 
 
 class QueryCounter:
-    """Count statements issued on the engine, per thread."""
+    """Count statements issued by *this* thread.
+
+    The event fires on the engine, which every worker thread shares, so under
+    --concurrency the naive version reports the whole fleet's queries as though
+    one request had issued them. The handler runs in the thread that issued the
+    statement, so comparing thread identity is enough to attribute it.
+    """
 
     def __init__(self) -> None:
         self.total = 0
+        self._thread = threading.get_ident()
 
     def __enter__(self) -> QueryCounter:
         self._engine = db.engine
@@ -94,7 +102,8 @@ class QueryCounter:
         event.remove(self._engine, "before_cursor_execute", self._count)
 
     def _count(self, *args: object, **kwargs: object) -> None:
-        self.total += 1
+        if threading.get_ident() == self._thread:
+            self.total += 1
 
 
 # ---------------------------------------------------------------------------
@@ -218,18 +227,34 @@ def sign_in(app, email: str):
 def run_scenario(app, email: str, name: str, path: str, headers: dict[str, str],
                  runs: int, concurrency: int) -> Result:
     result = Result(name)
+    local = threading.local()
+
+    def client_for() -> object:
+        """One signed-in client per worker thread.
+
+        Signing in per request would measure the login path instead of the page
+        under test, and a real user signs in once and then browses.
+        """
+        if concurrency == 1:
+            return shared
+        if not hasattr(local, "client"):
+            local.client = sign_in(app, email)
+        return local.client
 
     def one(_index: int) -> tuple[float, int, int, str | None]:
-        client = sign_in(app, email) if concurrency > 1 else shared
-        # Drop the session so its identity map does not answer queries a real
-        # request would have to issue. Without this the second run of a
-        # scenario reports a query count no production process ever sees.
-        db.session.remove()
-        with QueryCounter() as counter:
-            started = time.perf_counter()
-            response = client.get(path, headers=headers)
-            response.get_data()
-            elapsed = (time.perf_counter() - started) * 1000
+        client = client_for()
+        # Flask-SQLAlchemy scopes its session to the application context, not
+        # the thread, and a worker thread has neither -- so each one pushes its
+        # own. This is also what gives every request a cold identity map: reuse
+        # it and the second run of a scenario reports a query count no
+        # production process ever sees.
+        with app.app_context():
+            db.session.remove()
+            with QueryCounter() as counter:
+                started = time.perf_counter()
+                response = client.get(path, headers=headers)
+                response.get_data()
+                elapsed = (time.perf_counter() - started) * 1000
         return elapsed, counter.total, response.status_code, response.headers.get(
             "X-Render-Cache"
         )
@@ -263,9 +288,12 @@ def main() -> int:
                         help="Leave the generated data in the database.")
     args = parser.parse_args()
 
-    app = create_app("development")
-    app.config["RATELIMIT_ENABLED"] = False
-    app.config["WTF_CSRF_ENABLED"] = False
+    # These have to be overrides, not post-hoc config writes: Flask-Limiter
+    # latches `enabled` when init_app runs, so assigning the config afterwards
+    # leaves the limiter on and the run dies at 429 partway through.
+    app = create_app(
+        "development", RATELIMIT_ENABLED=False, WTF_CSRF_ENABLED=False
+    )
 
     with app.app_context():
         db.create_all()

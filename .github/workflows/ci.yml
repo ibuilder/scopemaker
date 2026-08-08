@@ -173,6 +173,88 @@ jobs:
           fi
           rm -f migrations/versions/drift_check_*.py
 
+  backup:
+    name: Backup and restore drill
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: scopemaker
+          POSTGRES_PASSWORD: scopemaker
+          POSTGRES_DB: scopemaker
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install ".[dev,postgres]"
+
+      # The drill shells out to pg_dump/pg_restore, which must match the server
+      # major version or the custom-format dump is rejected.
+      - name: Install PostgreSQL 16 client
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc             | sudo gpg --dearmor -o /usr/share/keyrings/pgdg.gpg
+          sudo sed -i 's|deb http|deb [signed-by=/usr/share/keyrings/pgdg.gpg] http|'             /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-16
+          pg_dump --version
+
+      - name: Dump, destroy, restore, verify
+        env:
+          DATABASE_URL: postgresql+psycopg://scopemaker:scopemaker@localhost:5432/scopemaker
+          SECRET_KEY: ci-only-secret-key-not-used-in-production
+          ENCRYPTION_KEY: PHMYRQ3sBQGmWfQFOWfLWCkV1s0MnBGKcpS4iFctuNM=
+        run: python scripts/backup_drill.py
+
+  perf:
+    name: Load test against PostgreSQL
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: scopemaker
+          POSTGRES_PASSWORD: scopemaker
+          POSTGRES_DB: scopemaker
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install ".[dev,postgres]"
+
+      # Concurrency above 1 only means anything against PostgreSQL; SQLite
+      # serialises writers and would report lock contention instead.
+      - name: Measure
+        env:
+          DATABASE_URL: postgresql+psycopg://scopemaker:scopemaker@localhost:5432/scopemaker
+          SECRET_KEY: ci-only-secret-key-not-used-in-production
+          ENCRYPTION_KEY: PHMYRQ3sBQGmWfQFOWfLWCkV1s0MnBGKcpS4iFctuNM=
+        run: |
+          {
+            echo "### Load test (PostgreSQL, 8 concurrent)"
+            echo
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          python scripts/load_test.py --scopes 25 --runs 24 --concurrency 8             | tee -a "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
   docker:
     name: Docker image
     runs-on: ubuntu-latest
