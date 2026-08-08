@@ -24,6 +24,7 @@ import statistics
 import sys
 import threading
 import time
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -81,33 +82,39 @@ class Result:
         )
 
 
-class QueryCounter:
-    """Count statements issued by *this* thread.
+#: Statements executed, per thread. A single listener feeds this for the whole
+#: run -- see install_query_counter.
+_query_counts: dict[int, int] = defaultdict(int)
 
-    The event fires on the engine, which every worker thread shares, so under
-    --concurrency the naive version reports the whole fleet's queries as though
-    one request had issued them. The handler runs in the thread that issued the
-    statement, so comparing thread identity is enough to attribute it.
 
-    The engine is passed in rather than read from ``db.engine``, because that
-    needs an application context and this deliberately runs without one.
+def install_query_counter(engine: Any) -> None:
+    """Attach one listener for the lifetime of the run.
+
+    Registering and removing a listener around each request looks tidier and is
+    a genuine bug under --concurrency: SQLAlchemy keeps its listeners in a
+    deque, and mutating that from one thread while another is iterating it to
+    dispatch raises "deque mutated during iteration" from somewhere deep in the
+    engine. That surfaced as intermittent 500s that looked like an application
+    fault and were entirely the measuring apparatus.
     """
 
-    def __init__(self, engine: Any) -> None:
-        self.total = 0
-        self._engine = engine
-        self._thread = threading.get_ident()
+    def count(*args: Any, **kwargs: Any) -> None:
+        _query_counts[threading.get_ident()] += 1
+
+    event.listen(engine, "before_cursor_execute", count)
+
+
+class QueryCounter:
+    """Statements issued by this thread while the block runs."""
 
     def __enter__(self) -> QueryCounter:
-        event.listen(self._engine, "before_cursor_execute", self._count)
+        self._thread = threading.get_ident()
+        self._start = _query_counts[self._thread]
+        self.total = 0
         return self
 
     def __exit__(self, *exc: object) -> None:
-        event.remove(self._engine, "before_cursor_execute", self._count)
-
-    def _count(self, *args: object, **kwargs: object) -> None:
-        if threading.get_ident() == self._thread:
-            self.total += 1
+        self.total = _query_counts[self._thread] - self._start
 
 
 # ---------------------------------------------------------------------------
@@ -228,7 +235,7 @@ def sign_in(app, email: str):
     return client
 
 
-def run_scenario(app, engine: Any, email: str, name: str, path: str,
+def run_scenario(app, email: str, name: str, path: str,
                  headers: dict[str, str], runs: int, concurrency: int) -> Result:
     result = Result(name)
     local = threading.local()
@@ -253,7 +260,7 @@ def run_scenario(app, engine: Any, email: str, name: str, path: str,
         # across every request in the run. Letting each request push and pop
         # its own is what production does, and it also hands each one a fresh
         # session, so the query counts are the ones a real process would issue.
-        with QueryCounter(engine) as counter:
+        with QueryCounter() as counter:
             started = time.perf_counter()
             response = client.get(path, headers=headers)
             response.get_data()
@@ -312,19 +319,22 @@ def main() -> int:
             f"{time.perf_counter() - started:.1f}s\n"
         )
 
+        install_query_counter(db.engine)
         engine = db.engine
         print(f"Database: {engine.url.drivername}   "
               f"concurrency: {args.concurrency}   runs: {args.runs}\n")
 
     # Measured outside any application context -- see the note in one().
+    failures: list[str] = []
     try:
         for name, path, headers in scenarios(scope_ids, project_id, api_token):
             result = run_scenario(
-                app, engine, email, name, path, headers,
+                app, email, name, path, headers,
                 args.runs, args.concurrency,
             )
             if result.statuses - {200}:
                 print(f"  ! {name} returned {sorted(result.statuses)}")
+                failures.append(f"{name}: {sorted(result.statuses)}")
             print(result.row(), flush=True)
     finally:
         with app.app_context():
@@ -332,6 +342,14 @@ def main() -> int:
                 print(f"\nKept organization {organization_id}.")
             else:
                 teardown(organization_id)
+
+    if failures:
+        # Exiting non-zero matters: a 500 under load that only prints a warning
+        # is a 500 nobody finds.
+        print("\nFAILED -- these scenarios did not return 200:")
+        for failure in failures:
+            print(f"  {failure}")
+        return 1
 
     return 0
 
