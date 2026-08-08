@@ -3,6 +3,37 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **Rate limiting is now tested.** The whole suite ran with
+  `RATELIMIT_ENABLED = False` — limits and fixtures that sign in dozens of
+  times do not mix — which left the only defence against unlimited password
+  guessing with no coverage at all. A dependency upgrade could have turned it
+  into a no-op and nothing would have failed. Verified against Flask-Limiter
+  3.12 and 4.1.1.
+
+### Changed
+
+- **API token verification is ~20x faster** (151 ms → 7.6 ms median on
+  `/api/v1/me`). Argon2 is deliberately slow, which is right for a password
+  typed once and wrong for a token presented on every call — it was most of the
+  request. A short-lived per-process cache keeps the hash comparison off the hot
+  path.
+
+  Only the *verification* is cached, never the authorization decision: every
+  request still loads the row and re-checks revocation and expiry, so revoking
+  a token takes effect on the very next call. The raw token is never a cache
+  key — it is hashed with BLAKE2b keyed on `SECRET_KEY` — and the cache is
+  bounded and expiring.
+- `last_used_at` is written at a five-minute resolution instead of on every
+  request. It answers "roughly when was this token last seen", which does not
+  justify a database write per API call.
+- Dependencies: `actions/checkout` v4→v7, `actions/setup-python` v5→v7,
+  `actions/configure-pages` v5→v6, `actions/deploy-pages` v4→v5,
+  `docker/setup-buildx-action` v3→v4, and Flask-Limiter widened to allow 4.x.
+
 ## [1.4.0] — 2026-08-07
 
 Track C: the work that decides whether this holds up under more than one user at
