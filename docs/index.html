@@ -152,6 +152,16 @@ footer a{color:#cbd5e1}
     </div>
     <div class="grid">
       <div class="card">
+        <span class="ico">🧭</span>
+        <h3>Coverage analysis</h3>
+        <p>
+          A matrix across every package on the project: which specification sections
+          nobody has claimed, which two trades are both being paid for, and which are
+          <em>shared by design</em> — every trade firestops its own penetrations, but
+          somebody still has to decide who paints the exposed sprinkler pipe.
+        </p>
+      </div>
+      <div class="card">
         <span class="ico">🔗</span>
         <h3>Cross-division references</h3>
         <p>
@@ -263,6 +273,10 @@ footer a{color:#cbd5e1}
       <div class="card"><span class="ico">🗂️</span><h3>Versioned and auditable</h3><p>Issuing a scope freezes an immutable snapshot. Later edits create a new version, so the text that went out with the subcontract is preserved verbatim.</p></div>
       <div class="card"><span class="ico">👥</span><h3>Organizations and roles</h3><p>Viewer, editor and admin; invitations; optional OIDC single sign-on. Every record is tenant-scoped, and cross-tenant access returns 404.</p></div>
       <div class="card"><span class="ico">🔌</span><h3>Connects to what you use</h3><p>Optional integrations, off by default. Import projects and bid packages, and push finished exhibits back. Credentials stay server-side and are encrypted at rest.</p></div>
+      <div class="card"><span class="ico">🛡️</span><h3>Two-factor and an audit log</h3><p>TOTP with single-use recovery codes; the enrolment QR is an inline SVG so the shared secret never leaves the server. Every privileged action is recorded in an append-only log that outlives the account that did it.</p></div>
+      <div class="card"><span class="ico">⚡</span><h3>Built to take load</h3><p>Exports are cached by document fingerprint and can be rendered on a worker instead of in the request. Prometheus metrics at <code>/metrics</code>. The load test runs against PostgreSQL with 8 concurrent clients on every push.</p></div>
+      <div class="card"><span class="ico">💾</span><h3>Backups that have been restored</h3><p>CI dumps a populated database, drops the schema, restores it, and checks the result renders the same exhibit byte for byte. A backup procedure nobody has restored from is a hypothesis.</p></div>
+      <div class="card"><span class="ico">⌨️</span><h3>Usable without a mouse</h3><p>The outline reorders from the keyboard, not only by dragging, and announces each move. Export everything held about your account, or delete it — with the audit trail and your colleagues’ documents deliberately preserved.</p></div>
       <div class="card"><span class="ico">🔒</span><h3>No CDN, tight CSP</h3><p>Every asset is served by the app, so <code>default-src 'self'</code> holds and it runs on an air-gapped jobsite network. Argon2id passwords, Fernet-encrypted tokens.</p></div>
     </div>
   </div>
@@ -271,21 +285,21 @@ footer a{color:#cbd5e1}
 <section>
   <div class="wrap">
     <div class="sec-head">
-      <h2>v1.0.0 is a complete rewrite</h2>
-      <p>Earlier versions of this repository were a browser-only prototype whose JavaScript was never committed.</p>
+      <h2>Where this came from</h2>
+      <p>Earlier versions of this repository were a browser-only prototype whose JavaScript was never committed. v1.0.0 was a complete rewrite; everything since has been hardening.</p>
     </div>
     <div class="tw">
       <table>
-        <thead><tr><th style="width:34%">Concern</th><th style="width:33%">Prototype</th><th style="width:33%">v1.0.0</th></tr></thead>
+        <thead><tr><th style="width:34%">Concern</th><th style="width:33%">Prototype</th><th style="width:33%">Today</th></tr></thead>
         <tbody>
-          <tr><td>Does it run?</td><td class="no">No — the four referenced <code>js/*.js</code> files were never committed</td><td class="yes">Flask 3 app, 9 blueprints, service layer, 214 tests</td></tr>
+          <tr><td>Does it run?</td><td class="no">No — the four referenced <code>js/*.js</code> files were never committed</td><td class="yes">Flask 3 app, 9 blueprints, service layer, 439 tests</td></tr>
           <tr><td>OAuth secret</td><td class="no">Stored in browser <code>localStorage</code></td><td class="yes">Server-side only; tokens Fernet-encrypted at rest</td></tr>
           <tr><td>PDF export</td><td class="no"><code>html2canvas</code> screenshot pasted onto one A4 page</td><td class="yes">WeasyPrint paged media, selectable text, <code>Page N of M</code></td></tr>
           <tr><td>DOCX export</td><td class="no"><code>alert('would be implemented here')</code></td><td class="yes">python-docx with formatting runs and page fields</td></tr>
           <tr><td>Scope content</td><td class="no">One hardcoded Fire Protection sample</td><td class="yes">236 clauses, 139 spec sections, 20+ trades</td></tr>
           <tr><td>CSI divisions</td><td class="no">16 hand-typed, several of which do not exist</td><td class="yes">Canonical MasterFormat 2020; reserved numbers excluded</td></tr>
           <tr><td>Storage</td><td class="no">Browser <code>localStorage</code></td><td class="yes">PostgreSQL, SQLAlchemy 2.0, Alembic migrations</td></tr>
-          <tr><td>Accounts</td><td class="no">None</td><td class="yes">Organizations, roles, invitations, OIDC SSO</td></tr>
+          <tr><td>Accounts</td><td class="no">None</td><td class="yes">Organizations, roles, invitations, OIDC SSO, two-factor, audit log</td></tr>
         </tbody>
       </table>
     </div>
