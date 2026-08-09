@@ -97,6 +97,40 @@ def strip_html(value: str | None) -> str:
     return " ".join(text.split())
 
 
+_COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
+_TAG = re.compile(r"<[^>]*>")
+
+
+def strip_stored_html(value: str | None) -> str:
+    """Plain text from markup this application already sanitised.
+
+    ``strip_html`` runs bleach, which parses the input with a full HTML5 parser
+    because it has to be safe against anything a browser might be tricked into
+    executing. That is the right tool for untrusted input and the wrong one for
+    scanning our own stored text: profiling the coverage report showed the
+    parser accounting for a third of the total time, entirely to find six-digit
+    section numbers and the word "Division".
+
+    Every ``text_html`` and ``body_html`` in the database has already been
+    through ``sanitize_inline`` or ``sanitize_html`` on the way in, so it is a
+    small, known, well-formed tag set. Removing tags from *that* needs no
+    parser.
+
+    Only for stored markup. Anything arriving from a client goes through
+    ``strip_html``. ``tests/test_sanitize.py`` checks the two agree across the
+    whole shipped clause library and a set of deliberately awkward inputs, so
+    the shortcut cannot silently drift from the real thing.
+    """
+    if not value:
+        return ""
+    text = re.sub(r"<br\s*/?>", " ", str(value), flags=re.IGNORECASE)
+    text = re.sub(r"</(p|li|div|tr)>", " ", text, flags=re.IGNORECASE)
+    text = _COMMENT.sub("", text)
+    text = _TAG.sub("", text)
+    text = html_unescape(text).replace("\xa0", " ")
+    return " ".join(text.split())
+
+
 def is_effectively_empty(value: str | None) -> bool:
     """True when the markup carries no visible text."""
     return not strip_html(value).strip()

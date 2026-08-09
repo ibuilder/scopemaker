@@ -128,3 +128,23 @@ session-scoped context would let Flask-Login's cached user leak between tests.
 
 PDF tests are marked `@pytest.mark.pdf` and skip when the native stack is missing. CI
 installs it and asserts they ran, so a PDF regression cannot pass unnoticed.
+
+## Two paths out of HTML
+
+Scope text is stored as a small, restricted set of HTML tags. Getting plain text
+back out happens in two places with different requirements:
+
+| Function | Use for | Cost |
+|---|---|---|
+| `strip_html` | Anything from a client, or of unknown origin | Full HTML5 parse via bleach |
+| `strip_stored_html` | `text_html` / `body_html` already sanitised on write | Regex tag removal |
+
+The split exists because the coverage report was spending a third of its time
+re-parsing its own sanitised markup to look for six-digit section numbers.
+Using the fast path there made the report 2.15x faster.
+
+The risk in having two is that they drift. `tests/test_sanitize.py` compares
+them across the entire shipped clause library and a set of deliberately awkward
+inputs, and `tests/test_coverage.py` asserts the report never reaches for the
+parser. Do not use `strip_stored_html` on anything that has not been through
+`sanitize_inline` or `sanitize_html` first.

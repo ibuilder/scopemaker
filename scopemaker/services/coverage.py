@@ -47,7 +47,7 @@ from sqlalchemy import select
 from ..data.masterformat import get_division
 from ..extensions import db
 from ..models import Project, Scope, SpecSection
-from ..services.sanitize import strip_html
+from ..services.sanitize import strip_stored_html
 
 # Matches "Division 07" / "Division 7" in clause text. Used to spot exclusions
 # that hand work to a trade which may not be under contract.
@@ -253,7 +253,7 @@ def _claimed_section_codes(scope: Scope) -> set[str]:
                 codes.add(str(code).strip())
                 continue
             if meta.get("role") == "spec_section":
-                match = _SECTION_NUMBER.search(strip_html(item.text_html))
+                match = _SECTION_NUMBER.search(strip_stored_html(item.text_html))
                 if match:
                     codes.add(match.group(1))
     return codes
@@ -267,7 +267,7 @@ def _exclusion_redirects(scope: Scope) -> list[tuple[str, str]]:
 
     found: list[tuple[str, str]] = []
     for item in section.items:
-        text = strip_html(item.text_html)
+        text = strip_stored_html(item.text_html)
         for match in _DIVISION_MENTION.finditer(text):
             code = match.group(1).zfill(2)
             if code == scope.division_code:

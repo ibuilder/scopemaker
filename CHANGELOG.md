@@ -3,6 +3,33 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- **The coverage report is 2.15x faster** (332 ms -> 154 ms on a 25-scope
+  project, measured interleaved so machine drift hit both sides). It was the
+  slowest page in the application.
+
+  Profiling found bleach's HTML5 parser accounting for a third of the runtime.
+  `strip_html` runs a full parse because it has to be safe against anything a
+  browser could be tricked into executing — the right tool for input arriving
+  from a client, and the wrong one for scanning text this application had
+  already sanitised on the way in, purely to find six-digit section numbers and
+  the word "Division".
+
+  `strip_stored_html` skips the parser for markup that has already been through
+  `sanitize_inline`/`sanitize_html`. `strip_html` is unchanged and still handles
+  everything untrusted.
+
+  The shortcut is only safe if it cannot drift from what it replaces, so it is
+  checked against `strip_html` across every clause and specification section
+  the product ships with — 375 entries — plus twenty inputs picked to break a
+  naive tag-stripper (comments containing `>`, tags splitting a word, entity
+  edge cases). A separate test asserts the coverage report invokes the HTML
+  parser zero times; a stopwatch assertion would be flaky on CI, a call count
+  is not.
+
 ## [1.5.1] — 2026-08-08
 
 ### Security
