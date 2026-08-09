@@ -75,16 +75,43 @@ OIDC_CLIENT_SECRET=...
 OIDC_DISCOVERY_URL=https://idp.example.com/.well-known/openid-configuration
 OIDC_ALLOWED_DOMAINS=yourcompany.com
 OIDC_DEFAULT_ORG=your-org-slug
+OIDC_REQUIRE_VERIFIED_EMAIL=1
 ```
 
 Users are matched on the issuer's stable subject first and email second, so somebody
 whose address changes at the identity provider keeps their account and their scopes
 rather than silently getting a second one.
 
+### Linking to an account that already exists
+
+Matching on subject is always safe: the subject is issued by the provider and cannot
+be chosen by the person signing in.
+
+The email fallback is different. Using it to claim a **pre-existing** local account —
+one that may already have a password, an admin role and a project's worth of documents
+— trusts the provider to have verified that address. Not all do: a multi-tenant IdP
+with self-service signup will issue a token asserting somebody else's address, and
+whoever holds it would inherit that account without ever knowing the password.
+
+So an incoming identity is only linked to an existing account when the provider reports
+`email_verified`. **An absent claim counts as unverified** — an issuer that says nothing
+has not confirmed anything. Creating a *new* account from an unverified address is still
+allowed, because it lands in its own organization and can reach nothing that exists.
+
+Set `OIDC_REQUIRE_VERIFIED_EMAIL=0` only for an identity provider you operate that omits
+the claim entirely. It is on by default.
+
+### Everything else
+
 `OIDC_ALLOWED_DOMAINS` restricts which email domains may sign in.
 `OIDC_DEFAULT_ORG` is the organization new SSO users land in; if the slug does not
 match anything, a personal organization is created from their email domain and a
 warning is logged rather than the sign-in failing.
+
+With no default configured, **each** new SSO user gets their own organization named
+after their email domain — they are not grouped together. That is deliberate: grouping
+people who merely share a domain would put strangers in one tenant the first time
+somebody signed in with a consumer address.
 
 SSO accounts have no local password. Password reset deliberately does nothing for
 them — the reset page reports the same neutral message as always, but no email is

@@ -295,6 +295,7 @@ list. The settings that matter most:
 | `METRICS_TOKEN` | Enables `/metrics`; without it the endpoint is 404 |
 | `PROCORE_ENABLED` | Off by default; the app is fully usable without it |
 | `OIDC_ENABLED` | Off by default |
+| `OIDC_REQUIRE_VERIFIED_EMAIL` | On by default. An SSO identity is only linked to an existing account when the provider reports the address as verified |
 
 `ProductionConfig` refuses to boot without the secrets, and refuses SQLite. A
 misconfigured deploy fails at startup rather than quietly leaking sessions.

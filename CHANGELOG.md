@@ -3,6 +3,48 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.5.1] — 2026-08-08
+
+### Security
+
+- **An unverified email claim could take over an existing account.**
+  `provision_sso_user` matched an incoming OIDC identity on the issuer's subject
+  first and the email claim second. The email fallback would bind that identity
+  to *any* pre-existing local account with the same address — including one with
+  a password, an admin role and a project's worth of documents.
+
+  That trusts the provider to have verified the address, and not all do: a
+  multi-tenant identity provider with self-service signup will issue a token
+  asserting somebody else's email. Whoever held such a token inherited the
+  victim's account without ever knowing the password.
+
+  Linking to an account that already exists now requires the provider to report
+  `email_verified`, and **an absent claim counts as unverified** — an issuer
+  that says nothing has confirmed nothing. Subject matching is unchanged: a
+  subject is issued by the provider and cannot be chosen by the person signing
+  in. Creating a *new* account from an unverified address is still permitted,
+  because it lands in its own organization and can reach nothing that exists.
+
+  `OIDC_REQUIRE_VERIFIED_EMAIL=0` restores the old behaviour for an identity
+  provider you operate that omits the claim.
+
+  **Who is affected:** deployments with `OIDC_ENABLED=1` whose identity provider
+  can issue tokens for addresses it has not verified. Password-only and
+  Procore-only deployments are unaffected.
+
+### Added
+
+- 20 tests for SSO account provisioning, which previously had none: subject
+  matching, email changes at the provider, provider scoping, the domain
+  allowlist, and organization attachment. Coverage of `accounts.py` went from
+  47% to 86%.
+
+### Changed
+
+- The GitHub Pages site now describes what the product actually does. It had
+  drifted four releases behind — its own argument is that scope gaps are
+  expensive, and it never mentioned the coverage analysis that finds them.
+
 ## [1.5.0] — 2026-08-08
 
 Everything here came from looking at the product rather than reading the code:
