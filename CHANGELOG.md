@@ -3,6 +3,30 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.5.4] — 2026-08-09
+
+### Fixed
+
+- **A link whose attribute contained `>` could fabricate a coverage finding.**
+  The fast text extraction added in 1.5.2 matched tags with `<[^>]*>`, which
+  stops at the first `>`. bleach does not escape `>` inside attribute values, so
+  `<a title="see > 220500 and Division 28">Excludes controls</a>` is a
+  legitimate stored item — and everything after the first `>` leaked into the
+  extracted text.
+
+  The consequences were both wrong answers in the report it exists to produce:
+  the leaked `220500` was recorded as a specification section the scope claims,
+  **suppressing a genuine gap**, and the leaked `Division 28` became a hand-off
+  finding nobody had written.
+
+  The tag pattern is now attribute-aware. The differential test missed this
+  because no clause in the shipped library has `>` inside an attribute; those
+  cases are now in it explicitly, along with a check that the pattern does not
+  backtrack.
+
+  Affects 1.5.2 and 1.5.3 for anyone whose scope text contains a link with `>`
+  in an attribute value. No migration — the next report is correct.
+
 ## [1.5.3] — 2026-08-09
 
 ### Changed

@@ -43,6 +43,17 @@ AWKWARD = [
     "nested <strong>bold <em>and italic</em></strong> text",
     "<sup>1</sup> and <sub>2</sub>",
     "a &lt; b and c &gt; d",
+    # Attribute values containing ">". bleach does not escape it, so these are
+    # legitimate *stored* values, and a naive <[^>]*> stops at the first one --
+    # leaking the rest of the tag into the text. That shipped in 1.5.2 and made
+    # the coverage report read a section number nothing claimed (suppressing a
+    # real gap) and a Division mention that was never in the prose.
+    '<a href="/x" title="a > b">link</a>',
+    '<a title="7 > 3">Division 07 handoff</a>',
+    '<span class="c">210500</span> <a title="see > 220500">x</a>',
+    "<a title='single > quote'>y</a>",
+    '<a href="/s" title="see > 220500 and Division 28">Excludes controls</a>',
+    '<a href="a" title="b" rel="c">several attributes</a>',
 ]
 
 
@@ -89,6 +100,30 @@ def test_the_fast_path_matches_across_the_whole_shipped_library(app, db):
         f"{len(diverged)} of {len(texts)} library entries diverged, "
         f"first: {diverged[0]!r}"
     )
+
+
+def test_an_attribute_containing_a_bracket_does_not_leak_into_the_text():
+    """The 1.5.2 regression, stated as the consequence rather than the cause.
+
+    Both of these fabricate a finding in the coverage report: a specification
+    section number that no scope claims will hide a genuine gap, and a spurious
+    "Division NN" becomes a hand-off that nobody wrote.
+    """
+    item = '<a href="/s" title="see > 220500 and Division 28">Excludes controls</a>'
+    text = strip_stored_html(item)
+
+    assert text == "Excludes controls"
+    assert "220500" not in text, "a section number leaked out of an attribute"
+    assert "Division" not in text, "a division mention leaked out of an attribute"
+
+
+def test_a_pathological_tag_does_not_backtrack():
+    """The attribute-aware pattern must stay linear."""
+    import time
+
+    started = time.perf_counter()
+    strip_stored_html("<a " + 'x="y" ' * 4000)
+    assert time.perf_counter() - started < 1.0
 
 
 def test_none_and_empty_are_handled():

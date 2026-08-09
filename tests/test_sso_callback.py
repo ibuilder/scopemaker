@@ -51,12 +51,24 @@ class FakeClient:
 
 @pytest.fixture()
 def sso_app(app, monkeypatch):
-    """SSO switched on, with the provider replaced."""
+    """SSO switched on, with the provider replaced.
+
+    Every key is restored, not just the one being turned on. ``app`` is
+    session-scoped, so leaving OIDC_NAME as "okta" would silently change the
+    provider every later test sees -- the kind of leak that makes a suite pass
+    in one order and fail in another.
+    """
+    keys = ("OIDC_ENABLED", "OIDC_NAME", "OIDC_DEFAULT_ORG", "OIDC_ALLOWED_DOMAINS")
+    previous = {key: app.config.get(key) for key in keys}
+
     app.config["OIDC_ENABLED"] = True
     app.config["OIDC_NAME"] = "okta"
     app.config["OIDC_DEFAULT_ORG"] = ""
-    yield app
-    app.config["OIDC_ENABLED"] = False
+    app.config["OIDC_ALLOWED_DOMAINS"] = []
+    try:
+        yield app
+    finally:
+        app.config.update(previous)
 
 
 def use_client(monkeypatch, client_obj):
@@ -133,13 +145,10 @@ def test_a_rejected_identity_shows_its_reason(sso_app, client, monkeypatch):
     """A ValidationError is ours and is meant to be read -- an unverified email
     or a domain outside the allowlist."""
     use_client(monkeypatch, FakeClient({**CLAIMS, "email": "nobody@elsewhere.example"}))
-    sso_app.config["OIDC_ALLOWED_DOMAINS"] = ["meridian.example"]
+    sso_app.config["OIDC_ALLOWED_DOMAINS"] = ["meridian.example"]  # fixture restores
     start_flow(client)
-    try:
-        response = client.get("/auth/sso/callback?state=known-state",
-                              follow_redirects=True)
-    finally:
-        sso_app.config["OIDC_ALLOWED_DOMAINS"] = []
+    response = client.get("/auth/sso/callback?state=known-state",
+                          follow_redirects=True)
 
     assert "elsewhere.example" in response.get_data(as_text=True)
 

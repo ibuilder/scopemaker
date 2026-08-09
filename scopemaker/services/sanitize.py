@@ -98,7 +98,19 @@ def strip_html(value: str | None) -> str:
 
 
 _COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
-_TAG = re.compile(r"<[^>]*>")
+
+#: A tag, allowing for ``>`` inside a quoted attribute value.
+#:
+#: The obvious ``<[^>]*>`` is wrong, and wrong in a way that survives
+#: sanitisation: bleach does not escape ``>`` inside attribute values, so
+#: ``<a title="see > 220500">x</a>`` is a legitimate stored value. Stopping at
+#: the first ``>`` leaves ``220500">x`` as text, and the coverage report then
+#: reads a specification section number that nothing claims -- suppressing a
+#: real gap -- or a "Division NN" mention that becomes a phantom hand-off.
+#:
+#: Each repetition consumes a whole quoted run, so there is no nested-quantifier
+#: backtracking here.
+_TAG = re.compile(r"""<[^>"']*(?:(?:"[^"]*"|'[^']*')[^>"']*)*>""")
 
 
 def strip_stored_html(value: str | None) -> str:
