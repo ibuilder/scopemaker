@@ -3,6 +3,39 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.5.3] — 2026-08-09
+
+### Changed
+
+- **The coverage report is a further 2.3x faster** — 72 ms to 31 ms median on a
+  25-scope project, 5 queries down to 4. Together with 1.5.2 that is 332 ms to
+  31 ms, roughly 10x.
+
+  `Scope.sections` and `ScopeSection.items` are both `lazy="selectin"`, so
+  merely touching `project.scopes` eagerly built every section and item as an
+  ORM instance — 2012 of them — whether or not anything read them. The report
+  needs two columns per item. It now loads scopes with `noload(Scope.sections)`
+  and takes those columns from a single row query.
+
+  The first attempt at this added the row query but left `project.scopes` in
+  place, so the instances were built anyway and the extra query made it 12%
+  *slower*. It only looked like a win because the benchmark loaded the objects
+  outside the timed region.
+
+### Added
+
+- **Tests for the operator commands** (`cli.py`, 40% → 94%): `create-user`,
+  `grant-role`, `seed-library`, `run-worker`, `demo-data`, `render-queue`. The
+  emphasis is on refusing loudly — a command that exits 0 having done nothing is
+  worse than one that fails, and these get run during incidents.
+- **Tests for the OIDC callback**: the CSRF state check, replay of a used state,
+  a provider error not leaking its detail to the page, a missing email claim,
+  and a deactivated account being refused even though the provider authenticated
+  it. The Authlib client is stubbed — this covers our side of the handshake, not
+  the provider, and does not replace testing against a real issuer.
+
+Overall coverage 84% → 86%; 517 tests.
+
 ## [1.5.2] — 2026-08-09
 
 ### Changed
