@@ -3,6 +3,38 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.5.5] — 2026-08-09
+
+### Fixed
+
+- **Deleting a sole-member account erased the record of the deletion.**
+  `audit_events.organization_id` is `ON DELETE CASCADE`, and `audit.record()`
+  defaults that column to the actor's active organization. So when the only
+  member of an organization deleted their account — the exact case the feature
+  exists for — removing the organization cascaded away the `ACCOUNT_DELETED`
+  and `ORGANIZATION_DELETED` rows written moments earlier in the same
+  transaction. One audit event before, zero after.
+
+  `record()` now accepts `inherit_organization=False`, and the two deletion
+  entries use it. Passing `organization_id=None` does not work and is worth
+  knowing: `None` is also the parameter's default, so the fallback fires
+  anyway. The organization's own history still goes with the organization —
+  its projects and scopes are going too — but who deleted it, and which
+  organization it was, survive in `actor_label` and `target_label`.
+
+- **Keyboard reordering could not move a clause that had sub-items.** The move
+  buttons treated every item as a sibling, but nesting is flat in the DOM and
+  carried by `data-parent-id`, so the item below a parent is its own first
+  child. The reorder endpoint assigns positions per parent, so a cross-depth
+  swap is not representable: the row moved on screen, the page said "Order
+  saved", and a reload put it back. Moves now find the next true sibling and
+  carry the whole subtree past it.
+
+  This was the only reordering path available to a keyboard user, so the
+  affected clauses could not be reordered without a mouse at all.
+
+Affects 1.5.0 onwards.
+
 ## [1.5.4] — 2026-08-09
 
 ### Fixed
