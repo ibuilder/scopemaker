@@ -19,7 +19,7 @@ from .errors import register_error_handlers
 from .extensions import csrf, db, limiter, login_manager, migrate, oauth
 from .logging_config import configure_logging
 
-__version__ = "1.5.1"
+__version__ = "1.5.2"
 __all__ = ["__version__", "create_app"]
 
 # .env is loaded by scopemaker.config at import time -- it has to be, because
