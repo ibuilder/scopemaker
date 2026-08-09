@@ -416,3 +416,82 @@ def test_the_report_does_not_run_the_html_parser(db, project, multi_trade, monke
         f"the coverage report invoked the HTML parser {len(calls)} times; "
         "use strip_stored_html for text this application already sanitised"
     )
+
+
+def test_the_report_does_not_materialise_scope_items(db, project, multi_trade):
+    """It reads two columns per item; it should not build an object per item.
+
+    Scope.sections and ScopeSection.items are both lazy="selectin", so touching
+    project.scopes eagerly constructs every section and item as an ORM instance
+    -- 2012 of them on a 25-scope project -- whether or not anything reads them.
+    Profiling put 45% of the report's remaining runtime in that construction
+    alone.
+
+    The report now loads scopes with noload(Scope.sections) and takes the two
+    columns it needs from one row query, which moved a 25-scope project from
+    72ms to 31ms.
+
+    Counted with the ORM's own "load" event, which fires as each instance is
+    built. The obvious instrument -- inspecting session.identity_map afterwards
+    -- is useless here and quietly passes: the map holds weak references, and
+    nothing keeps these objects alive once the report returns.
+    """
+    from sqlalchemy import event
+
+    from scopemaker.models import Project, ScopeItem, ScopeSection
+    from scopemaker.services import coverage as coverage_service
+
+    built: list[str] = []
+
+    def record(target, context):
+        built.append(type(target).__name__)
+
+    project_id = project.id
+    db.session.expire_all()
+    db.session.expunge_all()
+
+    event.listen(ScopeItem, "load", record)
+    event.listen(ScopeSection, "load", record)
+    try:
+        fresh = db.session.get(Project, project_id)
+        report = coverage_service.analyse_project(fresh)
+    finally:
+        event.remove(ScopeItem, "load", record)
+        event.remove(ScopeSection, "load", record)
+
+    assert report.sections, "expected a report worth measuring"
+    assert not built, (
+        f"the report built {len(built)} ORM instances "
+        f"({built.count('ScopeItem')} items, {built.count('ScopeSection')} sections); "
+        "it should read those columns via _load_item_rows instead"
+    )
+
+
+def test_the_row_query_and_the_orm_agree_on_what_is_claimed(db, project, multi_trade):
+    """The row query replaced a relationship walk. They must see the same thing.
+
+    Worth pinning down because the two disagree silently: the row path filters
+    on ScopeSection.is_enabled in SQL, the old one filtered in Python, and a
+    mismatch would invent or hide a scope gap rather than raise.
+    """
+    from scopemaker.services import coverage as coverage_service
+
+    scopes = [s for s in project.scopes if s.status != "archived"]
+    rows = coverage_service._load_item_rows([s.id for s in scopes])
+
+    for scope in scopes:
+        from_rows = coverage_service._claimed_section_codes(rows.get(scope.id, []))
+
+        # The relationship walk this replaced.
+        from_orm: set[str] = set()
+        for section in scope.sections:
+            if not section.is_enabled:
+                continue
+            for item in section.items:
+                meta = item.meta or {}
+                if meta.get("spec_code"):
+                    from_orm.add(str(meta["spec_code"]).strip())
+
+        assert from_rows >= from_orm, (
+            f"{scope.id}: the row query missed {from_orm - from_rows}"
+        )

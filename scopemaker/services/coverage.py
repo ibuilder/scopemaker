@@ -43,10 +43,11 @@ import re
 from dataclasses import dataclass, field
 
 from sqlalchemy import select
+from sqlalchemy.orm import noload
 
 from ..data.masterformat import get_division
 from ..extensions import db
-from ..models import Project, Scope, SpecSection
+from ..models import Project, Scope, ScopeItem, ScopeSection, SpecSection
 from ..services.sanitize import strip_stored_html
 
 # Matches "Division 07" / "Division 7" in clause text. Used to spot exclusions
@@ -235,7 +236,47 @@ def _scope_ref(scope: Scope) -> ScopeRef:
     )
 
 
-def _claimed_section_codes(scope: Scope) -> set[str]:
+#: One row per item: (section key, meta, text_html), for enabled sections only.
+ItemRow = tuple[str, dict, str]
+
+
+def _load_item_rows(scope_ids: list[str]) -> dict[str, list[ItemRow]]:
+    """Every enabled item of every listed scope, as rows rather than objects.
+
+    Walking ``scope.sections`` then ``section.items`` reads naturally and makes
+    SQLAlchemy construct a full ORM instance per row -- instrumented, tracked in
+    the identity map, registered with the unit of work. Profiling a 25-scope
+    report showed 2012 of those built purely so two columns could be read off
+    them, and instance construction alone was 45% of the remaining runtime.
+
+    Nothing here mutates an item, so the ORM machinery buys nothing. One query
+    returning plain tuples replaces it.
+    """
+    if not scope_ids:
+        return {}
+
+    rows = db.session.execute(
+        select(
+            ScopeSection.scope_id,
+            ScopeSection.key,
+            ScopeItem.meta,
+            ScopeItem.text_html,
+        )
+        .join(ScopeItem, ScopeItem.section_id == ScopeSection.id)
+        .where(
+            ScopeSection.scope_id.in_(scope_ids),
+            ScopeSection.is_enabled.is_(True),
+        )
+        .order_by(ScopeSection.position, ScopeItem.position)
+    ).all()
+
+    by_scope: dict[str, list[ItemRow]] = {}
+    for scope_id, key, meta, text_html in rows:
+        by_scope.setdefault(scope_id, []).append((key, meta or {}, text_html or ""))
+    return by_scope
+
+
+def _claimed_section_codes(items: list[ItemRow]) -> set[str]:
     """Every specification section a scope references.
 
     Prefers the structured id recorded when the scope was generated, and falls
@@ -243,34 +284,30 @@ def _claimed_section_codes(scope: Scope) -> set[str]:
     as claimed -- otherwise editing a line by hand would manufacture a gap.
     """
     codes: set[str] = set()
-    for section in scope.sections:
-        if not section.is_enabled:
+    for _key, meta, text_html in items:
+        code = meta.get("spec_code")
+        if code:
+            codes.add(str(code).strip())
             continue
-        for item in section.items:
-            meta = item.meta or {}
-            code = meta.get("spec_code")
-            if code:
-                codes.add(str(code).strip())
-                continue
-            if meta.get("role") == "spec_section":
-                match = _SECTION_NUMBER.search(strip_stored_html(item.text_html))
-                if match:
-                    codes.add(match.group(1))
+        if meta.get("role") == "spec_section":
+            match = _SECTION_NUMBER.search(strip_stored_html(text_html))
+            if match:
+                codes.add(match.group(1))
     return codes
 
 
-def _exclusion_redirects(scope: Scope) -> list[tuple[str, str]]:
+def _exclusion_redirects(
+    items: list[ItemRow], division_code: str | None
+) -> list[tuple[str, str]]:
     """(division, text) for exclusions that assign work to another division."""
-    section = scope.section("exclusions")
-    if section is None or not section.is_enabled:
-        return []
-
     found: list[tuple[str, str]] = []
-    for item in section.items:
-        text = strip_stored_html(item.text_html)
+    for key, _meta, text_html in items:
+        if key != "exclusions":
+            continue
+        text = strip_stored_html(text_html)
         for match in _DIVISION_MENTION.finditer(text):
             code = match.group(1).zfill(2)
-            if code == scope.division_code:
+            if code == division_code:
                 continue  # a trade referring to its own division is not a hand-off
             found.append((code, text))
     return found
@@ -278,9 +315,23 @@ def _exclusion_redirects(scope: Scope) -> list[tuple[str, str]]:
 
 def analyse_project(project: Project, *, include_archived: bool = False) -> CoverageReport:
     """Build the coverage report for one project."""
+    # Loaded explicitly rather than through ``project.scopes``. Scope.sections
+    # and ScopeSection.items are both lazy="selectin", so merely touching that
+    # relationship eagerly materialises every section and every item of every
+    # scope as ORM objects -- 2012 of them on a 25-scope project -- whether or
+    # not anything reads them. This report only needs two columns per item, and
+    # gets them from one row query in _load_item_rows.
+    #
+    # noload is safe here precisely because of that: nothing below walks
+    # scope.sections. If that changes, it will read as an empty list rather
+    # than fail, so keep item access going through _load_item_rows.
     scopes = [
         scope
-        for scope in project.scopes
+        for scope in db.session.scalars(
+            select(Scope)
+            .where(Scope.project_id == project.id)
+            .options(noload(Scope.sections))
+        )
         if include_archived or scope.status != "archived"
     ]
     report = CoverageReport(project_id=project.id, project_name=project.display_title)
@@ -294,11 +345,14 @@ def analyse_project(project: Project, *, include_archived: bool = False) -> Cove
 
     divisions_present = {s.division_code for s in scopes if s.division_code}
 
+    # Every item of every scope, in one query -- see _load_item_rows.
+    items_by_scope = _load_item_rows([s.id for s in scopes])
+
     # What each scope claims, keyed by section number.
     claims: dict[str, list[ScopeRef]] = {}
     for scope in scopes:
         ref = _scope_ref(scope)
-        for code in _claimed_section_codes(scope):
+        for code in _claimed_section_codes(items_by_scope.get(scope.id, [])):
             claims.setdefault(code, []).append(ref)
 
     # The universe of sections we hold this project to: everything the library
@@ -349,7 +403,10 @@ def analyse_project(project: Project, *, include_archived: bool = False) -> Cove
     seen: set[tuple[str, str]] = set()
     for scope in scopes:
         ref = _scope_ref(scope)
-        for division_code, text in _exclusion_redirects(scope):
+        redirects = _exclusion_redirects(
+            items_by_scope.get(scope.id, []), scope.division_code
+        )
+        for division_code, text in redirects:
             if division_code in divisions_present:
                 continue
             key = (scope.id, division_code)
