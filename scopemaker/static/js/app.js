@@ -226,32 +226,69 @@
       if (!item || !list) { return; }
 
       var direction = button.getAttribute('data-move');
-      var siblings = Array.prototype.filter.call(
+
+      /* Nesting is flat in the DOM: every item in a section is a sibling, and
+       * depth is carried by data-parent-id, not by the markup. So "the next
+       * item" is not the next element -- it may be this item's own child.
+       *
+       * Swapping across depths looks like it works and saves nothing: the
+       * reorder endpoint assigns positions per parent bucket, so an item's
+       * order relative to a node with a different parent is not represented.
+       * The row would move on screen, the page would say "Order saved", and a
+       * reload would put it back. Move among true siblings instead. */
+      var all = Array.prototype.filter.call(
         item.parentNode.children,
         function (node) { return node.classList.contains('item'); }
       );
+      var parentId = item.getAttribute('data-parent-id') || '';
+      var siblings = all.filter(function (node) {
+        return (node.getAttribute('data-parent-id') || '') === parentId;
+      });
+
       var index = siblings.indexOf(item);
       var target = direction === 'up' ? siblings[index - 1] : siblings[index + 1];
 
       if (!target) {
         announce(direction === 'up'
-          ? 'Already the first item.'
-          : 'Already the last item.');
+          ? 'Already the first item at this level.'
+          : 'Already the last item at this level.');
         return;
       }
 
-      if (direction === 'up') {
-        target.parentNode.insertBefore(item, target);
-      } else {
-        target.parentNode.insertBefore(item, target.nextSibling);
+      /* An item's children follow it as siblings, so moving past a node means
+       * moving past everything nested under it too -- otherwise the item lands
+       * between a parent and its children. */
+      function lastNodeOf(node) {
+        var last = node;
+        var at = all.indexOf(node) + 1;
+        while (at < all.length &&
+               (all[at].getAttribute('data-parent-id') || '') !== parentId) {
+          last = all[at];
+          at += 1;
+        }
+        return last;
       }
 
-      // The node moved, so the button inside it lost focus.
+      var block = [item];
+      var after = all.indexOf(item) + 1;
+      while (after < all.length &&
+             (all[after].getAttribute('data-parent-id') || '') !== parentId) {
+        block.push(all[after]);
+        after += 1;
+      }
+
+      var anchor = direction === 'up' ? target : lastNodeOf(target).nextSibling;
+      block.forEach(function (node) {
+        item.parentNode.insertBefore(node, anchor);
+      });
+
+      // The nodes moved, so the button inside this one lost focus.
       var moved = item.querySelector('[data-move="' + direction + '"]');
       if (moved) { moved.focus(); }
 
       announce('Moved ' + direction + ' to position ' +
-               (direction === 'up' ? index : index + 2) + '.');
+               (direction === 'up' ? index : index + 2) +
+               ' of ' + siblings.length + '.');
       persistOrder(list);
     });
   }

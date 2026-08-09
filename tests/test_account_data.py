@@ -342,3 +342,53 @@ def test_second_organization_membership_is_handled(app, db, user, colleague):
 
     doomed = account_data.organizations_deleted_with(user)
     assert [o.name for o in doomed] == ["Solo Consulting"]
+
+
+def test_deleting_a_sole_member_org_does_not_erase_the_deletion_record(
+    app, db, user, organization
+):
+    """The record of a destructive act must outlive what it destroyed.
+
+    audit_events.organization_id is ON DELETE CASCADE, and audit.record()
+    defaults that column to the actor's active organization. Left to the
+    default, deleting a sole-member organization took the ACCOUNT_DELETED and
+    ORGANIZATION_DELETED rows with it -- the audit trail of the deletion wiped
+    out by the deletion, inside the transaction that wrote it. Nothing failed;
+    the rows simply were not there afterwards.
+
+    The org's own history going with the org is intended. The fact that
+    somebody deleted it is not part of that history.
+    """
+    from flask_login import login_user
+
+    from scopemaker.services import audit
+
+    email, org_name = user.email, organization.name
+    assert [o.id for o in account_data.organizations_deleted_with(user)] == [
+        organization.id
+    ], "fixture should leave this user as the only member"
+
+    with app.test_request_context():
+        login_user(user)
+        audit.record(audit.AuditAction.SIGN_IN, summary=f"{email} signed in",
+                     commit=True)
+        account_data.delete_account(user)
+
+    surviving = db.session.scalars(select(AuditEvent)).all()
+    actions = {event.action for event in surviving}
+
+    assert "access.account_deleted" in actions, (
+        "the record of the account deletion was destroyed by the deletion"
+    )
+    assert "access.organization_deleted" in actions, (
+        "the record of the organization deletion was destroyed by it"
+    )
+
+    deletion = next(e for e in surviving if e.action == "access.account_deleted")
+    assert deletion.actor_label == email, "who did it must survive"
+    assert deletion.user_id is None, "the foreign key should be nulled"
+
+    removed = next(
+        e for e in surviving if e.action == "access.organization_deleted"
+    )
+    assert removed.target_label == org_name, "which organization must survive"

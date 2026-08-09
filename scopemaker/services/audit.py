@@ -52,11 +52,20 @@ def record(
     target_label: str | None = None,
     context: dict[str, Any] | None = None,
     commit: bool = False,
+    inherit_organization: bool = True,
 ) -> AuditEvent | None:
     """Append an audit entry. Never raises.
 
     Pass ``commit=True`` only when the surrounding code will not commit for
     itself -- for example a failed sign-in, which has no other state to save.
+
+    ``inherit_organization=False`` keeps the entry unattached to any
+    organization. ``organization_id`` defaults to the actor's active
+    organization, and passing ``None`` cannot express "no organization"
+    because that is also the parameter's default -- the fallback fires either
+    way. It matters because ``audit_events.organization_id`` is ON DELETE
+    CASCADE: an entry recording the deletion *of* an organization must not be
+    attached to it, or the deletion takes the record of itself away.
     """
     try:
         actor_id, label = _actor()
@@ -65,7 +74,7 @@ def record(
         if actor_label is None:
             actor_label = label
 
-        if organization_id is None:
+        if organization_id is None and inherit_organization:
             try:
                 if current_user and current_user.is_authenticated:
                     organization_id = current_user.active_organization_id

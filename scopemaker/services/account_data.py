@@ -11,12 +11,18 @@ to walk out with the clause library. Members who want the documents can already
 export each scope from the app, which is an organization-scoped action with
 organization-scoped permissions.
 
-**What deletion preserves.** The audit log is append-only and outlives its
-actor: the foreign key is ``ON DELETE SET NULL`` but ``actor_label`` keeps the
-email, so removing an account cannot erase what it did. Scopes, revisions and
-templates likewise keep their content and lose only the authorship link. The
-rows that genuinely belong to the person -- memberships, API tokens, reset
-tokens -- cascade away.
+**What deletion preserves.** The audit log outlives its actor: ``user_id`` is
+``ON DELETE SET NULL`` but ``actor_label`` keeps the email, so removing an
+account cannot erase who did what. Scopes, revisions and templates likewise
+keep their content and lose only the authorship link. The rows that genuinely
+belong to the person -- memberships, API tokens, reset tokens -- cascade away.
+
+**What it does not.** ``audit_events.organization_id`` is ``ON DELETE
+CASCADE``, so when a sole-member organization goes, that organization's own
+audit history goes with it, along with its projects and scopes. That is
+intended. What must not go is the record *of* the deletion, which is why the
+two entries written below are deliberately unattached to any organization --
+see the comment in ``delete_account``.
 """
 
 from __future__ import annotations
@@ -227,11 +233,25 @@ def delete_account(user: User) -> dict[str, Any]:
         ) or 0,
     }
 
+    # Both records are deliberately unattached to any organization.
+    #
+    # audit_events.organization_id is ON DELETE CASCADE, and audit.record()
+    # defaults that column to the actor's active organization. Leave it to the
+    # default and deleting a sole-member organization takes these two rows with
+    # it -- the record of the deletion destroyed by the deletion, in the same
+    # transaction that wrote it. Passing organization_id=None does not help:
+    # None is also the parameter's default, so the fallback still fires. Hence
+    # the explicit flag. Which organization was removed is kept in
+    # target_id/target_label and in the summary text, neither a foreign key.
+    #
+    # The organization's *own* history does go with the organization. That is
+    # intended: its projects, scopes and members are being removed too. What has
+    # to outlive it is the fact that somebody deleted it, and who.
     for organization in doomed:
         audit.record(
             audit.AuditAction.ORGANIZATION_DELETED,
             summary=f"{organization.name} deleted with its last member {email}",
-            organization_id=organization.id,
+            inherit_organization=False,
             user_id=user.id,
             actor_label=email,
             target_type="organization",
@@ -242,6 +262,7 @@ def delete_account(user: User) -> dict[str, Any]:
     audit.record(
         audit.AuditAction.ACCOUNT_DELETED,
         summary=f"{email} deleted their own account",
+        inherit_organization=False,
         user_id=user.id,
         actor_label=email,
         target_type="user",
