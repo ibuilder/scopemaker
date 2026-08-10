@@ -39,7 +39,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12"]
+        # 3.14 is what the Docker image ships, so it has to be a version the
+        # suite actually runs on -- otherwise bumping the base image only
+        # proves the container builds, not that the application works in it.
+        python-version: ["3.11", "3.12", "3.14"]
     steps:
       - uses: actions/checkout@v7
 
