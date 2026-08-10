@@ -49,3 +49,6 @@ audit-requirements.txt
 docs/demo/library.json
 docs/demo/document.css
 docs/demo/exhibits/
+
+# Frontend test toolchain
+/node_modules/

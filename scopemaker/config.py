@@ -39,8 +39,17 @@ class ConfigError(RuntimeError):
 
 
 def _bool(name: str, default: bool = False) -> bool:
+    """A blank value means "not set", the same as it does for _int and _csv.
+
+    Treating ``FLAG=`` as false is the dangerous reading. A commented-out or
+    emptied line in a .env file is how an operator says "I have not configured
+    this", and several entries in .env.example are deliberately blank -- so an
+    empty OIDC_REQUIRE_VERIFIED_EMAIL would silently turn off a security check
+    that defaults to on. Falling back to the default is both the safer answer
+    and the consistent one.
+    """
     raw = os.environ.get(name)
-    if raw is None:
+    if raw is None or not raw.strip():
         return default
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 

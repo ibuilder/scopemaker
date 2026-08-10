@@ -86,6 +86,22 @@ jobs:
           path: coverage.xml
           if-no-files-found: warn
 
+  frontend:
+    name: Browser JavaScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      # The editor's reordering is the only part of the UI with logic worth a
+      # test: it manipulates a flat DOM where nesting is implied by attributes,
+      # and it silently shipped a bug the Python suite structurally could not
+      # see.
+      - run: npm test
+
   security:
     name: Dependency audit and SBOM
     runs-on: ubuntu-latest

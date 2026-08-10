@@ -257,25 +257,47 @@
 
       /* An item's children follow it as siblings, so moving past a node means
        * moving past everything nested under it too -- otherwise the item lands
-       * between a parent and its children. */
-      function lastNodeOf(node) {
-        var last = node;
-        var at = all.indexOf(node) + 1;
-        while (at < all.length &&
-               (all[at].getAttribute('data-parent-id') || '') !== parentId) {
-          last = all[at];
-          at += 1;
+       * between a parent and its children.
+       *
+       * "Descendant" has to be decided by walking the parent chain, not by
+       * "has a different parent from the item being moved". A shallower node
+       * further down the list also has a different parent, and treating it as
+       * a descendant makes a child escape its parent entirely -- moving a1
+       * down in [a, a1, a2, b] put it after b. */
+      var parentOf = {};
+      all.forEach(function (node) {
+        parentOf[node.getAttribute('data-item-id')] =
+          node.getAttribute('data-parent-id') || '';
+      });
+
+      function isUnder(node, ancestorId) {
+        var at = node.getAttribute('data-parent-id') || '';
+        while (at) {
+          if (at === ancestorId) { return true; }
+          at = parentOf[at] || '';
         }
-        return last;
+        return false;
       }
 
-      var block = [item];
-      var after = all.indexOf(item) + 1;
-      while (after < all.length &&
-             (all[after].getAttribute('data-parent-id') || '') !== parentId) {
-        block.push(all[after]);
-        after += 1;
+      /* The contiguous run of nodes nested under `node`, which in this flat
+       * list is everything following it until something that is not. */
+      function subtreeOf(node) {
+        var id = node.getAttribute('data-item-id');
+        var out = [node];
+        var at = all.indexOf(node) + 1;
+        while (at < all.length && isUnder(all[at], id)) {
+          out.push(all[at]);
+          at += 1;
+        }
+        return out;
       }
+
+      function lastNodeOf(node) {
+        var subtree = subtreeOf(node);
+        return subtree[subtree.length - 1];
+      }
+
+      var block = subtreeOf(item);
 
       var anchor = direction === 'up' ? target : lastNodeOf(target).nextSibling;
       block.forEach(function (node) {

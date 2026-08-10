@@ -277,3 +277,47 @@ def test_production_config_rejects_sqlite(monkeypatch):
     with pytest.raises(ConfigError) as excinfo:
         ProductionConfig.validate()
     assert "SQLite" in str(excinfo.value)
+
+
+# ---------------------------------------------------------------------------
+# Environment coercion
+# ---------------------------------------------------------------------------
+
+def test_a_blank_flag_falls_back_to_its_default(monkeypatch):
+    """A blank value means "not configured", not "false".
+
+    An emptied or commented-out line in a .env file is how an operator says
+    they have not set something -- and .env.example ships several deliberately
+    blank entries. Reading that as false would silently disable
+    OIDC_REQUIRE_VERIFIED_EMAIL, which defaults to on and gates SSO account
+    linking. _int and _csv already fall back; _bool did not.
+    """
+    from scopemaker.config import _bool
+
+    for blank in ("", "   ", "\t"):
+        monkeypatch.setenv("SCOPEMAKER_TEST_FLAG", blank)
+        assert _bool("SCOPEMAKER_TEST_FLAG", default=True) is True, (
+            f"{blank!r} disabled a flag that defaults to on"
+        )
+        assert _bool("SCOPEMAKER_TEST_FLAG", default=False) is False
+
+
+def test_an_unset_flag_uses_its_default(monkeypatch):
+    from scopemaker.config import _bool
+
+    monkeypatch.delenv("SCOPEMAKER_TEST_FLAG", raising=False)
+    assert _bool("SCOPEMAKER_TEST_FLAG", default=True) is True
+    assert _bool("SCOPEMAKER_TEST_FLAG", default=False) is False
+
+
+def test_an_explicit_value_still_wins(monkeypatch):
+    """Turning something off deliberately must keep working."""
+    from scopemaker.config import _bool
+
+    for truthy in ("1", "true", "TRUE", "yes", "on"):
+        monkeypatch.setenv("SCOPEMAKER_TEST_FLAG", truthy)
+        assert _bool("SCOPEMAKER_TEST_FLAG", default=False) is True
+
+    for falsy in ("0", "false", "no", "off", "nonsense"):
+        monkeypatch.setenv("SCOPEMAKER_TEST_FLAG", falsy)
+        assert _bool("SCOPEMAKER_TEST_FLAG", default=True) is False

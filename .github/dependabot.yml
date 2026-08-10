@@ -31,3 +31,11 @@ updates:
     labels: ["dependencies", "docker"]
     commit-message:
       prefix: "docker"
+
+  # Added with the browser test harness. Dev-only -- nothing here ships to a
+  # user -- but an unpatched toolchain is still a supply-chain surface.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5

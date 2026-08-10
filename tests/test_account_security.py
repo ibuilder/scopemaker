@@ -434,3 +434,153 @@ def test_production_accepts_a_configured_relay(monkeypatch):
     monkeypatch.setattr(ProductionConfig, "MAIL_BACKEND", "")
     monkeypatch.setattr(ProductionConfig, "MAIL_SERVER", "smtp.example.com")
     ProductionConfig.validate()
+
+
+# ---------------------------------------------------------------------------
+# Mail delivery
+# ---------------------------------------------------------------------------
+
+class _FakeSMTP:
+    """Records what would have gone over the wire."""
+
+    instances: list[_FakeSMTP] = []
+
+    def __init__(self, host, port, timeout=None, context=None):
+        self.host, self.port, self.timeout = host, port, timeout
+        self.context = context
+        self.started_tls = False
+        self.logged_in_as = None
+        self.sent = []
+        self.ehlo_count = 0
+        _FakeSMTP.instances.append(self)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def ehlo(self):
+        self.ehlo_count += 1
+
+    def starttls(self, context=None):
+        self.started_tls = True
+
+    def login(self, username, password):
+        self.logged_in_as = (username, password)
+
+    def send_message(self, mime):
+        self.sent.append(mime)
+
+
+@pytest.fixture()
+def smtp(monkeypatch):
+    import smtplib
+
+    _FakeSMTP.instances = []
+    monkeypatch.setattr(smtplib, "SMTP", _FakeSMTP)
+    monkeypatch.setattr(smtplib, "SMTP_SSL", _FakeSMTP)
+    return _FakeSMTP
+
+
+def _message():
+    from scopemaker.services.mail import Message
+
+    return Message(
+        to="dana@meridian.example",
+        subject="Reset your password",
+        text="Follow the link.",
+        html="<p>Follow the link.</p>",
+    )
+
+
+def test_smtp_delivery_upgrades_to_tls_and_authenticates(app, db, smtp):
+    from scopemaker.services import mail
+
+    app.config.update(
+        MAIL_BACKEND="smtp", MAIL_SERVER="smtp.example.com", MAIL_PORT=587,
+        MAIL_USERNAME="mailer", MAIL_PASSWORD="secret", MAIL_USE_TLS=True,
+        MAIL_USE_SSL=False, MAIL_SENDER="noreply@meridian.example",
+    )
+
+    assert mail.send(_message()) is True
+
+    client = smtp.instances[-1]
+    assert (client.host, client.port) == ("smtp.example.com", 587)
+    assert client.started_tls, "credentials would have gone out in the clear"
+    assert client.logged_in_as == ("mailer", "secret")
+    assert client.sent, "nothing was handed to the server"
+
+
+def test_implicit_ssl_does_not_also_starttls(app, db, smtp):
+    from scopemaker.services import mail
+
+    app.config.update(
+        MAIL_BACKEND="smtp", MAIL_SERVER="smtp.example.com", MAIL_PORT=465,
+        MAIL_USE_SSL=True, MAIL_USERNAME="", MAIL_PASSWORD="",
+        MAIL_SENDER="noreply@meridian.example",
+    )
+
+    assert mail.send(_message()) is True
+
+    client = smtp.instances[-1]
+    assert client.port == 465
+    assert not client.started_tls, "STARTTLS on an already-encrypted connection"
+    assert client.logged_in_as is None, "logged in without a username"
+
+
+def test_a_delivery_failure_is_swallowed_by_default(app, db, smtp, monkeypatch):
+    """A password reset must not 500 because the relay is down."""
+    from scopemaker.services import mail
+
+    app.config.update(
+        MAIL_BACKEND="smtp", MAIL_SERVER="smtp.example.com",
+        MAIL_SENDER="noreply@meridian.example",
+    )
+    monkeypatch.setattr(
+        mail, "_send_smtp",
+        lambda *a, **k: (_ for _ in ()).throw(OSError("connection refused")),
+    )
+
+    assert mail.send(_message()) is False
+
+
+def test_a_delivery_failure_can_be_raised_when_the_caller_wants_it(
+    app, db, smtp, monkeypatch
+):
+    from scopemaker.services import mail
+
+    app.config.update(
+        MAIL_BACKEND="smtp", MAIL_SERVER="smtp.example.com",
+        MAIL_SENDER="noreply@meridian.example",
+    )
+    monkeypatch.setattr(
+        mail, "_send_smtp",
+        lambda *a, **k: (_ for _ in ()).throw(OSError("connection refused")),
+    )
+
+    with pytest.raises(mail.MailError):
+        mail.send(_message(), raise_on_error=True)
+
+
+def test_the_backend_is_chosen_from_configuration(app, db):
+    from scopemaker.services.mail import _backend
+
+    app.config["MAIL_BACKEND"] = "console"
+    assert _backend() == "console"
+
+    app.config["MAIL_BACKEND"] = ""
+    app.config["MAIL_SERVER"] = "smtp.example.com"
+    # Testing short-circuits to the null backend so a test run cannot send.
+    assert _backend() == "null"
+
+
+def test_a_message_carries_the_headers_that_keep_it_out_of_a_loop():
+    message = _message()
+    mime = message.as_mime("noreply@meridian.example", "ScopeMaker")
+
+    assert mime["Auto-Submitted"] == "auto-generated"
+    assert mime["Message-ID"]
+    assert mime["To"] == "dana@meridian.example"
+    assert "ScopeMaker" in mime["From"]
+    assert mime.get_content_type() == "multipart/alternative"
