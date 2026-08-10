@@ -3,6 +3,43 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.5.6] — 2026-08-10
+
+### Added
+
+- **A JavaScript test harness** (Vitest + jsdom, 13 tests, its own CI job). The
+  editor's reordering had no automated coverage at all — which is how 1.5.0
+  shipped keyboard moves that silently did nothing, and how 1.5.5's fix went
+  out verified only by hand. The tests load the real `static/js/app.js`, so the
+  file that ships is the file under test.
+
+  It immediately found a bug in the 1.5.5 fix: moving a child down let it
+  escape its parent. "Is this a descendant" was decided by comparing parent ids
+  against the item being moved, but a *shallower* node further down the list
+  also has a different parent — so moving `a1` down in `[a, a1, a2, b]` put it
+  after `b`. Descendants are now found by walking the parent chain, which also
+  handles grandchildren.
+- Coverage for the mail path (74% → 97%): STARTTLS upgrade and authentication,
+  implicit SSL not double-negotiating, and a dead relay returning `False`
+  rather than turning a password reset into a 500.
+- Coverage for the project routes (71% → 96%), including the guard that refuses
+  to delete a bid package with scopes still attached.
+- **Python 3.14 in the test matrix.** The Docker image now builds on
+  3.14-slim, and a base-image bump nothing runs against proves the container
+  builds, not that the application works in it.
+
+### Changed
+
+- `config._bool` falls back to its default on a blank value, matching `_int`
+  and `_csv`. An emptied line is how an operator says "not configured", and
+  `.env.example` ships blank entries — so `OIDC_REQUIRE_VERIFIED_EMAIL=` would
+  have silently disabled a security check that defaults to on.
+- Dependencies: Python base image 3.12 → 3.14, vitest 2 → 4, jsdom 25 → 30,
+  `setup-node` 4 → 7, `upload-artifact` 4 → 7, `upload-pages-artifact` 3 → 5,
+  `build-push-action` 6 → 7. npm added to Dependabot.
+
+553 Python tests, 13 JavaScript. Coverage 87%.
+
 ## [1.5.5] — 2026-08-09
 
 ### Fixed
