@@ -79,7 +79,7 @@ jobs:
       - name: Assert the PDF tests actually ran
         run: pytest -q -m pdf --no-header | tee /dev/stderr | grep -qv "no tests ran"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: matrix.python-version == '3.12'
         with:
           name: coverage
@@ -128,7 +128,7 @@ jobs:
       - name: Generate a CycloneDX SBOM
         run: cyclonedx-py environment --output-format JSON --output-file sbom.json
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sbom
           path: sbom.json
