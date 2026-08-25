@@ -97,15 +97,41 @@ one local account and never show a login screen.
 
 ## Plan for option A
 
-### Phase 0 — Spike: prove the DLLs (2–3 days)
+### Phase 0 — Spike: prove the DLLs
 
 The only phase that can invalidate the rest.
 
-- Vendor the five Pango-chain DLLs beside a Python embeddable distribution.
-- On a clean Windows VM with no GTK runtime, render the Division 21 sample and
-  compare it byte-for-byte against the CI-produced PDF.
-- Confirm font discovery works without a system fontconfig cache — this is the
-  most likely failure and the one to find on day two, not week three.
+**The harness is written: `scripts/windows_pdf_spike.py`.** It probes each of the
+five libraries individually, reports the real error for each, then renders a real
+exhibit and reports the page count. Point it at a directory of DLLs:
+
+```
+python scripts/windows_pdf_spike.py --dll-dir C:\path	o\dlls
+```
+
+It reports libraries one at a time on purpose: the usual failure is a missing
+*transitive* dependency — `libpango` loading while `libgobject` cannot find
+`libintl` — and a single "cannot load library" tells you nothing about which.
+
+**One manual step remains, and it is a sandbox limitation rather than a
+technical one.** The DLLs come from MSYS2 or the GTK-for-Windows installer, and
+neither host is reachable from the environment this was developed in; only PyPI
+is. No PyPI package ships them either — `pycairo` and `manimpango` both link
+statically, and `pango` on PyPI is an empty placeholder. The package list to
+download is in the script's docstring.
+
+Verified as far as it can be here: run against this machine, which has no GTK
+runtime, the harness correctly reports all five as unloadable with the real
+`error 0x7e` for each, and exits 1.
+
+Still to confirm once the DLLs are in hand:
+
+- The five load from a vendored directory via `os.add_dll_directory`.
+- Font discovery works without a system fontconfig cache — the most likely
+  failure, and the one to find on day two rather than week three.
+- The rendered PDF matches the CI-produced sample for the same division. Fonts
+  are what will differ, and a substituted font changes pagination in a document
+  that goes out with a subcontract.
 
 **If this fails,** stop and reconsider. Fallbacks, in order of preference:
 ship without PDF and rely on DOCX plus the browser print view; or bundle a
