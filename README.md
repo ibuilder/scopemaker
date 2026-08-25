@@ -216,6 +216,8 @@ demote or delete before export.
   sessions that are already open rather than only at the next login
 - Append-only audit log of every privileged action, with CSV export
 - See [SECURITY.md](SECURITY.md) for the full posture and the hardening checklist
+- [ROADMAP.md](ROADMAP.md) records what is planned, what is blocked, and the
+  decisions that are deliberate rather than oversights
 
 **Accounts and access**
 - Password reset with single-use expiring tokens; completing one signs out every
