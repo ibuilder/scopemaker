@@ -87,14 +87,17 @@ domain work rather than engineering.
 Each of these looks like a gap and is a decision. Reopen them only with a reason
 that is not "this looks wrong".
 
-**A Rust/Tauri desktop application.** The product was specified as Flask and
-Python and is built that way throughout. A rewrite would discard the clause
-library integration, the coverage engine, WeasyPrint's paged-media output and
-every test. Wrapping the existing app in Tauri is more plausible but means
-shipping a Python runtime inside a Rust shell, and WeasyPrint's GTK/Pango/cairo
-stack is genuinely difficult to bundle on Windows. If offline-first or
-single-binary distribution ever becomes a hard requirement, this is a new
-project — not a next step.
+**A Rust rewrite.** Reimplementing generation, coverage, numbering and
+paged-media PDF in Rust would discard ~4,000 lines of tested domain logic and
+every test with it. Months of work for no user-visible gain.
+
+**A packaged desktop build is a different question, and is now costed** — see
+[docs/desktop-app-scope.md](docs/desktop-app-scope.md). The blocker previously
+recorded here ("WeasyPrint's GTK/cairo stack is difficult to bundle") was based
+on stale information: WeasyPrint 69 renders PDFs itself and loads five
+Pango-chain libraries, not a GTK runtime. The realistic estimate is 2–4 weeks
+for a Tauri shell around the existing app, gated on a 2–3 day spike proving
+those libraries load on a clean Windows machine. Not started, not committed to.
 
 **Grouping SSO users by email domain.** With no `OIDC_DEFAULT_ORG` configured,
 each new SSO user gets their own organization named after their email domain.
