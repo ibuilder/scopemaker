@@ -106,7 +106,7 @@ five libraries individually, reports the real error for each, then renders a rea
 exhibit and reports the page count. Point it at a directory of DLLs:
 
 ```
-python scripts/windows_pdf_spike.py --dll-dir C:\path	o\dlls
+python scripts/windows_pdf_spike.py --dll-dir C:\vendor\dlls
 ```
 
 It reports libraries one at a time on purpose: the usual failure is a missing
