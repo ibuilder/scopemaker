@@ -28,15 +28,17 @@ RUN pip install --upgrade pip setuptools wheel \
 # ---------------------------------------------------------------------------
 FROM python:3.14-slim-bookworm AS runtime
 
-# WeasyPrint renders PDFs through Pango/cairo rather than a browser, so these
+# WeasyPrint renders PDFs itself (pydyf) rather than through a browser, so the
+# native surface is only Pango's text-shaping chain -- no cairo, no GDK-PixBuf.
+# Verified against weasyprint/text/ffi.py, which dlopens exactly: gobject,
+# pango, pangoft2, harfbuzz, fontconfig (plus harfbuzz-subset, allow_fail).
 # native libraries are what make PDF export work. Without them the app still
 # runs and every other format exports; only PDF is disabled.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libpango-1.0-0 \
         libpangoft2-1.0-0 \
         libharfbuzz0b \
-        libcairo2 \
-        libgdk-pixbuf-2.0-0 \
+        libfontconfig1 \
         libffi8 \
         libjpeg62-turbo \
         libpq5 \

@@ -6,7 +6,7 @@ illegibility and no text was selectable or searchable.  WeasyPrint lays out real
 paged media: text stays text, content flows across pages, and ``@page`` CSS
 gives running headers, footers and "Page N of M".
 
-WeasyPrint needs a native stack (Pango, cairo, GDK-PixBuf). It is present in
+WeasyPrint needs Pango's text-shaping libraries. It is present in
 the Docker image and in CI; on a bare Windows box it is usually missing, so the
 import is guarded and the failure is reported as an actionable message rather
 than a stack trace.
@@ -40,14 +40,15 @@ except (ImportError, OSError) as exc:  # pragma: no cover
 
 
 INSTALL_HINT = (
-    "PDF rendering requires WeasyPrint's native libraries (Pango, cairo, "
-    "GDK-PixBuf).\n"
+    "PDF rendering requires WeasyPrint's native libraries (Pango and its "
+    "GLib/HarfBuzz/fontconfig chain).\n"
     "  Docker/Linux: they are installed in the provided image; "
     "on Debian/Ubuntu run\n"
     "    apt-get install -y libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b "
-    "libffi-dev libjpeg-dev\n"
+    "libfontconfig1 libffi-dev libjpeg-dev\n"
     "  macOS:   brew install pango libffi\n"
-    "  Windows: install the GTK3 runtime, then restart the shell -- see "
+    "  Windows: install the GTK runtime (it carries Pango), then restart "
+    "the shell -- see "
     "https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#windows\n"
     "Every other export format (DOCX, HTML, Markdown, JSON) works without it."
 )

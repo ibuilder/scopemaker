@@ -89,7 +89,7 @@ scopemaker = [
 testpaths = ["tests"]
 addopts = "-q --strict-markers"
 markers = [
-    "pdf: tests that require the WeasyPrint native stack (GTK/Pango/cairo)",
+    "pdf: tests that require WeasyPrint's native Pango libraries",
 ]
 filterwarnings = ["ignore::DeprecationWarning:passlib.*"]
 

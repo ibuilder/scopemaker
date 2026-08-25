@@ -58,12 +58,18 @@ WeasyPrint and python-docx are CPU-bound.
 
 ## PDF rendering
 
-WeasyPrint needs Pango, cairo and GDK-PixBuf. They are in the Docker image. Elsewhere:
+WeasyPrint renders PDFs itself rather than through a browser or cairo, so the native
+surface is smaller than it once was: Pango and its GLib, HarfBuzz and fontconfig
+dependencies. It no longer loads cairo or GDK-PixBuf — verified against
+`weasyprint/text/ffi.py`, which dlopens exactly `gobject`, `pango`, `pangoft2`,
+`harfbuzz` and `fontconfig` (plus `harfbuzz-subset`, which is optional).
+
+They are in the Docker image. Elsewhere:
 
 ```bash
 # Debian / Ubuntu
 apt-get install -y libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b \
-                   libcairo2 libgdk-pixbuf-2.0-0 shared-mime-info fonts-dejavu-core
+                   libfontconfig1 shared-mime-info fonts-dejavu-core
 
 # macOS
 brew install pango libffi
