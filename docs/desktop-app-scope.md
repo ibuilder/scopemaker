@@ -7,10 +7,12 @@ one-line no.
 **Status: not started, not committed to.** This is the analysis you would want
 before deciding.
 
-**Headline: the thing that made this look hard is no longer true.** WeasyPrint
-dropped cairo and GDK-PixBuf; the native surface is now five Pango-chain DLLs.
-That moves the honest estimate from "months, don't" to **"2–4 weeks for a real
-installer"** — see the risk section for what could still bite.
+**Headline: the blocker was stale information, and the spike has now passed.**
+WeasyPrint dropped cairo and GDK-PixBuf; the native surface is five Pango-chain
+DLLs. Those have been loaded from a vendored directory on Windows and used to
+render an exhibit **with pagination identical to CI's**. The honest estimate
+moves from "months, don't" to **2–4 weeks for a real installer**, with the
+riskiest unknown now measured rather than feared.
 
 ---
 
@@ -56,9 +58,8 @@ This finding has already been applied to the repository: the Docker image, the
 CI installer, `docs/deployment.md` and the in-app error message no longer name
 cairo or GDK-PixBuf.
 
-**Still to prove:** that the same five load correctly on a clean Windows machine
-with no GTK runtime installed, vendored beside the executable. That is the first
-spike below, and it is the single fact the whole plan rests on.
+**Proven.** See Phase 0 below: the five loaded from a directory that is not on
+`PATH`, and the resulting PDF paginates identically to CI's.
 
 ---
 
@@ -97,46 +98,48 @@ one local account and never show a login screen.
 
 ## Plan for option A
 
-### Phase 0 — Spike: prove the DLLs
+### Phase 0 — Spike: prove the DLLs — **PASSED**
 
-The only phase that can invalidate the rest.
+The only phase that could invalidate the rest. It did not.
 
-**The harness is written: `scripts/windows_pdf_spike.py`.** It probes each of the
-five libraries individually, reports the real error for each, then renders a real
-exhibit and reports the page count. Point it at a directory of DLLs:
+**WeasyPrint rendered a real exhibit on Windows from DLLs in a directory that
+is not on `PATH`**, loaded via `os.add_dll_directory`. All five required
+libraries loaded; `harfbuzz-subset` was absent and, being `allow_fail=True`,
+did not matter.
+
+The output was compared against the same division rendered by CI on Linux:
+
+| | CI (Linux) | Windows |
+|---|---|---|
+| Pages | 6 | 6 |
+| Page fill | 96% 90% 94% 98% 86% 44% | 96% 90% 94% 98% 86% 44% |
+
+Identical pagination, to the percentage point, on the metric that exists
+specifically to catch layout drift. **The top-ranked risk — font substitution
+changing pagination in a contract document — did not materialise.** Text
+similarity was 0.982; every difference was local demo data (a different
+organization name, an unset bid amount, and two items swapped by an earlier
+reordering test), not rendering.
+
+Reproduce with:
 
 ```
-python scripts/windows_pdf_spike.py --dll-dir C:\vendor\dlls
+python scripts/windows_pdf_spike.py --dll-dir <directory of DLLs>
 ```
 
-It reports libraries one at a time on purpose: the usual failure is a missing
-*transitive* dependency — `libpango` loading while `libgobject` cannot find
-`libintl` — and a single "cannot load library" tells you nothing about which.
+**Caveat worth keeping.** The DLLs used were GIMP 2's bundled GTK stack, which
+happened to be installed on the test machine. That proves the *loading model* —
+arbitrary directory, not on `PATH`, no GTK runtime registered — but a shipping
+installer would vendor its own set from MSYS2 (list in the script's docstring).
+Re-run the spike against that set before Phase 3.
 
-**One manual step remains, and it is a sandbox limitation rather than a
-technical one.** The DLLs come from MSYS2 or the GTK-for-Windows installer, and
-neither host is reachable from the environment this was developed in; only PyPI
-is. No PyPI package ships them either — `pycairo` and `manimpango` both link
-statically, and `pango` on PyPI is an empty placeholder. The package list to
-download is in the script's docstring.
+Two traps the script guards against, both hit while writing it:
 
-Verified as far as it can be here: run against this machine, which has no GTK
-runtime, the harness correctly reports all five as unloadable with the real
-`error 0x7e` for each, and exits 1.
-
-Still to confirm once the DLLs are in hand:
-
-- The five load from a vendored directory via `os.add_dll_directory`.
-- Font discovery works without a system fontconfig cache — the most likely
-  failure, and the one to find on day two rather than week three.
-- The rendered PDF matches the CI-produced sample for the same division. Fonts
-  are what will differ, and a substituted font changes pagination in a document
-  that goes out with a subcontract.
-
-**If this fails,** stop and reconsider. Fallbacks, in order of preference:
-ship without PDF and rely on DOCX plus the browser print view; or bundle a
-headless Chromium for PDF, which costs ~150 MB and abandons the paged-media
-CSS the exhibits are built on.
+- It takes the scope with the most items, not `.first()`. An empty scope renders
+  a title page and nothing else — a convincing-looking 1-page "pass" that proves
+  nothing about pagination.
+- It probes each library separately. The usual failure is a missing *transitive*
+  dependency, and one "cannot load library" tells you nothing about which.
 
 ### Phase 1 — Native shell (1 week)
 
@@ -178,11 +181,10 @@ CSS the exhibits are built on.
 
 ## Risks, honestly ranked
 
-1. **Font rendering differs from CI.** Exhibits are contract documents; if
-   Windows substitutes a font, pagination shifts and page counts change. The
-   page-fill assertions already in the suite would catch gross breakage, but
-   they run on Linux. Mitigation: vendor DejaVu and Liberation with the app and
-   pin them in `document.css`, as the Docker image already does.
+1. ~~**Font rendering differs from CI.**~~ **Measured, and it does not** — 6
+   pages either side and page fill identical to the percentage point. Still
+   vendor DejaVu and Liberation with the installer as the Docker image does,
+   because this was tested on one machine whose font set is not every user's.
 2. **Code-signing lead time.** Weeks of procurement, and unsigned installers
    get a SmartScreen wall. Start early.
 3. **Bundle size.** Python plus WeasyPrint plus fonts lands around 80–120 MB

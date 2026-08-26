@@ -159,26 +159,36 @@ def main() -> int:
     print("\n-- rendering " + "-" * 59)
     from scopemaker import create_app
     from scopemaker.extensions import db
-    from scopemaker.models import Scope
+    from scopemaker.models import Organization, Scope
     from scopemaker.services.renderers import render_pdf
 
     app = create_app("development")
     with app.app_context():
-        scope = db.session.query(Scope).first()
-        if scope is None:
-            print("  No scope in the database. Run:")
+        # Deliberately not .first(): a database may hold empty scopes from
+        # earlier experiments, and a title-only PDF would look like a pass while
+        # proving nothing about pagination. Take the largest scope there is.
+        scope = max(
+            db.session.query(Scope).all(),
+            key=lambda s: s.item_count,
+            default=None,
+        )
+        if scope is None or scope.item_count == 0:
+            print("  No scope with any items. Run:")
             print("    flask create-user you@example.com --org demo --role admin")
             print("    flask demo-data --org demo")
             return 1
 
-        payload = render_pdf(scope, organization=scope.organization)
+        # Scope carries organization_id, not a relationship.
+        organization = db.session.get(Organization, scope.organization_id)
+        payload = render_pdf(scope, organization=organization)
         out = Path(args.out).resolve()
         out.write_bytes(payload)
 
         from pypdf import PdfReader
 
         pages = len(PdfReader(out).pages)
-        print(f"  scope   : {scope.document_title}")
+        print(f"  scope   : {scope.document_title} "
+              f"(division {scope.division_code}, {scope.item_count} items)")
         print(f"  written : {out}  ({len(payload) // 1024} KB, {pages} pages)")
 
     print("\nPASS -- WeasyPrint rendered a PDF on Windows.")

@@ -91,13 +91,21 @@ that is not "this looks wrong".
 paged-media PDF in Rust would discard ~4,000 lines of tested domain logic and
 every test with it. Months of work for no user-visible gain.
 
-**A packaged desktop build is a different question, and is now costed** — see
-[docs/desktop-app-scope.md](docs/desktop-app-scope.md). The blocker previously
-recorded here ("WeasyPrint's GTK/cairo stack is difficult to bundle") was based
-on stale information: WeasyPrint 69 renders PDFs itself and loads five
-Pango-chain libraries, not a GTK runtime. The realistic estimate is 2–4 weeks
-for a Tauri shell around the existing app, gated on a 2–3 day spike proving
-those libraries load on a clean Windows machine. Not started, not committed to.
+**A packaged desktop build is no longer a non-goal** — it is costed, and its
+riskiest assumption is now tested. See
+[docs/desktop-app-scope.md](docs/desktop-app-scope.md).
+
+The blocker previously recorded here ("WeasyPrint's GTK/cairo stack is difficult
+to bundle") was stale: WeasyPrint 69 renders PDFs itself and loads five
+Pango-chain libraries, not a GTK runtime. The Phase 0 spike has since **passed**
+— those five loaded from a directory that is not on `PATH`, and the resulting
+PDF paginates identically to CI's, 6 pages with page fill matching to the
+percentage point. Font substitution, the top-ranked risk, did not materialise.
+
+Estimate: 2–4 weeks for a Tauri shell around the existing app. Not started, and
+still a decision to make rather than one already taken — but it is now a
+decision about whether the users want installed software, not about whether it
+is technically feasible.
 
 **Grouping SSO users by email domain.** With no `OIDC_DEFAULT_ORG` configured,
 each new SSO user gets their own organization named after their email domain.
