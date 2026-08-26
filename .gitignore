@@ -52,3 +52,6 @@ docs/demo/exhibits/
 
 # Frontend test toolchain
 /node_modules/
+
+# Rust / Tauri build output
+/src-tauri/target/

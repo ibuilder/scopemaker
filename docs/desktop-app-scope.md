@@ -4,8 +4,7 @@ A costed look at shipping ScopeMaker as a desktop application, written because
 "is this a Rust/Tauri Windows app yet?" deserves a real answer rather than a
 one-line no.
 
-**Status: not started, not committed to.** This is the analysis you would want
-before deciding.
+**Status: Phases 0 and 1 are done and verified. Phases 2–4 are not started.**
 
 **Headline: the blocker was stale information, and the spike has now passed.**
 WeasyPrint dropped cairo and GDK-PixBuf; the native surface is five Pango-chain
@@ -141,14 +140,61 @@ Two traps the script guards against, both hit while writing it:
 - It probes each library separately. The usual failure is a missing *transitive*
   dependency, and one "cannot load library" tells you nothing about which.
 
-### Phase 1 — Native shell (1 week)
+### Phase 1 — Native shell — **DONE**
 
-- Tauri app whose only job is to start the bundled Python, wait for the port,
-  and open a webview at `127.0.0.1` on an ephemeral port.
-- Bind to loopback only. Generate the `SECRET_KEY` on first run into the user
-  profile directory.
-- Lifecycle: the Python process dies with the window, and a crashed backend
-  surfaces as a dialog rather than a blank webview.
+`src-tauri/` is a Tauri 2 app whose only job is to start the Python backend,
+wait for it to announce a port, and open a webview at `127.0.0.1`. It builds and
+runs: a window titled ScopeMaker, responding, with the backend as its child.
+
+Everything that could be got wrong lives in `scopemaker/desktop.py` where it is
+tested (`tests/test_desktop.py`, 17 tests). Rust is a process supervisor and a
+window.
+
+**Loopback only.** Verified twice over: a unit test asserts the bind address,
+and `netstat` confirms `127.0.0.1:<port>` rather than `0.0.0.0` on a live run.
+Reverting it to `0.0.0.0` fails the test.
+
+**An ephemeral port, announced not agreed.** The backend asks the OS for a free
+port and prints `SCOPEMAKER_PORT=<n>`; the shell reads that line. A fixed port
+would collide with whatever else the user runs.
+
+**A persistent secret key.** `DevelopmentConfig` generates one per process,
+which would sign the user out every time they closed the window. It is written
+once into the profile directory, `0600` where the platform honours it, and a
+blank file from an interrupted first run is regenerated rather than used.
+
+**One local account, no login screen.** Created on first run, idempotent on the
+second, and with no password — nothing authenticates against it, so storing one
+would imply a secret worth stealing that protects nothing.
+
+#### The bug this phase actually found
+
+The window-close handler killed the backend. That covers the normal path and
+nothing else: a crash or a Task Manager kill runs no Rust at all, and the
+backend survived holding the user's SQLite file. Each such orphan accumulates.
+
+Fixed with a Windows Job Object (`KILL_ON_JOB_CLOSE`), which makes the OS
+responsible however the parent dies. Verified by hard-killing the shell with
+`taskkill /F`, which runs no handler: the backend's listening port disappeared
+with it, 6 listeners down to 5, the survivors unrelated. Before the fix, the
+same test left an orphan.
+
+Two smaller things, both found by running it rather than reading it:
+
+- Dev mode spawned bare `python`, which on this machine was an unrelated 3.10
+  with none of the dependencies. `SCOPEMAKER_PYTHON` names the right one.
+- The startup-failure dialog is modal and waits for a human, so the Phase 4
+  smoke test would hang on it forever. `SCOPEMAKER_NO_DIALOG=1` prints to
+  stderr and exits 1 instead.
+
+#### Build and run
+
+```
+cargo build --manifest-path src-tauri/Cargo.toml
+SCOPEMAKER_PYTHON=.venv/Scripts/python.exe src-tauri/target/debug/scopemaker-desktop.exe
+```
+
+Needs Rust and WebView2 (present on Windows 11 by default).
 
 ### Phase 2 — Desktop-shaped defaults (1 week)
 

@@ -1,0 +1,33 @@
+[package]
+name = "scopemaker-desktop"
+version = "0.1.0"
+description = "Desktop shell for ScopeMaker"
+edition = "2021"
+rust-version = "1.77"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+
+[target.'cfg(windows)'.dependencies]
+# Job Objects. Killing the child from a window-close handler is not enough: a
+# crash or a Task Manager kill runs no handler at all, and the backend is left
+# holding the user's database, which each launch then adds to. A job with
+# KILL_ON_JOB_CLOSE makes Windows do it, however the parent dies. Verified:
+# before this, force-killing the shell left an orphaned backend behind.
+windows-sys = { version = "0.60", features = [
+    "Win32_Foundation",
+    "Win32_System_JobObjects",
+    # CreateJobObjectW takes SECURITY_ATTRIBUTES, and
+    # JOBOBJECT_EXTENDED_LIMIT_INFORMATION embeds IO_COUNTERS. Both sit behind
+    # their own features; omitting either leaves the symbols unresolved.
+    "Win32_Security",
+    "Win32_System_Threading",
+] }
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1

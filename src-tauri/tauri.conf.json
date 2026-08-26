@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "ScopeMaker",
+  "version": "0.1.0",
+  "identifier": "io.github.ibuilder.scopemaker",
+  "build": {
+    "frontendDist": "../docs/demo"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": ["icons/icon.ico"],
+    "shortDescription": "Construction scope of work exhibits",
+    "longDescription": "Generate, edit and export CSI MasterFormat scope of work exhibits."
+  }
+}
