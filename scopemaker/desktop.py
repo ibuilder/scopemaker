@@ -129,6 +129,9 @@ def desktop_overrides(directory: Path | None = None) -> dict[str, object]:
         "SESSION_COOKIE_SECURE": False,
         "REMEMBER_COOKIE_SECURE": False,
         "PREFERRED_URL_SCHEME": "http",
+        # Read by install_auto_signin, and by nothing else. The server build
+        # never sets it.
+        "DESKTOP_MODE": True,
     }
 
 
@@ -167,24 +170,109 @@ def ensure_local_account(app) -> tuple[str, str]:
         return user.email, organization.slug
 
 
+def migrate_database(app) -> str:
+    """Bring the schema to head, whatever state it is in.
+
+    Three cases, and getting the middle one wrong is what loses somebody's
+    documents:
+
+    * **Empty database.** ``upgrade`` creates everything and records the
+      revision.
+    * **Tables but no ``alembic_version``.** A database created by an earlier
+      build that used ``create_all``. Running ``upgrade`` here fails trying to
+      create tables that already exist; the schema is current, so it is stamped
+      instead.
+    * **Already stamped.** ``upgrade`` applies whatever is new, or does nothing.
+
+    Returns a word describing which path was taken, for the log and the tests.
+    """
+    from alembic.migration import MigrationContext
+    from flask_migrate import stamp, upgrade
+
+    from .extensions import db
+
+    with app.app_context():
+        connection = db.session.connection()
+        context = MigrationContext.configure(connection)
+        stamped = context.get_current_revision()
+        inspector = db.inspect(db.engine)
+        has_tables = "scopes" in inspector.get_table_names()
+
+    if stamped:
+        with app.app_context():
+            upgrade()
+        return "upgraded"
+
+    if has_tables:
+        # Created by a build that used create_all. The schema matches head, so
+        # record that rather than trying to build it again.
+        with app.app_context():
+            stamp()
+        logger.info("Adopted an existing database that predates migrations")
+        return "stamped"
+
+    with app.app_context():
+        upgrade()
+    return "created"
+
+
+def install_auto_signin(app) -> None:
+    """Sign the local user in on every request. Desktop builds only.
+
+    A single-user application on loopback has nobody to authenticate against:
+    anyone who can reach the port is already sitting at the machine. A login
+    screen there is a password to lose, not a control.
+
+    Gated on ``DESKTOP_MODE``, which only ``desktop_overrides`` sets. If this
+    ever ran on the server build it would sign every visitor in as somebody
+    else, so the guard is checked at request time rather than trusted from
+    however the app was constructed -- and there is a test asserting the server
+    build does not get the hook.
+    """
+    if not app.config.get("DESKTOP_MODE"):
+        return
+
+    from flask import g
+    from flask_login import current_user, login_user
+    from sqlalchemy import select
+
+    from .extensions import db
+    from .models import User
+
+    @app.before_request
+    def _sign_in_the_local_user():
+        if app.config.get("DESKTOP_MODE") is not True:  # pragma: no cover
+            return None
+        if current_user.is_authenticated:
+            return None
+        user = db.session.scalar(select(User).where(User.email == DESKTOP_EMAIL))
+        if user is None:  # pragma: no cover - first run creates it
+            return None
+        login_user(user, remember=True)
+        g._desktop_auto_signin = True
+        return None
+
+
 def build_app(directory: Path | None = None):
     """A Flask app configured for the desktop, schema migrated, account ready."""
     from . import create_app
-    from .extensions import db
     from .services.seeding import seed_library
 
     directory = directory or data_dir()
     app = create_app("development", **desktop_overrides(directory))
 
+    # Alembic rather than create_all. A desktop user has no operator to run a
+    # migration for them, and create_all silently does nothing to an existing
+    # database -- so a schema change would ship as a crash, or worse, as a
+    # missing column nobody notices until an export fails.
+    outcome = migrate_database(app)
+    logger.info("Database %s", outcome)
+
     with app.app_context():
-        # create_all rather than Alembic: a desktop install has no operator to
-        # run a migration, and the schema is whatever this version ships.
-        # Phase 2 should replace this with `flask db upgrade` on launch so an
-        # upgrade over an existing database keeps the user's documents.
-        db.create_all()
         seed_library()
 
     ensure_local_account(app)
+    install_auto_signin(app)
     return app
 
 

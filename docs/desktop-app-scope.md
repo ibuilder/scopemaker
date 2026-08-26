@@ -4,7 +4,7 @@ A costed look at shipping ScopeMaker as a desktop application, written because
 "is this a Rust/Tauri Windows app yet?" deserves a real answer rather than a
 one-line no.
 
-**Status: Phases 0 and 1 are done and verified. Phases 2–4 are not started.**
+**Status: Phases 0 and 1 done, Phase 2 mostly done. Phases 3 and 4 not started.**
 
 **Headline: the blocker was stale information, and the spike has now passed.**
 WeasyPrint dropped cairo and GDK-PixBuf; the native surface is five Pango-chain
@@ -196,13 +196,35 @@ SCOPEMAKER_PYTHON=.venv/Scripts/python.exe src-tauri/target/debug/scopemaker-des
 
 Needs Rust and WebView2 (present on Windows 11 by default).
 
-### Phase 2 — Desktop-shaped defaults (1 week)
+### Phase 2 — Desktop-shaped defaults — **mostly done**
 
-- SQLite in `%APPDATA%\ScopeMaker`, migrated with Alembic on launch.
-- One local account, auto-signed-in; the login screen is never shown.
-- `RENDER_ASYNC=0`, rate limiting off, metrics off, mail set to the console
-  backend.
-- Native file dialogs for export, replacing browser downloads.
+Done and tested (26 tests in `tests/test_desktop.py`):
+
+- **SQLite in the profile directory**, `%APPDATA%\ScopeMaker` on Windows.
+- **Alembic on launch, not `create_all`.** This is the one that matters. A
+  desktop user has no operator to run a migration, and `create_all` silently
+  does nothing to an existing database — a schema change would ship as a crash,
+  or worse as a missing column nobody notices until an export fails. Three
+  cases are handled: an empty database is created and stamped; an already
+  stamped one is upgraded; and a database from a build that used `create_all`
+  is **adopted by stamping** rather than rebuilt. Getting that last one wrong
+  is what destroys somebody's documents, and there is a test that puts a
+  project in a pre-migration database and asserts it survives. Reverting to a
+  naive always-upgrade fails it with `table organizations already exists`.
+- **No login screen.** A single-user app on loopback has nobody to authenticate
+  against; a password there is something to lose, not a control. Gated on
+  `DESKTOP_MODE`, which only `desktop_overrides` sets, with a test asserting the
+  server build never receives the hook — hardened after the first version of
+  that test passed with the gate deleted, because the fixture had no local
+  account for the hook to find.
+- **Server-only features off**: async rendering, rate limiting, metrics, and
+  registration, each for a reason recorded in `desktop_overrides`.
+
+Not done:
+
+- **Native file dialogs for export.** Downloads currently go through the
+  webview, which works. Replacing them needs the Tauri dialog plugin and
+  changes on the JavaScript side; it is polish rather than function.
 
 ### Phase 3 — Distribution (3–5 days)
 
