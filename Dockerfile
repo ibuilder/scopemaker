@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------
 # Builder: compile wheels once so the runtime image needs no toolchain.
 # ---------------------------------------------------------------------------
-FROM python:3.14-slim-bookworm AS builder
+FROM python:3.15-slim-bookworm AS builder
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1
@@ -26,7 +26,7 @@ RUN pip install --upgrade pip setuptools wheel \
 # ---------------------------------------------------------------------------
 # Runtime
 # ---------------------------------------------------------------------------
-FROM python:3.14-slim-bookworm AS runtime
+FROM python:3.15-slim-bookworm AS runtime
 
 # WeasyPrint renders PDFs itself (pydyf) rather than through a browser, so the
 # native surface is only Pango's text-shaping chain -- no cairo, no GDK-PixBuf.
